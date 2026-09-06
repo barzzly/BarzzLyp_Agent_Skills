@@ -1,0 +1,9 @@
+# Private/runtime metadata
+skills/.usage.json
+skills/.usage.json.lock
+skills/.curator_ledger.jsonl
+skills/.curator_state
+**/__pycache__/
+*.pyc
+.env
+*.log
