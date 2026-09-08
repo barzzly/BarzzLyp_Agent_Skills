@@ -1,6 +1,6 @@
 ---
 name: vps-web-deployment
-description: Use when deploying web apps to Linux VPS with Nginx and DB.
+description: Use when deploying web apps to Linux VPS. Deploy fullstack app with Nginx, MariaDB, PM2, and CI/CD.
 ---
 
 # VPS Web Deployment
@@ -21,7 +21,7 @@ Standard procedure for deploying web applications (Node.js/Express, Vite/React, 
   npm run build
   ```
 
-### 2. Database Provisioning (Local MariaDB/MySQL)
+### 2. Database Provisioning & Auto-Migrations (MariaDB/MySQL)
 - Verify service status:
   ```bash
   sudo systemctl status mariadb
@@ -34,10 +34,12 @@ Standard procedure for deploying web applications (Node.js/Express, Vite/React, 
   GRANT ALL PRIVILEGES ON <db_name>.* TO '<db_user>'@'localhost';
   FLUSH PRIVILEGES;
   ```
-- Import migration/schema files:
+- Import initial schema:
   ```bash
   sudo mariadb <db_name> < migrations/schema.sql
   ```
+- Use an idempotent migration runner (`templates/migrate.cjs` -> `script/migrate.cjs`) to track executed files in `_migrations` table so subsequent pushes apply only new `.sql` migrations.
+- Local dev connection: Never bind MariaDB to `0.0.0.0` or open port 3306 on UFW for remote development. Tunnel via SSH instead: `ssh -N -L 3307:127.0.0.1:3306 <user>@<vps_ip>`.
 
 ### 3. Environment & Security Configuration (`.env`)
 - Populate `.env` with required runtime variables (`PORT`, `DB_*`, secrets, URLs).
@@ -197,3 +199,6 @@ Standard procedure for deploying web applications (Node.js/Express, Vite/React, 
 - **Cloudflare HTTPS Protocol Header**: When Nginx receives traffic on port 80 behind Cloudflare SSL, `$scheme` is `http`. If Nginx forwards `$scheme` instead of `https`, frameworks with `trust proxy` enabled will issue cookies without the `Secure` flag or reject HTTPS-only sessions, causing silent authentication redirects and broken login flows. Always force `proxy_set_header X-Forwarded-Proto https;` or use a map on `$http_x_forwarded_proto`.
 - **Pre-check Port Conflicts**: Always inspect existing listeners (`ss -tulpn`) before picking an application port to prevent binding collisions with existing containers or Node/Python daemons.
 - **Production Build Flags**: On hosts with `NODE_ENV=production`, run `npm ci --include=dev` or `npm install` before running the build step, because build toolchains (Vite, TSX, esbuild) reside in `devDependencies` and are stripped by default in production installs.
+- **Claude Code Router Model Override**: Global `ANTHROPIC_DEFAULT_OPUS_MODEL` in settings can silently redirect a custom `--model` flag. Override routing cleanly per-invocation by passing `--settings '{"model":"<requested_id>","env":{"ANTHROPIC_DEFAULT_OPUS_MODEL":"<requested_id>"}}'`.
+- **Frontend Dead Code & Component Pruning**: Boilerplate UI templates (like unreferenced shadcn components) bloat bundle chunks and increase compile times. Scripting cross-import reference checks across source files before production deployment cuts bundle size significantly (e.g. dropping CSS from 151KB to 102KB) without regressing active components.
+- **Database Security for Remote Dev**: Exposing database ports (3306/5432) to public IP creates constant attack surfaces for credential brute-force. Keep database bound to `127.0.0.1` and firewalled (`ufw deny 3306/tcp`); connect remote development environments exclusively through encrypted SSH port-forwarding tunnels (`ssh -N -L <local_port>:127.0.0.1:<remote_port> <user>@<host>`).
