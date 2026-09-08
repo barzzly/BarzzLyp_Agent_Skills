@@ -209,5 +209,6 @@ terminal(command="tmux new-session -d -s resumed 'hermes --resume 20260225_14305
 - **Never break prompt caching** — don't change past context, toolsets, or the system prompt mid-conversation. The only exception is context compression.
 - **Message role alternation** — never two assistant or two user messages in a row; only `tool` results can repeat.
 - **Secrets in `.env`, settings in `config.yaml`** — never tell a user to put a non-credential setting in `.env`.
+- **Long-work verification** — `hermes chat --query-file <absolute-path> --oneshot --run-budget <seconds> --max-turns <N>` supports bounded worker runs (verify flags with installed `--help`). Smoke-test provider/model before launching. If terminal background returns a handle but exits with `Failed to connect to bus`, inspect process status; use verified `tmux` supervision instead. A handle alone is not evidence of ongoing work. Cron script paths must be relative beneath active profile's `scripts/`; an absolute `workdir` does not change this script-path rule.
 - **Profile-safe paths** — `get_hermes_home()` in code, `$HERMES_HOME` when resolving paths in a session.
 - **Never hand-edit `config.yaml` for the user** — use `hermes config set KEY VAL`; a stray indent can corrupt the file and break the live gateway.

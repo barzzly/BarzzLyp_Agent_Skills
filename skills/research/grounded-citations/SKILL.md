@@ -219,6 +219,12 @@ and read the `info: stats:` line to see the counts before picking a number.
 - **Hand-editing the Sources block.** Use `render --replace-in <draft>`; slicing
   the file yourself risks a stale or duplicated block that `verify` then flags.
 
+## Indonesian journal accreditation
+
+- Verify SINTA rank for the article's publication year, not only Current Accreditation; promotions do not automatically apply retroactively. Match journal title, publisher, and ISSN to avoid same-name journals.
+- If text extraction drops the History Accreditation colors, inspect its HTML table: year cells pair with rank cells carrying `title="Sinta N"`. Preserve year/rank mappings. Check the publisher's accreditation decree for exact volume/issue boundaries when required.
+- Cross-check OJS metadata against the article PDF for author order, issue and pages; extraction caches can reorder authors and OJS issue metadata can conflict with the PDF. Declare any unresolved discrepancy.
+
 ## Verification
 
 ```bash
