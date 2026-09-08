@@ -172,6 +172,7 @@ Standard procedure for deploying web applications (Node.js/Express, Vite/React, 
               cd <app-path>
               git pull origin main
               npm ci --include=dev
+              npm run db:migrate
               npm run build
               pm2 reload <app-name>
   ```
