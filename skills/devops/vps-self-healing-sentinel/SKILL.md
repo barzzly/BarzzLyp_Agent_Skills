@@ -16,7 +16,7 @@ metadata:
 
 ## Self-Healing Procedures
 - **Orphaned Daemons & Memory Leaks:** If no active browser instance (`chrome`/`chromium`) is running, kill orphaned worker daemons (`pkill -f '\[b\]rowser_harness.daemon'`) to recover leaked RAM.
-- **Node/PM2 Services:** Validate PM2 process state and listening port. If down or errored, execute `pm2 resurrect || pm2 restart <app_name>`. Persist the process table with `pm2 save`. *Verified in production:* Recovers application automatically when PM2 daemon drops during maintenance/reboot, restoring port 5000 and socket state within 2 seconds.
+- **Node/PM2 Services:** Validate PM2 process state and listening port. Require two consecutive failed probes before recovery; transient socket/PM2 output failures must not restart a healthy app or be reported as downtime. Parse `pm2 jlist` only when exit code is zero and stderr is empty. If confirmed down or errored, execute `pm2 resurrect || pm2 restart <app_name>`. Persist the process table with `pm2 save`. Report a recovery only when that same run actually performed it; never carry a past recovery into current status.
 - **Docker Containers:** Inspect container status with `docker inspect -f '{{.State.Status}}' <container>`. If stopped or unreachable on its exposed port, execute `docker restart <container>` and verify socket readiness after 2 seconds.
 - **Systemd Daemons:** Check unit status with `systemctl is-active <unit>`. Avoid calling restart wrappers on the active gateway from within its own execution context.
 
