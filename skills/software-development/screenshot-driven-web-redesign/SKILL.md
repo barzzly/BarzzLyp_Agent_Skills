@@ -8,6 +8,7 @@ description: Use when rebuilding web UI from supplied screenshots.
 ## Always-on rules
 
 - Treat supplied screenshots, local fonts, logos, and palettes as source of truth. Do not substitute a generic interpretation.
+- When a live reference URL is supplied, inspect its HTML and loaded CSS/assets directly with `web_extract` or `curl` before implementing; record exact font families, weights, color tokens, radii, borders, and shadows. Never infer a brand palette from a prior project or add accents absent from the reference.
 - Match composition before decoration: page order, shell geometry, alignment, section proportions, card structure, spacing rhythm, and typography hierarchy come before polish.
 - Inspect every supplied reference before editing. Distinguish mobile and desktop references by dimensions and map each to its target viewport.
 - Preserve business logic, routes, API calls, auth, data states, and accessibility unless the brief explicitly changes them.
@@ -23,7 +24,8 @@ description: Use when rebuilding web UI from supplied screenshots.
    - Inspect current route files, shared shell, global CSS/tokens, and asset imports.
 
 2. **Extract a reference specification**
-   - Record exact page order, header/footer geometry, column/grid counts, alignment, card shapes, typography roles, palette values, imagery aspect ratios, and responsive transitions.
+   - Extract exact page order, header/footer geometry, column/grid counts, alignment, card shapes, typography roles, palette values, imagery aspect ratios, and responsive transitions.
+   - For live references, preserve the distinction between dark-mode base colors (`#000`, `#09090b`, `#18181b`, `#27272a`, `#3f3f46`, `#52525b`), neutral text (`#fafafa`, `#f4f4f5`, `#a1a1aa`, `#71717a`), and semantic success colors; do not invent blue/lime accents unless reference CSS proves they exist.
    - Use exact supplied values where visible. Mark unavailable imagery as placeholder, not invented content.
 
 3. **Delegate as one bounded implementation task when Claude Code is requested**
