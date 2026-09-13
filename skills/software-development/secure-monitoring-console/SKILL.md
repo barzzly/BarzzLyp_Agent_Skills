@@ -44,6 +44,7 @@ Use for authenticated, read-only monitoring consoles for bots and services.
 - Verify a state-changing integration by reading its exact persisted result, not merely by accepting HTTP 200; successful transport does not prove storage or UI visibility.
 - Do not hardcode `/usr/bin/pm2` when spawning process manager actions; Node/PM2 is frequently located in user-scoped npm prefixes (e.g. `~/.npm-global/bin/pm2`), throwing silent ENOENT errors without `PM2_HOME` in env.
 - Never use default `alert()` popups for async action feedback; browsers show generic host headers and poor UX. Use structured in-page toast notifications with explicit loading and error states.
+- Do not enforce excessive client-side input restrictions (such as HTML `minlength="20"`) or arbitrary length minimums in server authentication logic that exceed standard operator passwords; validate against the configured environment secret directly, otherwise users with valid 10–16 character passwords will be blocked by native browser validation.
 
 ## References
 

@@ -36,6 +36,7 @@ Use for production updates where a supplied `.env` replaces runtime configuratio
    - Copy current `.env` to local backup, for example `.env.before-new-env`.
    - Copy supplied env to project's `.env`; set mode `600`.
    - Validate required DB keys, non-empty credentials, safe DB/user identifiers, and local DB host.
+   - Preserve internal service integration keys (e.g. inter-bot/internal API tokens like `WEBSITE_MANUAL_DONATION_KEY`) from the existing `.env` backup if the supplied file omitted them.
    - Keep unrelated existing runtime values only when user explicitly requests merge; otherwise use supplied env as replacement.
 
 3. **Provision local database**
@@ -64,6 +65,10 @@ Use for production updates where a supplied `.env` replaces runtime configuratio
 - Do not restart before building; PM2 can serve stale or incompatible output.
 - Do not trust successful SSH/CI command as deployment proof; read back PM2 and HTTP state.
 - Do not expose local MariaDB publicly; only application needs DB access on VPS.
+- Move untracked local design or working assets outside repo before git pull; newly pulled upstream directories with matching file paths will abort fast-forward merges.
+- Check schema migration diffs (e.g. column adjustments like VARCHAR to LONGTEXT) and alter live database tables before reloading; otherwise runtime crashes or data truncation will occur.
+- When adding media or image upload features, always support multi-file selection and chunk uploads (batches of 5) to prevent exceeding HTTP proxy client_max_body_size limits.
+- Never set a low raw file size check (e.g. 10MB) on image pickers when downscaling on canvas anyway; phone/camera photos easily exceed 15-25MB. Allow up to 50MB raw and downscale sequentially to avoid canvas memory exhaustion.
 
 ## References
 
