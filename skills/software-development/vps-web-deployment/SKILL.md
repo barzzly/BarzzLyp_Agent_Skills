@@ -7,7 +7,7 @@ description: Use when deploying web apps to Linux VPS. Deploy fullstack app with
 
 Standard procedure for deploying web applications (Node.js/Express, Vite/React, Fullstack) on a Linux VPS behind Nginx reverse proxy, process management (PM2/systemd), database provisioning, and Cloudflare DNS/SSL.
 
-## Standard Deployment Workflow
+## Architecture & Standard Deployment Workflow
 
 ### 1. Repository & Location
 - Place all web projects under the designated web root (e.g. `/home/<user>/Website/<project-name>`). Keep the home directory tidy.
@@ -304,3 +304,6 @@ Standard procedure for deploying web applications (Node.js/Express, Vite/React, 
        - Provide both a 1:1 square preview (`og-image.png` / 512x512 or square artwork for WhatsApp chat cards) and a 1.91:1 landscape card (`og-banner.png` / 1200x630 for Twitter `summary_large_image` and Discord embeds).
        - Add an explicit cache-busting query parameter across all OpenGraph tags (`<meta property="og:image" content="https://<domain>/og-image.png?v=<tag>" />`), paired with `og:image:secure_url`, `og:image:type`, `og:image:width`, and `<link rel="image_src" ...>`.
        - Verify using `curl -sI https://<domain>/og-image.png` that the static asset route returns `Content-Type: image/png` and HTTP 200 rather than falling through to the SPA `index.html`.
+    12. **Seamless Backdrop Alpha Fading (Eliminating Hard Bottom Edges)**:
+       - When header or hero backdrops display high-contrast or high-opacity images (e.g. `opacity-75`) blending into light solid background content, standard background color gradient overlays frequently leave a noticeable horizontal clipping line at the bottom of the container.
+       - Eliminate hard edges by layering CSS `mask-image: linear-gradient(to bottom, black 50%, transparent 100%)` directly on the image element and terminating the background color gradient earlier (`to-85%` reaching `#FEFEFE`), allowing alpha transparency to hit 0 before container bounds.
