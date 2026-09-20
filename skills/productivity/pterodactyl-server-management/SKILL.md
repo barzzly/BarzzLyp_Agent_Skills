@@ -183,7 +183,62 @@ When deploying large plugin bundles, archives, or backups to a server:
 3. **Staging & Excluding Database/State Folders**:
    - Heavy local logging plugins (e.g. `CoreProtect` with multi-gigabyte `database.db` files) should be excluded during recovery/migration staging to prevent bandwidth saturation and node disk quota exhaustion.
 
+## Procedure 5: Database Maintenance, Pre-Wipe Dump & Safe Data Reset
+
+When performing server wipes, seasonal resets, or clearing game databases associated with Pterodactyl servers:
+
+1. **Retrieve Database Credentials via API**:
+   Query all allocated databases and passwords in one call:
+   ```bash
+   curl -s -H "Authorization: Bearer $PTERO_TOKEN" \
+        -H "Accept: application/json" \
+        "https://<PANEL_HOST>/api/client/servers/<SERVER_ID>/databases?include=password"
+   ```
+   Extract `name`, `host.address`, `host.port`, `username`, and `relationships.password.attributes.password`.
+
+2. **Stop Server Before Database Operations**:
+   Always transition server state to `offline` via `POST /api/client/servers/<SERVER_ID>/power` with `{"signal": "stop"}` before wiping or truncating tables. This prevents HikariCP connection pool errors, locked tables, and in-flight write crashes during shutdown.
+
+3. **Pre-Wipe Local Backup (Mandatory)**:
+   Always dump all databases locally before any destructive command:
+   ```bash
+   mariadb-dump -h<HOST> -P<PORT> -u<USER> -p<PWD> <DATABASE> > /path/to/backup/<DATABASE>.sql
+   ```
+
+4. **Safe Truncation (Preserve Schema Structure)**:
+   Never run `DROP TABLE` or `DROP DATABASE`. Run `TRUNCATE TABLE` with disabled foreign key checks:
+   ```sql
+   SET FOREIGN_KEY_CHECKS = 0;
+   TRUNCATE TABLE `table_name`;
+   SET FOREIGN_KEY_CHECKS = 1;
+   ```
+
+5. **Protect Migration & Metadata Tables**:
+   Never truncate migration tracking or schema metadata tables (e.g. `*_schema_migrations`, `*_metadata`, `*_migrations`). If migration records are wiped while tables exist, plugins attempt to run initialization DDL on boot and crash with `Table already exists` or `Duplicate column name`.
+
+## Procedure 6: Full Plugin Backup & Purge Procedure
+
+When wiping, replacing, or rebuilding a server's plugin suite:
+
+1. **Catalog Active JARs**:
+   Query all files in `plugins/` via `GET /api/client/servers/<ID>/files/list?directory=plugins` and filter for `.jar` files.
+
+2. **Full Local Backup Before Purge (Mandatory)**:
+   Create a dedicated local backup directory (e.g. `/home/barzzly/backup_plugins_<server>/`). Download every JAR using signed URLs (`GET /api/client/servers/<ID>/files/download?file=plugins/<jar>`). Verify that downloaded file count matches the server and total size is greater than 0.
+
+3. **Stop Server Before Deletion**:
+   Always transition server state to `offline` (`signal: stop`) and poll `resources` until state is `offline`. Never delete JAR files while the JVM is active.
+
+4. **Chunked Deletion via API**:
+   Delete files in batches of 40 via `POST /api/client/servers/<ID>/files/delete` with payload `{"root": "plugins", "files": [...]}`. Verify with a list call that 0 JARs remain.
+
+5. **Direct Delivery on Request**:
+   Deliver requested JAR files from the local backup directly via `MEDIA:/absolute/path/to/file.jar`.
+
 ## Pitfalls
+
+- **Server Stop Mandatory Before Bulk JAR Deletions**: Always transition server state to `offline` before deleting all plugin JARs. Deleting JAR files while the server is active causes classloader crashes (`NoClassDefFoundError` on background schedulers) and leaves corrupted locks in `.paper-remapped`.
+- **Chunked Deletions for Large Plugin Suites**: Pterodactyl API's `/files/delete` endpoint should process files in batches of 40. Sending 80+ files in one request can trigger proxy timeouts or daemon connection reset.
 
 - **OpenSSH SFTP rm lacks recursive flag**: OpenSSH `sftp` `rm` command rejects `-r` (`rm: Invalid flag -r`). To remove remote directories, use a generated bottom-up exact file delete + `rmdir` script or rename/move.
 - **Never delete or replace whole plugin root directories**: Live servers contain existing third-party assets, rank cosmetics, and active configs in `plugins/ItemsAdder/contents` and `plugins/MMOItems`. Replacing or deleting whole plugin roots wipes out non-pack server assets. Always delete and upload only exact pack-specific subfolders (e.g. `contents/SL_*`).
@@ -242,3 +297,40 @@ When deploying large plugin bundles, archives, or backups to a server:
   2. For landscape cards (Twitter/X, Discord `summary_large_image`), generate a 1200x630 version (`og-banner.png`) extending or padding the background to match the art edge tone.
   3. Always append cache-busting query parameters (e.g. `og-image.png?v=banner`) across `index.html` (`og:image`, `og:image:secure_url`, `link rel="image_src"`, `twitter:image`) and React Helmet/dynamic `<SEO>` components simultaneously so crawler caches are broken immediately.
 - **BatchMode Required**: Always pass `-o BatchMode=yes` with `sftp` in automation scripts. If authentication fails, it terminates immediately with exit code 255 rather than hanging indefinitely on a password prompt.
+- **Wings Signed Upload URL Target Directory**: When requesting a signed upload URL via `GET /api/client/servers/<ID>/files/upload`, appending `&directory=<target_dir>` (e.g. `&directory=plugins`) directly to the daemon upload URL (`https://<node>/upload/file?token=...&directory=plugins`) and specifying the filename in curl (`-F "files=@/path/to/file.jar;filename=plugin.jar"`) will land files directly into the target folder without requiring a separate move/rename API call.
+
+- **Server Plugin Sourcing & Strict Server Isolation**:
+  When performing automated plugin upgrades on server instances:
+  1. **Strict Server Isolation (NEVER Cross-Copy Between Sibling Servers)**: Sibling servers on the panel (e.g. Queencraft, LegacySchool, Dev) are strictly isolated projects/tenants. NEVER cross-copy, scrape, or transplant JARs or configurations between different panel servers. Sibling servers belong to different environments or licenses; copying across them breaks isolation and violates licensing.
+  2. **Official External Sourcing Only**: All updates must be downloaded directly from official, authoritative external repositories:
+     - Modrinth API (`https://api.modrinth.com/v2/project/<id>/version` -> download primary loader build)
+     - GitHub Releases (`https://api.github.com/repos/<owner>/<repo>/releases/latest` -> download matching asset)
+     - Official project download endpoints (e.g. `download.luckperms.net`, EssentialsX GitHub, GeyserMC downloads API)
+  3. **Premium / Commercial Plugins**: Commercial/licensed plugins (such as `AdvancedEnchantments`, `DeluxeSellwands`, `ShopGUIPlus`, `RoseStacker`, `MMOItems`, `Nexo`, `PlayerAuctions`, `Ultimate_BlockRegeneration`) cannot be downloaded from open public repositories. NEVER transplant them from other panel servers; leave the server's existing version intact and clearly report to the operator that manual file upload is required.
+  4. **Coupled Plugin Dependencies (e.g. NightExpress Suite)**: When updating core framework plugins, update all dependent plugins simultaneously. For example, `ExcellentCrates` 6.x requires `nightcore` 2.16.x or newer; deploying `ExcellentCrates-6.6.1` while leaving `nightcore-2.7.3` will cause runtime startup crashes. Both are available on Modrinth.
+  5. **Custom Internal Plugins**: Plugins with custom prefixes (e.g. `Noe*`) belong to the network's proprietary codebase and must never be overwritten from external sources.
+  6. **Restoring Deleted Files from Pterodactyl Wings `/.trash`**: When files are deleted via the Client API (`/files/delete`), Wings moves them into `/.trash` named with base64-encoded original paths (e.g. `L3BsdWdpbnMvQWR2YW5jZWRFbmNoYW50bWVudHMtOS4yNC44Lmphcg`). To restore an accidentally deleted file without node disk access, invoke the rename API (`PUT /api/client/servers/<ID>/files/rename`) with `{"root": ".trash", "files": [{"from": "<base64_name>", "to": "../plugins/<original_filename>"}]}`.
+- **Auditing Plugin Health & Red Plugin Diagnostics**:
+  To identify failed plugins programmatically:
+  1. Count JARs in `plugins/` via API (`GET /api/client/servers/<ID>/files/list?directory=plugins`).
+  2. Send `plugins` or `pl` to console (`POST /api/client/servers/<ID>/command`) and parse `logs/latest.log`. Plugins prefixed with `*` or listed under `Disabling <Plugin>` are RED in-game and disabled due to uncaught initialization exceptions.
+  3. Compare plugin data folders against active JARs to identify orphan folders left behind by removed plugins.
+- **MMOItems & MythicLib Version/Build Coupling**:
+  In the Lumine/PhoenixDevt ecosystem, MMOItems and MythicLib builds must match strictly. Modern builds of MythicLib (1.7.1 b100+) relocated base class `MMOPlugin` from `io.lumine.mythic.lib.util.MMOPlugin` to `io.lumine.mythic.lib.module.MMOPlugin`, and deliberately throw `java.lang.RuntimeException` in the old constructor. Installing an older release of MMOItems (e.g. `MMOItems-6.10.jar`) with a newer MythicLib causes an immediate `InvalidPluginException: Exception initializing main class 'net.Indyuce.mmoitems.MMOItems'` on startup. Always deploy matching builds (e.g. `MMOItems-6.10.1.jar` with `MythicLib-dist-1.7.1-b106`). When resolving mismatches on premium plugins, inform the operator to upload the matching purchased JAR rather than transplanting files from other panel instances.
+- **Server Database Resets & Preserving Schema Migrations & Currencies**:
+  When emptying or resetting server databases (e.g. for season wipes):
+  1. Retrieve connection parameters via `GET /api/client/servers/<ID>/databases?include=password`.
+  2. Always transition server to `offline` state before executing wipes to prevent active HikariCP connection pool locks or in-flight write corruption.
+  3. Dump every database to local `.sql` files before executing any table modifications.
+  4. Truncate tables (`SET FOREIGN_KEY_CHECKS = 0; TRUNCATE TABLE \`table\`; SET FOREIGN_KEY_CHECKS = 1;`) rather than dropping tables so schemas, indexes, and column types persist.
+  5. **Never truncate migration tables**: Skip tables containing `migration` or `metadata` (e.g. `auraskills_schema_migrations`, `huskclaims_metadata`, `playerpoints_migrations`). Clearing migration history while tables exist triggers initial creation DDL on the next server startup, crashing plugins with `Table already exists` or `Duplicate column name`.
+  6. **Player Currency Preservation**: Network economy tables (e.g. `s4077_PlayerPoint`) hold permanent player coins, username caches, and transaction logs that must be preserved across seasonal wipes. Always verify explicit database exclusion lists before executing bulk database commands.
+- **ModelEngine 4 Cross-Version Compatibility with ViaVersion / ViaBackwards (1.20.1 to 1.21.4+)**:
+  On Minecraft servers running 1.21.4+ (such as UniverseSpigot/Paper 1.21.11), ModelEngine 4 defaults to `Force-Custom-Model-Data: false` in `plugins/ModelEngine/config.yml`. Under this default, ModelEngine transmits modern `item_model` data components on `BONE` or `GLASS` items instead of integer `CustomModelData`. When older clients (Minecraft 1.20.1 through 1.21.3) connect via ViaVersion / ViaBackwards proxy, the client does not support `item_model` components, causing ViaVersion to drop the model metadata and downgrade the item to plain unmodeled `Material.GLASS` or `leather_horse_armor` (which renders in-game as an untextured red translucent cube or crystal). To restore proper model rendering across all client versions 1.20.1 through 1.21.4+:
+  1. Set `Force-Custom-Model-Data: true` under `Model-Engine:` in `plugins/ModelEngine/config.yml`.
+  2. **Full Server Restart Required**: Do NOT rely on `/meg reload` alone. `/meg reload` only re-parses blueprints and model files; the NMS packet handler (`NMSHandler_v26_2`) initializes its internal `forceCMD` state on startup and will continue sending `Material.GLASS` without CustomModelData until a full server restart is performed.
+  3. **Resource Pack Dual Compatibility & 1.20.1 Root Fallback**:
+     - Maintain legacy predicate overrides with `custom_model_data` in `assets/minecraft/models/item/leather_horse_armor.json` and modern definitions in `assets/minecraft/items/leather_horse_armor.json`.
+     - Minecraft 1.20.1 does not support resource pack `overlays` (introduced in 1.20.2). Any item models placed inside overlay directories (such as `modelengine_1_19_4/assets/minecraft/models/item/player_head.json`) MUST also be copied directly to the root `assets/minecraft/models/item/player_head.json` so 1.20.1 clients load without missing models.
+     - In `pack.mcmeta`, declare `pack_format: 15` alongside `"supported_formats": {"min_inclusive": 15, "max_inclusive": 32767}` to eliminate red incompatible-version warnings across both legacy and modern clients.
+
