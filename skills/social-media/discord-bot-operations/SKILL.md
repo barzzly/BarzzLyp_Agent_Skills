@@ -15,7 +15,7 @@ metadata:
 ## Standing rules
 
 - Keep embed branding consistent across commands, panels, webhooks, and logger-generated messages; do not patch only the command named by the user when the requirement is global.
-- For Noesantara embeds, use footer format `Noesantara Network • MM/DD/YYYY, hh:mm AM/PM` with `Asia/Jakarta` time, matching Discord's displayed `en-US` format. Do not use `Official Store` in embed footers.
+- For Noesantara embeds, keep footer branding to `Noesantara Network` and use Discord's native timestamp (`setTimestamp()` / ISO `timestamp`) as the only date display; Discord renders it as “Today” and automatically changes to the date on later days. Do not duplicate a formatted date inside the footer. Do not use `Official Store` in embed footers.
 - When users ask to restore or match an existing panel, treat the current Discord message as the source of truth: inspect its description, emoji IDs, button labels/URLs, mention content, footer, and image fields before rebuilding; product catalog data alone is not enough.
 - Use the fixed blue Noesantara logo URL `https://store.noesantara.id/logo-no-backround.png` as footer `icon_url`; never fall back to bot avatar when branding requires the Noesantara logo.
 - When refreshing an existing panel, preserve its established visual language: exact emoji, list layout, wording, buttons, `@everyone`, and footer branding. Do not invent a plain replacement from product data; inspect the previous builder/source first. If prior source is unavailable, inspect recent Discord messages before rebuilding and copy their structure.
@@ -26,14 +26,14 @@ metadata:
 ## Procedure
 
 1. Locate every embed producer before editing. Include command files, interaction handlers, webhook servers, donation loggers, and panel builders.
-2. Add one centralized embed metadata helper or a single serialization boundary. Apply organization footer and send time at final serialization so future commands and webhook paths cannot bypass branding. Build the displayed date manually or with `formatToParts` when punctuation must be exact; `Intl.DateTimeFormat('en-US').format()` commonly inserts a comma.
+2. Add one centralized embed metadata helper or a single serialization boundary. Apply organization footer and native send timestamp at final serialization so future commands and webhook paths cannot bypass branding. Do not add a second human-readable date to footer: Discord's native timestamp already renders relative day label and rolls over to calendar date automatically.
 3. Preserve the fixed Noesantara logo in the final footer object; replace stale organization text rather than appending a second footer. Use `Asia/Jakarta` time and an ISO timestamp for Discord's native timestamp. Remove panel-specific decorative images when requested, but keep footer logo independent from embed body images. For raw payload embeds, explicitly include footer, icon, timestamp, components, and allowed mention fields because they bypass `EmbedBuilder` serialization hooks.
 4. Run syntax checks across all changed JavaScript:
    ```bash
    node --check index.js
    for f in commands/*.js donation-logger.js webhook-server.js items-handler.js rank-handler.js; do node --check "$f" || exit 1; done
    ```
-5. Run one serialization self-check that constructs an `EmbedBuilder` and asserts footer starts with `Noesantara Network • ` and timestamp exists. Avoid starting a second bot instance because its webhook port can collide with PM2.
+5. Run one serialization self-check that constructs an `EmbedBuilder` and asserts footer text is exactly `Noesantara Network` and native timestamp exists. Avoid starting a second bot instance because its webhook port can collide with PM2.
 6. Restart only intended PM2 process and verify liveness:
    ```bash
    pm2 restart <bot-name> --update-env
