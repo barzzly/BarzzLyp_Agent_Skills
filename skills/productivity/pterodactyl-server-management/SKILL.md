@@ -235,8 +235,23 @@ When wiping, replacing, or rebuilding a server's plugin suite:
 5. **Direct Delivery on Request**:
    Deliver requested JAR files from the local backup directly via `MEDIA:/absolute/path/to/file.jar`.
 
+## Procedure 7: Stale Config & Backup Scanning via Ephemeral SFTP
+
+When auditing server storage or cleaning up obsolete configs (`.old`, `.bak`, `.backup*`, `.save*`, `~`, `.broken`):
+
+1. **Avoid REST API for Deep Directory Crawling**:
+   Pterodactyl client endpoint `/files/list` only lists one level per call. Scanning deep plugin directories via HTTP creates hundreds of rate-limited requests. Direct SFTP traversal via Python + Paramiko (`uv run --with paramiko python3`) is orders of magnitude faster.
+
+2. **Exclude Chunk & Texture Directories**:
+   Always skip `region/`, `poi/`, `entities/`, `playerdata/`, `stats/`, `data/`, `libraries/`, `assets/`, `textures/`, `models/`, and `blueprints/` during recursive directory walks to prevent timeouts scanning tens of thousands of binary chunk files and assets.
+
+3. **Decode Wings `/.trash` File Names**:
+   Files deleted via the panel/API are moved into `/.trash/` named after the base64-encoded original path, optionally suffixed with `_YYYYMMDD_HHMMSS`. Decode base64 strings with standard padding (`base64.b64decode(name + '=' * (-len(name) % 4))`) to identify candidates for restoration.
+
 ## Pitfalls
 
+- **SFTP Directory Traversal Bottlenecks on World Regions and Assets**: Minecraft server folders contain hundreds of thousands of chunk `.mca` files and asset `.json`/`.png` textures. Always prune `region`, `poi`, `entities`, `playerdata`, `stats`, `models`, and `textures` when traversing via SFTP to avoid stalling execution.
+- **Decoding Wings Base64 Trash Entries**: Files inside `.trash` are renamed to standard Base64 representations of their original paths with trailing timestamps. Decode with standard Base64 padding (`base64.b64decode(name + '=' * (-len(name) % 4))`) to inspect deleted items.
 - **Server Stop Mandatory Before Bulk JAR Deletions**: Always transition server state to `offline` before deleting all plugin JARs. Deleting JAR files while the server is active causes classloader crashes (`NoClassDefFoundError` on background schedulers) and leaves corrupted locks in `.paper-remapped`.
 - **Chunked Deletions for Large Plugin Suites**: Pterodactyl API's `/files/delete` endpoint should process files in batches of 40. Sending 80+ files in one request can trigger proxy timeouts or daemon connection reset.
 
