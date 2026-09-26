@@ -28,6 +28,16 @@ Pterodactyl environments expose two programmatic control surfaces:
 - Uploading, inspecting, editing, or backing up server plugins (`plugins/` or `plugins_new/`), configs, and logs.
 - Triggering server power actions or executing console commands programmatically.
 
+## Live Bot Acceptance Rules
+
+- Distinguish connection, authenticated gameplay, chat capture, scripted commands, and AI conversation before promising capabilities. When the user asks an agent to join and follow player chat, do not silently substitute a regex command bot for an AI participant. Explicitly disclose a reduced scope; claim AI participation only after a real model-backed response and safe action are verified in-game.
+- Verify each claimed capability separately: backend connection in server logs, designated player's message captured with identity, outgoing reply delivered, and requested command's actual effect. A running background process proves none of these by itself.
+- Keep chat authority limited to the user-designated player and gameplay scope. Require explicit approval through the trusted control channel for destructive, privilege, security, or host actions; never feed player text into unrestricted shell execution.
+- Preserve performance-test scope when the user adds live interaction: save samples and report measured metrics or mark the assessment incomplete. A low ping or successful join is not proof of healthy TPS/MSPT or capacity.
+- State the active bot's lifetime and what continues autonomously after the reply. A logged message is not continuous AI review; an allowlist is not natural-language understanding.
+
+For ordered setup, authentication, resource-pack handling, and chat checks, read [Headless Minecraft testing](references/minecraft-headless-testing.md).
+
 ## Prerequisites
 
 - SSH Key pair generated locally (`~/.ssh/id_ed25519.pub`).
@@ -314,6 +324,8 @@ When auditing server storage or cleaning up obsolete configs (`.old`, `.bak`, `.
   3. Always append cache-busting query parameters (e.g. `og-image.png?v=banner`) across `index.html` (`og:image`, `og:image:secure_url`, `link rel="image_src"`, `twitter:image`) and React Helmet/dynamic `<SEO>` components simultaneously so crawler caches are broken immediately.
 - **BatchMode Required**: Always pass `-o BatchMode=yes` with `sftp` in automation scripts. If authentication fails, it terminates immediately with exit code 255 rather than hanging indefinitely on a password prompt.
 - **Wings Signed Upload URL Target Directory**: When requesting a signed upload URL via `GET /api/client/servers/<ID>/files/upload`, appending `&directory=<target_dir>` (e.g. `&directory=plugins`) directly to the daemon upload URL (`https://<node>/upload/file?token=...&directory=plugins`) and specifying the filename in curl (`-F "files=@/path/to/file.jar;filename=plugin.jar"`) will land files directly into the target folder without requiring a separate move/rename API call.
+
+- **Geyser/Floodgate Velocity Updates**: Resolve official metadata at `https://download.geysermc.org/v2/projects/<geyser|floodgate>/versions/latest/builds/latest`, then pin version/build in `/versions/<version>/builds/<build>/downloads/velocity`. Verify SHA-256 against `downloads.velocity.sha256` and inspect `velocity-plugin.json`. Back up both JARs, configs, and Floodgate key locally in a private categorized directory. Upload with non-`.jar` staging suffix, read back hashes, stop and confirm offline, rename old JARs to non-loading backups, activate staged JARs, verify hashes, then start. Check fresh startup logs, not merely running state: GeyserUtils can throw `NoSuchMethodError` for `NbtMapBuilder.putList` while Geyser still binds UDP and reports Done; report this custom-entity failure explicitly without claiming full gameplay health. Geyser can migrate config schema automatically; compare diffs before claiming configs unchanged. Preserve Floodgate key and avoid changing unrelated plugins without scope.
 
 - **Server Plugin Sourcing & Server Isolation Rules**:
   When performing automated plugin upgrades on server instances:

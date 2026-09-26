@@ -400,6 +400,14 @@ When fixing bugs:
 3. Fix the root cause (GREEN)
 4. The test proves the fix and prevents regression
 
+## Browser Demo Concurrency and Load Checks
+
+- Distinguish an over-budget value selectable in UI from an accepted server overspend. Reproduce exact reduced balance, test presets/input maximum, then POST the oversized amount directly and verify balance unchanged.
+- Guard polling responses with a mutation generation, not timestamp alone: an older request can share `serverNow` with a newer mutation and revert UI state. Hold a real poll response, complete mutation, release poll, and assert newer state persists.
+- Prevent visibility events from starting overlapping poll loops. Pause hidden tabs, refresh on return, and keep action controls stale until fresh state arrives.
+- Separate new-session IP throttles from existing-session request quotas so shared-network players do not exhaust each other's read budget. Keep bounded session storage; distributed session exhaustion remains a capacity limitation, not solved by per-IP limits alone.
+- Benchmark successful requests with realistic participant payloads and explicit error counts; rate-limited responses must not masquerade as high throughput. Report latency regressions honestly and never equate a short loopback burst with production player capacity.
+
 ## Real-World Impact
 
 From debugging sessions:

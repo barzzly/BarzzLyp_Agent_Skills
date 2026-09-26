@@ -345,6 +345,12 @@ Bug found? Write failing test reproducing it. Follow TDD cycle. The test proves 
 
 Never fix bugs without a test.
 
+## Node Crypto and Round-Rollover Tests
+
+- For history-dependent demo rules, test the actual HTTP rollover as well as the sampler; a passing helper test does not prove production calls it.
+- When deterministic tests must replace Node crypto entropy, restore the original function and call `syncBuiltinESMExports()` after both replacement and restoration. Keep overrides inside isolated test processes; never add production override endpoints.
+- Test both sides of streak thresholds, interruption by a qualifying result, reset behavior, and maximum output. Remove stale UI claims of independent outcomes when rules depend on history.
+
 ## Testing Anti-Patterns
 
 - **Testing mock behavior instead of real behavior** — mocks should verify interactions, not replace the system under test
