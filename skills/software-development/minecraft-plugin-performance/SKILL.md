@@ -52,3 +52,7 @@ author: Hermes Agent
 - Do not label custom Bukkit event execution as safe merely because event class is named `Async`; listeners can still call Bukkit APIs.
 
 See [references/paper-threading-and-verification.md](references/paper-threading-and-verification.md) for audit patterns and release gates.
+
+For whole CustomFishing audits, load [references/fishing-audit-regressions.md](references/fishing-audit-regressions.md) for delayed rewards, bag/market boundaries, atomic storage, and real-runtime fixture pitfalls.
+
+For built-in CustomFishing menus, load [references/native-fishing-index.md](references/native-fishing-index.md): shaded Adventure compatibility, native stats aliases, command migration, read-only inventory safety, and isolated Paper smoke tests.

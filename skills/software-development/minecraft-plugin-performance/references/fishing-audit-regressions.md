@@ -1,0 +1,13 @@
+# CustomFishing audit regression gates
+
+- Trace caller cleanup before checking hook validity in delayed rewards. Normal success immediately destroys hook; delayed loot must survive that cleanup. Guard duplicate success before scheduling and preserve offline checks.
+- Snapshot reward rod for item generation/size limits. Do not compare vanilla rods including damage after reel durability changes: normalize only damage for vanilla equality. Test multi-loot after stop, vanilla damage mutation, and swap to a different rod/material. Keep sizeless trash catchable; invalid configured bounds still fail closed.
+- Test final generated size with `restricted-size-range: false` only in isolated fixtures when proving multiplier effects. Production default range clamping can legitimately cancel test multiplier; never modify user gameplay config to satisfy a test.
+- Run catch harness alone on peaceful/invulnerable test player. Reload, another player, mob death, and dropped items contaminate XP/drop assertions. Reset fixture failure count per run; assert every named case plus final count.
+- Bag admission must cover cursor PLACE/SWAP, shift from bottom, number-key/offhand (`hotbarButton == -1`), and drag. Permit removal and ordinary bottom manipulation. Match fixture policy: default `can-store-loot: false` legitimately rejects cod.
+- Check market final summed/multiplied amount and resulting earnings are finite before item clearing/reward. Per-item finite checks alone miss overflow. Test real GUI settlement leaves items/earnings unchanged.
+- Use unique temporary file per JSON/YAML save, UTF-8, atomic replace with filesystem fallback, and finally cleanup. A shared `<uuid>.yml.tmp` lets concurrent writers overwrite/delete each other's data. Test another temp file survives, serialization failure retains old target, and failed replacement returns false.
+- Compile test plugins against same Paper API version as runtime; old Spigot `InventoryView` ABI may differ. Unsafe-allocate real plugin implementation for standalone tests rather than repeatedly inventing incomplete abstract plugin stubs.
+- Treat subagent summaries as unverified: require runnable tests and verify exact source diff. Reject untested lifecycle patches that publish competition before start then release lock; unload can interleave and orphan timer.
+- Preserve async event contracts; separate Redis I/O from Bukkit scheduling only with explicit lifecycle tests. Do not label repository fully safe or Folia-compatible after Paper-only harness.
+- Decode Base64 locally to validate values. Tool-output redaction may show `...` even when source contains complete valid textures; do not 'fix' redacted values.

@@ -1,5 +1,12 @@
 # Headless Minecraft testing and chat control
 
+## Real graphical screenshots on a VPS
+
+- For authentic GUI screenshots, install official version assets with `minecraft-launcher-lib` in a project venv; run Java 21 client under Xvfb with `LIBGL_ALWAYS_SOFTWARE=1` and bounded heap/lifetime. Keep game directory in the project, not home root. Use existing authorized test identity only on its offline-auth test server; online-mode requires legitimate Microsoft authentication.
+- Use `quickPlayMultiplayer` for modern client startup. First-launch accessibility screen may block connection until Continue. Accept the intended server resource pack and wait for actual reload completion; unlike Mineflayer acknowledgements, this downloads/renders assets.
+- Capture Xvfb with Pillow `ImageGrab.grab(xdisplay=...)`; inspect actual screenshot before delivering. Convert PNG to JPEG if image analysis rejects oversized payloads. Hover unknown index entries to prove `???`, tier, habitat and undiscovered status; dark slots alone can resemble empty content.
+- Keep login secrets out of screenshots and command output. Stop graphical client and its Xvfb after capture; installed assets remain reusable. Local helper paths: `/home/barzzly/Projects/minecraft-smoke-test/{install-client.py,run-graphical-client.py,client-control.py}` with `.venv-client` and `graphical-client/`.
+
 ## 1. Establish scope and baseline
 
 Use one non-OP bot for a bounded live smoke test. Confirm proxy allocation and backend alias through panel API and proxy config. Java login does not test Geyser/Floodgate; a single idle bot does not test player capacity. Keep credentials private in the project directory.
@@ -58,6 +65,15 @@ Feed observed server feedback back to the model and distinguish sent, accepted, 
 For navigation load Mineflayer pathfinder and explicitly disable automatic digging, towers, doors, and scaffold placement unless specifically required. Resolve owner from currently visible entities, not merely the chat/tab list; cross-world/vanished players may chat while absent from the bot's perception. Stop must clear controls, path goals and digging immediately, not wait behind an AI API call. Bound follow/action lifetimes.
 
 For digging/placing require exact finite integer block coordinates, reach and visibility checks, user-authorized gameplay context, and cancellation timeout. Do not gate Indonesian natural-language mining behind English keywords: requests such as `ambil snow ini 10 biji drop ke gw` already authorize the mining/collection/drop workflow. Once ordinary gameplay is authorized, do not ask permission again; add nearby-block perception so the model can resolve targets itself. Attribute local validator failures to the bot, never falsely to server protection. Never substitute an arbitrary block ahead when coordinates are absent. Mineflayer digging can optimistically set local block state to air; do not call that authoritative server verification. Inspect the current window before clicking and invalidate inspection on window/slot changes. Validate namespaced commands against the canonical command root; `/minecraft:op` must not bypass an `op` block.
+
+### Mining enchantment compatibility
+
+When mining fails with `enchantments.concat is not a function`, inspect installed `prismarine-item` and Mineflayer `digTime` before changing server permissions. Item components on 1.21.4 can expose `{enchantments:[{id,level}],showTooltip}` while Mineflayer expects `[{name,lvl}]`; held tools plus helmets expose the concat failure. Normalize only the dig-time input using the bot registry, preserving efficiency and Aqua Affinity; never mutate serialized item components or remove enchantments. Keep a regression using real Item/Block and Mineflayer digging plugin, with helmet, empty enchants, efficiency and bare-hand cases. Install a local compatibility hook after plugin initialization, rather than an untracked node_modules edit. Verify live mining through actual inventory delta (e.g. grass block producing dirt), not optimistic local air or a passing mocked dig test. Restarting the bot may return it to backend spawn: re-enter authorized wilderness before testing, never excavate spawn as fallback.
+
+## CustomFishing command-based index checks
+
+- For user-authorized simulated collection tests, inspect live `commands.yml` and loot IDs, then use `customfishing statistics query <online-test-player> AMOUNT_OF_FISH_CAUGHT` before and after `customfishing statistics add <online-test-player> AMOUNT_OF_FISH_CAUGHT <loot-id> 1`. Query requires online loaded user data. Verify actual index window separately; stat success does not prove visibility.
+- Check loot `disable-stat` before expecting index inclusion. Native index excludes those entries even if admin commands manually add their counts; report exclusion rather than changing gameplay config without authorization. Amount-only additions leave size record unchanged; disclose command simulation, not real catch.
 
 ## 6. Report runtime honestly
 
