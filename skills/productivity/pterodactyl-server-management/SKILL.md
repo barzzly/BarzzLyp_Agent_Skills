@@ -30,10 +30,17 @@ Pterodactyl environments expose two programmatic control surfaces:
 
 ## Noesantara minigames economy boundary
 
-- User permits hardening NoeWebWallet/web wallet but does not permit modifying EssentialsX; keep automatic deposits and withdrawals disabled unless user explicitly changes that decision. Preserve provider and real balances.
-- When no provider-owned durable receipt exists, disable journal SUCCESS/FAILED replay as well as new transfers. A startup retry timer can otherwise settle old monetary results despite a disabled feature flag. Retain unresolved journals for reconciliation; backend must reject new certain settlements while disabled, keeping withdrawal reservations held.
+- Preserve existing EssentialsX/Vault/shop integration and real balances. User permits a scoped EssentialsX persistence patch for durable Noe transfers, subject to compatibility and isolated crash tests. Preserve Vault API behavior; do not replace economy providers or deploy unverified builds. A balance-persistence patch does not make ShopGUIPlus inventory delivery and money changes one atomic transaction.
+- Without provider-owned durable receipts, never replay previous-boot monetary mutations or treat previous-boot unacknowledged SUCCESS/FAILED as certain. Quarantine ambiguous journals for reconciliation; backend must reject new certain settlements while disabled and retain unknown withdrawal reservations. Same-process idempotent result delivery in explicitly accepted best-effort mode remains distinct from provider durability.
 
-## Noesantara minigames login preference
+## Noesantara NoeWebApi password login
+
+- Place NoeWebApi on NoeRPG Paper/Bukkit, not Velocity. Reuse existing NoeWebAuth proxy companion only for signed JPremium identity grants; keep UUID/name/backend connection/challenge/expiry checks and HTTP off main thread.
+- Use `/webconnect CODE password`: website issues five-character random code valid ten minutes, actual command sender must match requested nickname, user chooses persistent 5–64 ASCII non-whitespace password excluding case-insensitive substring `password`. Store Argon2id separately from monetary PIN; approval alone never grants browser session. Login takes nickname/password; setup/reset revokes prior sessions, devices, and competing challenges.
+- Disable native `spigot.yml` `commands.log` before exposing password commands. Paper may log before PlayerCommandPreprocessEvent, so cancellation/redaction alone is insufficient. Keep proxy command logging disabled and audit spy plugins separately. Never print secrets in tests or logs.
+- Include new challenge polling paths in existing GET throttles; serialize account password resets before challenge locks, index cleanup queries, and test concurrency beyond DB pool capacity. Release/fence plugin pending requests across disable/re-enable, including disconnected players.
+
+## Noesantara minigames login preference (legacy PIN flow)
 
 - Use one `/web approve CODE` command to approve browser verification; do not require a second `/web confirm`. Keep proxy-auth identity checks, browser-bound expiring challenge, exact login/reset purpose, PIN verification, replay controls, and disabled unsafe transfers intact. Explain that codes from other people grant browser access. Read Vault only on the server thread; perform HTTP off-thread and recheck current player/auth after preparation and before approval.
 - Give minigames PIN fields independent accessible eye toggles, hidden by default, without changing values or submitting forms.

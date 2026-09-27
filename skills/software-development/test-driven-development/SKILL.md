@@ -354,6 +354,8 @@ Never fix bugs without a test.
 ## Durable Wallet Game Checks
 
 - Run money tests against a separate loopback MariaDB instance and randomized disposable databases; never load deployment `.env` or seed real player accounts.
+- Audit every suite connection, including read-only sampler tests that select the system `mysql` schema. When disposable schemas are mandatory, change only a staged test copy to a random owned schema, preserve assertions, restore the copy before build, and verify schema lists before/after. Include shared display tests when counting frontend coverage.
+- For release snapshots sharing installed `node_modules`, run `npm run check -- --incremental false` when tsBuildInfoFile points inside that symlink; this prevents verification from rewriting shared compiler cache. Hash live dist and source before/after, and build only inside a unique staging directory.
 - Test concurrent same-wallet operations before integrating games: `INSERT IGNORE` followed by `SELECT ... FOR UPDATE` can deadlock shared-lock upgrades; an exclusive duplicate-key update avoids that upgrade pattern.
 - Lock own wallet before singleton game room and never lock other wallets during rollover; loss settlement needs only game-entry changes because stakes were debited already.
 - Read authoritative DB time after acquiring game locks; queued cashouts must not settle using stale request-arrival timestamps.
@@ -367,6 +369,9 @@ Never fix bugs without a test.
 - Treat `navigator.onLine === false` as offline, not a falsy value; Node exposes `navigator` without browser connectivity state.
 - Test feature flags with missing, false, and true values; high-risk actions must require explicit server enablement.
 
+- Run generated browser checks in a real browser; successful esbuild bundling does not execute assertions. Serve oversized bundles from a loopback-only artifact server and load a script element rather than sending megabytes through CDP IPC. Record actual assertion results separately from Node test totals.
+- Check challenge expiration again when asynchronous approvals arrive, against both stored challenge deadline and response deadline; polling can cross expiry after request start. Hold stale nickname/status/challenge responses and release them after replacement to verify newer form state survives.
+
 ## MariaDB Wallet Concurrency Checks
 
 - Run money-state tests against a disposable database on a dedicated loopback MariaDB instance when production credentials cannot create isolated databases; never point fixture resets or global settings at a shared production server.
@@ -374,11 +379,45 @@ Never fix bugs without a test.
 - Reproduce same-wallet lock upgrade races with many parallel valid writes. `INSERT IGNORE` followed by `SELECT FOR UPDATE` can deadlock; an idempotent duplicate-key UPDATE obtains the exclusive row lock directly.
 - Separate transport HMAC timestamp from observed presence timestamp. Test older online snapshots arriving after offline snapshots, and historical result retries after snapshot TTL; neither may refresh online balance.
 
+## Express wallet boundary checks
+
+- Exercise case and trailing-slash variants of every feature-gated endpoint. Express default routing can match `/Transfers/` while an exact `req.path` gate checks only `/transfers`; attach guard directly to routes or enforce canonical strict routing, and assert no wallet/DB entry while disabled.
+- Put small wallet parsers ahead of large generic upload parsers; checking `rawBody.length` after a 50MB global parse does not bound allocation. Preserve exact raw bytes for HMAC and test unsupported types and routing variants.
+- Recheck expiration after locking reads and after asynchronous PIN verification/hash or account-binding waits, immediately before issuing credentials or approving challenges. Pre-lock `Date.now()` SQL parameters can expire while queued.
+
 ## Session/challenge race regression checks
 
 - Hold controlled transport responses while exercising real fetch helper and React Query; release old success and old 401 responses after logout, revoke, login/account switch, and session expiry. Assert both cached identity and next mutation's CSRF header, not merely request rejection.
 - Cancel queries synchronously before replacing auth caches; also guard post-JSON side effects with generations because transports can complete despite abort. Keep challenge UI derived from session cache so an absent challenge clears it, and reject approvals whose code no longer matches.
 - Bound locally retired challenge codes through expiry; local memory cancellation does not revoke server cookies or survive a full document reload. Use a server cancellation endpoint if persistent cancellation becomes required.
+
+## Durable provider receipt protocol checks
+
+- Agree provider wire contract before implementing backend proof validation; storage brand guesses or integer-only balance assumptions can break a correct provider. Parse bounded canonical decimal strings with scaled BigInt, bind operation/player/attempt/kind/amount, and distinguish trusted bridge attestation from independent storage proof.
+- Require an explicit durable provider capability plus fresh accepted advertisement for new claims; recheck after queued wallet acquisition. Let proven historical settlement remain independent of new-transfer enablement and live presence. Never infer a durable failed/fenced operation from provider exceptions.
+- Test additive migrations on populated old schemas, repeat them, and assert money remains unchanged; CREATE TABLE IF NOT EXISTS alone does not upgrade columns. Make schema readiness probe required columns.
+- Measure successful HTTP operations beyond pool capacity with p50/p95/max, exact success/error counts, and ledger cardinality; never report rejection throughput as settlement capacity.
+
+## Offline Journal Stress
+
+- Snapshot production source and harness into a dedicated artifact tree before compiling; hash both plus cached dependency JARs, and compare original source hashes after execution. Never borrow mutable plugin build outputs during parallel work.
+- Test cross-process exclusion both directly and after a rejected same-JVM duplicate open. Closing a second descriptor for a locked inode can release process-associated OS locks even while Java still considers its original FileLock valid.
+- Replay identical provider success after acknowledgment and assert acknowledgment remains durable; separately require fresh acknowledgment when UNKNOWN upgrades to newly proven SUCCESS.
+- Separate complete temporary-record recovery liveness from corruption fail-closed safety. Preserve staged files and exact failure traces; a disabled journal is not proof of lost money or duplicate settlement.
+- Keep seeded model counts, named scenario counts, reached assertions, source hashes, and real child exit codes machine-readable. Runtime.halt tests process death, not actual disk power loss.
+
+## Password Transfer Authentication Races
+
+- Test password transfers through real login cookies against a disposable MariaDB schema; pause real Argon2 verification to replace password hashes or expire sessions, then assert balances, transfer rows, and ledger remain unchanged.
+- Keep automatic pending-transfer refunds inside the authenticated transfer transaction; otherwise an expired session can mutate balances before the final authorization check. Recheck expiry after row-lock waits before refund or new hold writes.
+- Avoid range `FOR UPDATE` scans followed by inserts on the same transfer index: adjacent accounts can deadlock on next-key gaps. Discover bounded candidate IDs without locks, then lock each primary key and revalidate status under the already-held wallet lock. Verify successful requests beyond pool capacity, not merely rejection throughput.
+
+## Password Reset Database Races
+
+- Hold account locks before challenge locks across both new password and legacy approval/completion routes; test each legacy route racing reset, because mixed lock order can deadlock even when new-flow concurrency passes.
+- Split UUID/name identity checks into unique-index point reads instead of an OR locking query; inspect InnoDB deadlock output when independent account requests lock unrelated rows.
+- Test expiry after revocation waits, not only after hashing; roll back password, session/device deletion, and challenge approval together when the final deadline check fails.
+- Exercise concurrent distinct reset codes for one account and independent accounts beyond pool capacity; add indexes for challenge revocation predicates and preserve single-use winners.
 
 ## Testing Anti-Patterns
 
