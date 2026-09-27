@@ -28,6 +28,16 @@ Pterodactyl environments expose two programmatic control surfaces:
 - Uploading, inspecting, editing, or backing up server plugins (`plugins/` or `plugins_new/`), configs, and logs.
 - Triggering server power actions or executing console commands programmatically.
 
+## Noesantara minigames economy boundary
+
+- User permits hardening NoeWebWallet/web wallet but does not permit modifying EssentialsX; keep automatic deposits and withdrawals disabled unless user explicitly changes that decision. Preserve provider and real balances.
+- When no provider-owned durable receipt exists, disable journal SUCCESS/FAILED replay as well as new transfers. A startup retry timer can otherwise settle old monetary results despite a disabled feature flag. Retain unresolved journals for reconciliation; backend must reject new certain settlements while disabled, keeping withdrawal reservations held.
+
+## Noesantara minigames login preference
+
+- Use one `/web approve CODE` command to approve browser verification; do not require a second `/web confirm`. Keep proxy-auth identity checks, browser-bound expiring challenge, exact login/reset purpose, PIN verification, replay controls, and disabled unsafe transfers intact. Explain that codes from other people grant browser access. Read Vault only on the server thread; perform HTTP off-thread and recheck current player/auth after preparation and before approval.
+- Give minigames PIN fields independent accessible eye toggles, hidden by default, without changing values or submitting forms.
+
 ## Live Bot Acceptance Rules
 
 - Distinguish connection, authenticated gameplay, chat capture, scripted commands, and AI conversation before promising capabilities. When the user asks an agent to join and follow player chat, do not silently substitute a regex command bot for an AI participant. Explicitly disclose a reduced scope; claim AI participation only after a real model-backed response and safe action are verified in-game.
@@ -121,6 +131,8 @@ When web panel logins are blocked by Cloudflare Turnstile, bypass the web UI ent
      ```
 
 4. **Send Power Signal** (`start`, `stop`, `restart`, `kill`):
+   - Before restart, save the current log and record the stop/start boundary. After starting, require both API state `running` and a new startup sequence with target-plugin enable and `Done (` after that boundary. Merely finding `Done (` or detecting changed file contents is insufficient: `latest.log` can still contain the previous boot plus newly appended shutdown lines while the server is `starting`.
+   - Compare new startup errors with the saved pre-restart log. Report existing unrelated errors separately; do not claim whole-server health from one plugin enabling. Verify database connection completion where applicable and re-download the active JAR to compare its SHA-256 with the tested artifact.
    ```bash
    curl -s -X POST \
         -H "Authorization: Bearer $PTERO_TOKEN" \
@@ -132,6 +144,7 @@ When web panel logins are blocked by Cloudflare Turnstile, bypass the web UI ent
    ```
 
 5. **Send Console Command**:
+   - Inspect command registration and sender restrictions before choosing a smoke command. Player-only GUI commands can return `Incorrect argument for command` from console even when correctly registered; this neither proves GUI failure nor validates gameplay. Use a supported console command for startup checks and an authenticated player for menu acceptance. Do not guess a `help` subcommand.
    ```bash
    curl -s -X POST \
         -H "Authorization: Bearer $PTERO_TOKEN" \
@@ -259,6 +272,9 @@ When auditing server storage or cleaning up obsolete configs (`.old`, `.bak`, `.
    Files deleted via the panel/API are moved into `/.trash/` named after the base64-encoded original path, optionally suffixed with `_YYYYMMDD_HHMMSS`. Decode base64 strings with standard padding (`base64.b64decode(name + '=' * (-len(name) % 4))`) to identify candidates for restoration.
 
 ## Pitfalls
+
+- **Vault SUCCESS is not economy persistence**: For EssentialsX YAML-backed economy, Vault mutation can return SUCCESS before its queued atomic save; bridge journal fsync does not make provider state durable. Never credit external wallets or release reservations based on response alone. Require exact observed delta plus provider-owned async durable receipt/revision with propagated errors, file and directory fsync, and coordinated recovery. Stock `blockingSave()`, pending-write counts, worker reflection, sleeps, or reading YAML are not safe durability barriers. Keep automatic transfers disabled when no verified barrier exists.
+- **Bukkit proxy authentication attestations**: Backend reachability, offline UUIDs, whitelist, or missing AuthMe never establish JPremium login. Use fresh signed proxy login attestations tied to exact Player UUID/name, backend-generated per-connection random challenge, pinned proxy connection, short expiry and replay protection. Parse envelopes with strict streaming JSON, duplicate-field rejection and UTF-8 decoder REPORT; Gson JsonParser can accept lenient syntax/duplicate keys. Clear on disconnect and signed negatives.
 
 - **Dependent bulk renames race**: A single API rename payload containing `active -> active.old` followed by `active.new -> active` can partially apply and return 409. Run dependent renames sequentially (SFTP batch or separate API calls), inspect exact directory state after failure, and verify active/backup hashes before start. Never blindly replay a partial rename batch.
 

@@ -351,6 +351,35 @@ Never fix bugs without a test.
 - When deterministic tests must replace Node crypto entropy, restore the original function and call `syncBuiltinESMExports()` after both replacement and restoration. Keep overrides inside isolated test processes; never add production override endpoints.
 - Test both sides of streak thresholds, interruption by a qualifying result, reset behavior, and maximum output. Remove stale UI claims of independent outcomes when rules depend on history.
 
+## Durable Wallet Game Checks
+
+- Run money tests against a separate loopback MariaDB instance and randomized disposable databases; never load deployment `.env` or seed real player accounts.
+- Test concurrent same-wallet operations before integrating games: `INSERT IGNORE` followed by `SELECT ... FOR UPDATE` can deadlock shared-lock upgrades; an exclusive duplicate-key update avoids that upgrade pattern.
+- Lock own wallet before singleton game room and never lock other wallets during rollover; loss settlement needs only game-entry changes because stakes were debited already.
+- Read authoritative DB time after acquiring game locks; queued cashouts must not settle using stale request-arrival timestamps.
+- Inject SQL trigger failures after wallet changes to prove entry, ledger, and balance roll back together; read persisted results from a separate Node process to verify restart durability.
+- Treat an idempotent ledger hit without its matching game entry as corruption and fail closed, rather than creating a free stake.
+
+## React pages without a DOM test dependency
+
+- Use installed esbuild with CSS loader `empty`, external React packages, and `react-dom/server` to assert rendered access gates and form states without adding a test framework; wrap wouter pages with `Router` and `ssrPath` to avoid browser-location errors.
+- Seed React Query caches by account UUID when checking private history; test that an unrelated account cache never renders after account changes.
+- Treat `navigator.onLine === false` as offline, not a falsy value; Node exposes `navigator` without browser connectivity state.
+- Test feature flags with missing, false, and true values; high-risk actions must require explicit server enablement.
+
+## MariaDB Wallet Concurrency Checks
+
+- Run money-state tests against a disposable database on a dedicated loopback MariaDB instance when production credentials cannot create isolated databases; never point fixture resets or global settings at a shared production server.
+- Test more concurrent requests than pool capacity. Never acquire another connection from the same pool while holding business transaction locks; reserve persistent auth backoff first, and clear only its own attempt token after verification.
+- Reproduce same-wallet lock upgrade races with many parallel valid writes. `INSERT IGNORE` followed by `SELECT FOR UPDATE` can deadlock; an idempotent duplicate-key UPDATE obtains the exclusive row lock directly.
+- Separate transport HMAC timestamp from observed presence timestamp. Test older online snapshots arriving after offline snapshots, and historical result retries after snapshot TTL; neither may refresh online balance.
+
+## Session/challenge race regression checks
+
+- Hold controlled transport responses while exercising real fetch helper and React Query; release old success and old 401 responses after logout, revoke, login/account switch, and session expiry. Assert both cached identity and next mutation's CSRF header, not merely request rejection.
+- Cancel queries synchronously before replacing auth caches; also guard post-JSON side effects with generations because transports can complete despite abort. Keep challenge UI derived from session cache so an absent challenge clears it, and reject approvals whose code no longer matches.
+- Bound locally retired challenge codes through expiry; local memory cancellation does not revoke server cookies or survive a full document reload. Use a server cancellation endpoint if persistent cancellation becomes required.
+
 ## Testing Anti-Patterns
 
 - **Testing mock behavior instead of real behavior** — mocks should verify interactions, not replace the system under test

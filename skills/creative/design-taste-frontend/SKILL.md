@@ -33,6 +33,11 @@ For a dark monitor console matching `https://megconverter.barzzly.com/`:
 - Primary buttons white `#fff` with black text. Secondary controls `#18181b` with `#3f3f46` border. No blue or lime unless reference explicitly contains them.
 - Use 7px–12px radii, subtle borders, restrained blur, dashed work areas, and no neon glow.
 
+## Noesantara inner-page consistency
+
+- Match Minigames headers to Leaderboard/Gallery: `container max-w-6xl mx-auto px-4 pt-8`, heading `text-3xl md:text-5xl font-heading font-extrabold tracking-tight`, header gap `mb-6 md:mb-10`, subtitle `text-sm md:text-base` with 20px/24px line heights and 4px top margin. Do not add a network eyebrow or extra navbar-offset padding; App already lays out navigation.
+- Compare computed title coordinates and typography at desktop/mobile; broad `.mg-page p` CSS can override subtitle line height even when utility classes match.
+
 ## Pre-flight
 
 1. Inspect reference CSS/HTML or screenshot.

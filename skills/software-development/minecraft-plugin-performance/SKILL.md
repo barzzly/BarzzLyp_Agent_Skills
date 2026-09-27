@@ -9,13 +9,15 @@ author: Hermes Agent
 
 ## Procedure
 
+For this user's Minecraft work, use Astra for parent and delegated agents. Inspect the delegation model override and verify a spawned child's actual model; changing the parent does not change a pinned child model. If correcting model selection, stop old-model workers before assigning their files to replacements.
+
 1. Establish build gate before edits.
    - Run project identity/verification scripts, `git diff --check`, and project build command.
    - If dependency resolution blocks compilation, record exact missing artifacts; do not claim runtime compatibility or release a JAR.
 
 2. Audit execution context before optimizing hot paths.
    - Search plugin code for `CompletableFuture.runAsync`, `supplyAsync`, executor services, async scheduler calls, and Bukkit/Paper world/entity/event API calls.
-   - Move Bukkit world reads, entity mutation, events, module transitions, region work, and scheduler-owned state to Paper server scheduler.
+   - Move Bukkit world reads, entity mutation, module transitions, region work, and scheduler-owned state to the appropriate Paper/Folia scheduler. Inspect custom event contracts first: preserve deliberately asynchronous events and separate their surrounding Bukkit operations rather than changing event thread semantics blindly.
    - Keep async work only for data detached from Bukkit state. Never block server thread with `join()` or `get()`.
    - Advertise Folia support only after every entity/world operation is region-scheduler safe; otherwise set `folia-supported: false`.
 
@@ -40,8 +42,13 @@ author: Hermes Agent
 
 6. Verify and report.
    - Run textual safety checks covering plugin identity, Paper/Java target, async Bukkit ban, generator initialization, per-world pool access, and changed regression behavior.
-   - Run `git diff --check`, then full build. Test in Paper server only after build succeeds.
-   - Report verified checks, commit hash if pushed, and exact remaining external blocker.
+   - Freeze production edits before final verification; assign one owner to full builds so concurrent compiles do not leave partial class directories. Re-read interrupted worker files before resuming, and distinguish transient concurrent-edit failures from baseline defects.
+   - Run `git diff --check`, full build, then all registered runnable regressions. Compile-only or source-token checks do not replace executing production methods.
+   - Hash the final JAR and the copy loaded by isolated Paper; rerun affected runtime gates after any production edit. Parse named case markers and expected counts, not merely client exit code: clients can exit zero while server assertions fail.
+   - Deliver the built JAR with a short report of verified behavior and remaining limits. Distinguish compiled, built, runtime-tested, and deployed states; do not leave the user with repeated worker-status reports instead of completing integration. Absorb delayed notifications already covered by newer evidence.
+   - Report commit hash only if pushed; do not claim throughput improvement without a measured benchmark or universal compatibility from one Paper version.
+
+For biome-only CustomFishing configuration, read [references/biome-fishing-config.md](references/biome-fishing-config.md): additive pools, gear bypasses, lava preservation, index labels, and configuration verification.
 
 ## Pitfalls
 
