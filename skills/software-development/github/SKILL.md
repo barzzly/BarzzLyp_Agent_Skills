@@ -44,6 +44,7 @@ Supporting assets: `scripts/gh-env.sh` + `scripts/git-credential-token.py`
   porcelain lacks (the cheatsheet lists them).
 - Never report CI green without checking `gh pr checks` yourself; never
   claim merged without verifying `state,mergedAt`.
+- For existing-checkout pushes, inspect `git diff --ignore-space-at-eol` when CRLF changes inflate the diff; preserve user line endings unless normalization was requested. Verify baseline tests from a temporary `git archive HEAD` extraction rather than stashing user edits. If HTTPS Git fails while `gh` auth and SSH are configured, use the verified SSH URL for the same repository without changing global credentials or remotes.
 - Read full context before writing: `gh issue view --comments` /
   `gh pr view --comments` — decisions live in threads, not titles.
 - Sweep for duplicates before creating anything:

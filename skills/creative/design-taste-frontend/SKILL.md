@@ -38,6 +38,23 @@ For a dark monitor console matching `https://megconverter.barzzly.com/`:
 - Match Minigames headers to Leaderboard/Gallery: `container max-w-6xl mx-auto px-4 pt-8`, heading `text-3xl md:text-5xl font-heading font-extrabold tracking-tight`, header gap `mb-6 md:mb-10`, subtitle `text-sm md:text-base` with 20px/24px line heights and 4px top margin. Do not add a network eyebrow or extra navbar-offset padding; App already lays out navigation.
 - Compare computed title coordinates and typography at desktop/mobile; broad `.mg-page p` CSS can override subtitle line height even when utility classes match.
 
+## Noesantara localization
+
+- Use existing `useAppSettings` ID/EN language setting for minigames, including login/setup, wallet snapshots, transfer statuses, validation, accessibility labels, and game rules. Avoid em dashes in user-facing copy; use periods or colons. Keep command names, arguments, account identifiers, numeric mutation payloads, and security gates unchanged.
+- Verify language changes preserve form inputs and pending transaction intent. Format display numbers/dates by locale, not command arguments. Unknown backend errors must remain visible rather than disappear behind generic translations.
+
+## Transfer history viewport
+
+- Show the newest two transfer records, retaining older fetched records inside a keyboard-focusable vertical scroll list. For variable status instructions and ID/EN wrapping, size viewport from the first two row heights with ResizeObserver instead of fixed pixels or truncating records. Observe only those rows and disconnect on cleanup; no polling required. Bring browser tab to front before resize assertions because background ResizeObserver delivery can pause.
+
+## Minigames lobby balance
+
+- Use equal-width, equal-height desktop overview columns; move long transfer form into a separate full-width section with equal internal columns instead of stretching one sidebar. Stack on mobile and verify no horizontal overflow.
+- Put amount input and submit button in a shared CSS grid row; helper text belongs below controls. Independent column flex layouts with margin-top:auto misalign actions when copy wraps. Measure input/button top and bottom coordinates.
+- Do not interpret pending session data as a disabled service. Show unavailability only after explicit successful status=false, keep mutation gates fail-closed, and avoid legacy hardcoded explanations that misstate the live service state.
+- When removing verbose asset attribution, retain a concise discoverable credit/license link and complete attribution file; avoid silently dropping CC BY requirements.
+- Run generated wallet and login browser suites on separate fresh documents; both override global fetch/timers and overlap causes false polling failures. Wait for CSS to load before recording layout geometry.
+
 ## Pre-flight
 
 1. Inspect reference CSS/HTML or screenshot.

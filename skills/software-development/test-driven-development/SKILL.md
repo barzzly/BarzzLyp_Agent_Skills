@@ -364,6 +364,8 @@ Never fix bugs without a test.
 
 ## React pages without a DOM test dependency
 
+- When a formerly public helper starts rejecting authorization failures, search every caller, including legacy modals and raw-fetch duplicates. Test private failures independently from public-profile loading, and render account switches before effects run to catch stale private rows. Report active callers outside assigned ownership rather than silently widening edits.
+
 - Use installed esbuild with CSS loader `empty`, external React packages, and `react-dom/server` to assert rendered access gates and form states without adding a test framework; wrap wouter pages with `Router` and `ssrPath` to avoid browser-location errors.
 - Seed React Query caches by account UUID when checking private history; test that an unrelated account cache never renders after account changes.
 - Treat `navigator.onLine === false` as offline, not a falsy value; Node exposes `navigator` without browser connectivity state.
@@ -398,15 +400,26 @@ Never fix bugs without a test.
 - Test additive migrations on populated old schemas, repeat them, and assert money remains unchanged; CREATE TABLE IF NOT EXISTS alone does not upgrade columns. Make schema readiness probe required columns.
 - Measure successful HTTP operations beyond pool capacity with p50/p95/max, exact success/error counts, and ledger cardinality; never report rejection throughput as settlement capacity.
 
+## Best-effort Vault transfer checks
+
+- Test fsynced intent before calling Vault, preserve last observed integer balance for restart UNKNOWN, and replay exact persisted attempts/results without requiring an online player. A local fsync does not prove Essentials async persistence; never label Vault receipts durable.
+- Treat any failure, exception, nonfinite result, response mismatch, or wrong decimal delta after a Vault invocation as UNKNOWN; only pre-invocation fences can be FAILED. Keep UNKNOWN player locks after backend acknowledgment and never auto-reverse.
+- Test provider disable/name changes, signed-auth loss, delayed main-thread callbacks, shutdown, and mismatched confirmations before live plugin integration. Supply explicit main-thread and transport hooks so offline checks can exercise the real engine without real wallets.
+
+- Hold an already-started Vault callback beyond the worker deadline until UNKNOWN is durably acknowledged; then release exact success and require same-attempt durable upgrade, fresh acknowledgment, and exact restart replay without another Vault call. Also close while it is held: stop transport/new work, retain journal until completion, and report a permanently hung provider as unresolved shutdown rather than discarding its result.
+
 ## Offline Journal Stress
 
 - Snapshot production source and harness into a dedicated artifact tree before compiling; hash both plus cached dependency JARs, and compare original source hashes after execution. Never borrow mutable plugin build outputs during parallel work.
 - Test cross-process exclusion both directly and after a rejected same-JVM duplicate open. Closing a second descriptor for a locked inode can release process-associated OS locks even while Java still considers its original FileLock valid.
 - Replay identical provider success after acknowledgment and assert acknowledgment remains durable; separately require fresh acknowledgment when UNKNOWN upgrades to newly proven SUCCESS.
+- Verify journal startup with actual `strace -f -yy` fsync paths before first record write; inject EIO at each directory fsync and require startup rejection before claim/intent. Force existing ancestors too: a failed earlier startup can leave directories present but not durably linked. State clearly that syscall ordering and Runtime.halt do not simulate disk power loss.
 - Separate complete temporary-record recovery liveness from corruption fail-closed safety. Preserve staged files and exact failure traces; a disabled journal is not proof of lost money or duplicate settlement.
 - Keep seeded model counts, named scenario counts, reached assertions, source hashes, and real child exit codes machine-readable. Runtime.halt tests process death, not actual disk power loss.
 
 ## Password Transfer Authentication Races
+
+- Key password-bearing wallet UI by account UUID plus session CSRF identity so expiry, revocation, and account replacement discard secrets, eye visibility, and retry intent together. Guard async completions with both mount lifetime and current query-cache identity; release held responses before React commits replacement to catch stale private-cache writes that unmount guards alone miss.
 
 - Test password transfers through real login cookies against a disposable MariaDB schema; pause real Argon2 verification to replace password hashes or expire sessions, then assert balances, transfer rows, and ledger remain unchanged.
 - Keep automatic pending-transfer refunds inside the authenticated transfer transaction; otherwise an expired session can mutate balances before the final authorization check. Recheck expiry after row-lock waits before refund or new hold writes.
@@ -418,6 +431,51 @@ Never fix bugs without a test.
 - Split UUID/name identity checks into unique-index point reads instead of an OR locking query; inspect InnoDB deadlock output when independent account requests lock unrelated rows.
 - Test expiry after revocation waits, not only after hashing; roll back password, session/device deletion, and challenge approval together when the final deadline check fails.
 - Exercise concurrent distinct reset codes for one account and independent accounts beyond pool capacity; add indexes for challenge revocation predicates and preserve single-use winners.
+
+## Best-effort bridge settlement checks
+
+- Pin provider identity on each transfer row before claim; test provider switches and feature disablement between creation, claim, and historical settlement. Additive migrations must assign legacy rows their prior provider without rewriting populated provider fields on repeated upgrades.
+- Distinguish timed-out review with NULL outcome from explicitly reported UNKNOWN. Test delayed signed non-invocation failures after timeout, but never let UNKNOWN become failed/refunded; provider exceptions after invocation remain ambiguous.
+- Derive pre-invocation failure reason allowlists from actual engine wire output, not invented receipt fields. Document that HMAC authenticates engine assertions and cannot prove unchanged Essentials/Vault disk durability.
+
+## Single-command deposit verification
+
+- Keep native single-command deposit on the existing authenticated prepare/claim/journal/mutate path. Test RED on missing dispatch and player feedback separately; preserve legacy withdrawal and provider-specific commands.
+- Run insufficient-funds checks before deliberately losing settlement acknowledgments: unacknowledged journals correctly fence subsequent transfers. Compare unchanged balance with the actual pre-command Vault reading, not a decimal literal; official providers can expose binary floating-point conversion differences.
+- Stop and join isolated transfer workers before deleting fixture directories; asynchronous journal initialization/close can race recursive cleanup even after plugin disable returns. Create foreign-owner fixture accounts before assigning transfer UUIDs; preserve database foreign-key constraints.
+
+## Game Router Boundary Checks
+
+- Mount bounded JSON/admission ingress before global upload parsers for every money-game API prefix, not only wallet auth. Exercise production mount statements with case/trailing-slash, chunked, and unsupported-type requests; assert oversized bodies never reach global parsers.
+- Retain admission until game transactions settle after HTTP disconnect; hold room locks, abort eight admitted requests, and require immediate rejection of further work. Middleware-only retention ends before downstream async game handlers finish.
+- Revalidate HTTP session identity under transaction locks after wallet and room waits; test logout during queued join and expiry during queued cashout with unchanged ledger/balance. Keep direct trusted service fixtures distinct from browser identity.
+
+## Uncertain frontend transfer retries
+
+- Keep original request ID, amount, and direction through every ambiguous retry response, including auth/throttle 4xx and malformed 200. A later rejection cannot disprove an earlier commit. Resolve only a validated same-ID own-transfer response; history lists without request IDs cannot safely correlate intent.
+- Replay frozen intent despite balance/presence preflight changes caused by its prior hold; enforce full preflight for new intent. Compose default transport deadline with caller cancellation and cover body reads, preserving explicit abort reasons.
+- Guard game success, errors, and finally writes with both session-cache identity and effect/mutation generation. Key authenticated subtrees by UUID plus CSRF; an alive boolean alone fails cleanup/setup replay.
+- When SSR tests bundle pages as CJS, obtain React Query provider from the same CJS export. Mixing ESM provider and CJS hook creates separate contexts and false missing-provider failures.
+
+## Storefront session and history checks
+
+- Test session insertion/invalidation failures with SQL triggers on disposable MariaDB, and require no cookie before commit. Freeze time across two logins to catch identical JWTs; add random `jti` without changing existing session schema.
+- Test both authentication and history query identity semantics. A matching-account middleware cannot close IDOR when downstream SQL expands Java `Foo` into Bedrock `.Foo`; keep leading dots significant and test actual returned rows after route integration.
+
+## Storefront RCON Payment Checks
+
+- Reproduce mysql2 FOUND_ROWS races against disposable MariaDB using more parallel callbacks/status/admin retries than pool capacity; change claim predicate before remote invocation rather than treating unchanged matched rows as claim wins.
+- Persist per-item intent before RCON and fence unknown/processing forever until independent reconciliation. Test intent, acknowledgment, and final-order DB failures; never call database fencing exactly-once remote delivery.
+- Quarantine every pre-migration undelivered invoice, including pending discounted ranks, because new checkout validation cannot repair historical ownership proof. Test repeated additive migration without changing amounts.
+- Bind provider reference/order and exact gross created invoice amount on callback/detail; distinguish customer fees from merchant net receipts using provider documentation. Keep manual fulfillment pending and exact dotted player identities separate in authenticated history HTTP tests.
+
+- For explicit manual fulfillment, assert one atomic terminal write across status, delivered flag, state and timestamp; then reject downgrades using each terminal marker independently. Test mixed carts with unchanged acknowledged journals, a held active remote claim, SQL-trigger write failure, and bridge INSERT defaults. Keep processing/review fenced rather than treating manual approval as an uncertainty bypass.
+
+## Admin CSRF rotation checks
+
+- Reproduce retired-admin authorization with a valid JWT and matching active DB row; require both identities to equal current configured admin exactly. Test health-check and delegated private-history gates too.
+- Test session-bound CSRF with two real logins and replay the first CSRF against the second auth cookie. Replace plain CSRF fixtures with issued login tokens so persistence/logout fault tests still reach their intended DB operation.
+- Exercise production and development cookie modes against disposable DB schemas. Assert __Host- cookie issue/clear attributes, production rejection of legacy cookies, and client preference for host cookies while preserving login-response store behavior.
 
 ## Testing Anti-Patterns
 

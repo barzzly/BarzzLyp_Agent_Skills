@@ -28,10 +28,20 @@ Pterodactyl environments expose two programmatic control surfaces:
 - Uploading, inspecting, editing, or backing up server plugins (`plugins/` or `plugins_new/`), configs, and logs.
 - Triggering server power actions or executing console commands programmatically.
 
+## Execution preference
+
+- Prefer direct work in the active session for this user's plugin/web changes and deployment; do not move the critical path into background delegation without agreement. When taking over a stopped worker, inspect current files and test artifacts before editing because interruption does not undo completed writes. Separate worker status from verified test results.
+
+## Noesantara deposit interaction
+
+- Create the deposit request on the website, display its amount and account-bound expiring code, and use `/depositweb CODE` as the single in-game confirmation; do not add a second `/web confirm` step. Keep withdrawal behavior separate unless requested.
+- Check current Vault balance on the main thread immediately before withdrawal from the game account, not only when generating the web request. Reject insufficient funds before invoking the money mutation, with clear player feedback and zero website credit. Preserve signed identity, claim, journal, expiry and idempotency checks around this shortcut.
+- Test balance falling between request and confirmation, duplicate confirmation, foreign-owner and expired codes, and insufficient funds through the native command. Checking balance prevents overspending, not EssentialsX crash rollback.
+
 ## Noesantara minigames economy boundary
 
-- Preserve existing EssentialsX/Vault/shop integration and real balances. User permits a scoped EssentialsX persistence patch for durable Noe transfers, subject to compatibility and isolated crash tests. Preserve Vault API behavior; do not replace economy providers or deploy unverified builds. A balance-persistence patch does not make ShopGUIPlus inventory delivery and money changes one atomic transaction.
-- Without provider-owned durable receipts, never replay previous-boot monetary mutations or treat previous-boot unacknowledged SUCCESS/FAILED as certain. Quarantine ambiguous journals for reconciliation; backend must reject new certain settlements while disabled and retain unknown withdrawal reservations. Same-process idempotent result delivery in explicitly accepted best-effort mode remains distinct from provider durability.
+- Preserve existing EssentialsX/Vault/shop integration and real balances. Use unchanged EssentialsX for the explicitly approved best-effort bridge; do not infer permission to patch or replace the provider from a bridge feature request. Require separate scope, compatibility checks and isolated crash tests for any provider persistence change. A balance-persistence patch does not make ShopGUIPlus inventory delivery and money changes one atomic transaction.
+- Without provider-owned durable receipts, never replay previous-boot monetary mutations or treat previous-boot unacknowledged SUCCESS/FAILED as certain. Quarantine ambiguous journals for reconciliation; backend must reject new certain settlements while disabled and retain unknown withdrawal reservations. In explicitly accepted best-effort mode, replaying a persisted exact result after restart is distinct from repeating the money mutation; retain UNKNOWN reservations and label provider rollback risk rather than claiming durable settlement.
 
 ## Noesantara NoeWebApi password login
 
@@ -44,6 +54,21 @@ Pterodactyl environments expose two programmatic control surfaces:
 
 - Use one `/web approve CODE` command to approve browser verification; do not require a second `/web confirm`. Keep proxy-auth identity checks, browser-bound expiring challenge, exact login/reset purpose, PIN verification, replay controls, and disabled unsafe transfers intact. Explain that codes from other people grant browser access. Read Vault only on the server thread; perform HTTP off-thread and recheck current player/auth after preparation and before approval.
 - Give minigames PIN fields independent accessible eye toggles, hidden by default, without changing values or submitting forms.
+
+## Bridge release verification
+
+- Test the exact final JAR against real Paper, the official economy provider, and isolated web backend/DB; fixture-only source corrections do not validate the release. Compare reviewed source hashes and runtime JAR hashes before deployment.
+- Select the website build from its verified manifest, not a remembered staging directory; later UI changes can leave an older valid build beside the intended release. Verify staged source and asset hashes, back up live dist/environment/database, apply additive migrations, deploy that exact dist, then reload only the target PM2 app with `--update-env`.
+- Verify public HTML references and downloaded asset hashes against deployed files, then check the session endpoint's fresh matching bridge capability. An enabled configuration flag alone does not prove plugin/backend connectivity. Probe native and namespaced command registration separately without transferring money, and explicitly distinguish these smoke checks from authenticated live transaction tests.
+- Verify economy provider names from runtime rather than guessing: official EssentialsX 2.22.0 reports `EssentialsX Economy`.
+- Persist newly created journal directory entries by forcing parent directories before readiness; test syscall ordering and injected fsync failures. File fsync alone cannot preserve a missing directory entry.
+- Retain definitive late mutation results after timeouts. Upgrade only the same validated attempt from UNKNOWN to SUCCESS, persist before delivery, and require a fresh acknowledgment. Never infer a refund from a timeout.
+- Reset browser secret fields and private async state on session identity changes; test expiry, replacement login, and stale completions in an actual browser, not only a bundling test.
+
+## Dungeon lifecycle regression checks
+
+- Scope combat isolation to physical session containment, not registration alone: PRIVATE sessions register before async copying, and completed sessions stay indexed during evacuation. Check players, tameable mobs, projectiles, PREPARING and post-exit states so dungeon entry cannot grant outside-world immunity.
+- Exclude wave-listed spawn points from automatic objective spawning even when their explicit `waveId` is null. Establish wave ownership before first spawn; otherwise existing mobs can fill the cap without wave tags and their deaths never complete a zero-timeout wave.
 
 ## Live Bot Acceptance Rules
 
@@ -60,6 +85,8 @@ For ordered setup, authentication, resource-pack handling, and chat checks, read
 - SSH Key pair generated locally (`~/.ssh/id_ed25519.pub`).
 - SFTP connection details from server Settings (Host, Port, Username format `<user>.<server_id>`).
 - Optional Client API Key (`ptlc_...`) from Account Settings -> API Credentials for console & power control.
+
+For bulk glyph conversions, read [Nexo glyph migration](references/nexo-glyph-migration.md).
 
 ## Procedure 1: SFTP File Access via SSH Key (Bypass Web/Cloudflare)
 
@@ -280,7 +307,7 @@ When auditing server storage or cleaning up obsolete configs (`.old`, `.bak`, `.
 
 ## Pitfalls
 
-- **Vault SUCCESS is not economy persistence**: For EssentialsX YAML-backed economy, Vault mutation can return SUCCESS before its queued atomic save; bridge journal fsync does not make provider state durable. Never credit external wallets or release reservations based on response alone. Require exact observed delta plus provider-owned async durable receipt/revision with propagated errors, file and directory fsync, and coordinated recovery. Stock `blockingSave()`, pending-write counts, worker reflection, sleeps, or reading YAML are not safe durability barriers. Keep automatic transfers disabled when no verified barrier exists.
+- **Vault SUCCESS is not economy persistence**: For EssentialsX YAML-backed economy, Vault mutation can return SUCCESS before its queued atomic save; bridge journal fsync does not make provider state durable. Never credit external wallets or release reservations based on response alone. Require exact observed delta plus provider-owned async durable receipt/revision with propagated errors, file and directory fsync, and coordinated recovery. Stock `blockingSave()`, pending-write counts, worker reflection, sleeps, or reading YAML are not safe durability barriers. Keep durable mode disabled without that verified barrier. Enable a separate best-effort mode only with explicit acceptance of provider rollback risk, exact-delta receipts, durable bridge journaling, idempotent result delivery and conservative UNKNOWN handling; never silently downgrade durable mode.
 - **Bukkit proxy authentication attestations**: Backend reachability, offline UUIDs, whitelist, or missing AuthMe never establish JPremium login. Use fresh signed proxy login attestations tied to exact Player UUID/name, backend-generated per-connection random challenge, pinned proxy connection, short expiry and replay protection. Parse envelopes with strict streaming JSON, duplicate-field rejection and UTF-8 decoder REPORT; Gson JsonParser can accept lenient syntax/duplicate keys. Clear on disconnect and signed negatives.
 
 - **Dependent bulk renames race**: A single API rename payload containing `active -> active.old` followed by `active.new -> active` can partially apply and return 409. Run dependent renames sequentially (SFTP batch or separate API calls), inspect exact directory state after failure, and verify active/backup hashes before start. Never blindly replay a partial rename batch.
@@ -334,7 +361,7 @@ When auditing server storage or cleaning up obsolete configs (`.old`, `.bak`, `.
 - **Webstore Player Profiles & Donation Calculation**:
   1. **Historical Log Merging & Preventing Double-Counting**: When historical donations exist in a dedicated dataset (e.g. `DONATORS_DATA`) and are subsequently imported into the MariaDB `transactions` table, ensure the merge function (`mergeDonatorsWithTransactions`) treats the database as the authoritative single source of truth when populated. Adding static historical arrays on top of imported database rows causes player totals to double (e.g. inflating Rp 1.84M to Rp 3.68M). Only use the static array as a fallback when database rows are empty or unreachable.
   2. **Channel Donation Log Scraping (Bot Embeds + Human Codeblocks)**: When scraping donation log channels (e.g. `#donation-log`), never parse embed objects alone. Up to half of transactions may be posted by human staff as plain-text markdown codeblocks (`\`\`\`NAMA: ... HARGA: ...\`\`\``). Parse both embed descriptions/fields and raw message content. Detect couple donations (`+`, `&`, `dan`, `💖`, `❤️`) and split the price 50/50 so each partner's order history and donation total receive equal credit.
-  3. **Bedrock Dot Normalization & Case-Insensitive Queries**: Bedrock players frequently carry a leading dot prefix (`.TherryVa`). Preserve the dot in canonical display names, but write transaction lookup endpoints with flexible case-insensitivity and dot-stripping: `WHERE LOWER(username) = LOWER(?) OR LOWER(username) = LOWER(?) OR LOWER(username) = LOWER(?)` with `[rawUser, cleanUser, '.' + cleanUser]`. This ensures players see their full order history regardless of whether their browser session logged in with uppercase, lowercase, or without the prefix.
+  3. **Private history identity**: Require a server-authenticated owner or active admin. Match `WHERE LOWER(username) = LOWER(?)` against the verified canonical name only. Preserve leading dots: `Foo` and `.Foo` are distinct accounts. Never combine dot-stripped variants for private purchase history; display-only nickname selection is not authentication.
   4. **Discord Bot `/donation` Amount Parsing**: When parsing user-input price fields in Discord slash commands or modals, never use raw digit stripping (`replace(/[^0-9]/g, '')`). Shorthand inputs like `50k` or `120k` will reduce to `50` or `120`. Always support `k` multipliers (`* 1000`), strip currency affixes (`rp`, `rupiah`, `rb`), and discard decimal cents (`,00`) before extracting values.
   5. **Trust Device Session Expiry**: In storefronts with username-only login modals, enforce a 1-hour trust device session window (`USER_SESSION_MS = 3600000`). Store `loginAt: Date.now()` in persistent local storage. Attach an automated watchdog timer in the root application component that evaluates `checkSession()` periodically (every 30s) and on window `focus` / rehydration, automatically clearing user and cart state upon expiration to prevent open sessions on shared devices.
   6. **Iconography Perceived as Emojis**: Users frequently perceive vector/SVG icons (`<Receipt />`, `<LogOut />`, `<Crown />`, `<Trophy />`) as "emojis". When instructed to remove all emojis, strip decorative icon pictograms from navigation buttons, card headers, and badges in favor of strict, clean typography.

@@ -53,11 +53,35 @@ For biome-only CustomFishing configuration, read [references/biome-fishing-confi
 
 For durable economy transfer work, load [references/durable-economy-review.md](references/durable-economy-review.md): account ownership, async snapshot atomicity, pending-fund fences, exact receipts, and release layers.
 
+## Offline wallet expectations
+
+- For Noesantara minigames, the user expects ECO RPG balances to remain inspectable while the player is offline and cares about Minecraft request/load costs. Distinguish last-known cached balance from a fresh offline-provider lookup; label snapshot age, never present stale data as realtime, and never use display caches to authorize transfers.
+- Explain browser-to-web polling separately from plugin-to-web batch publishing. Verify actual intervals and provider calls from code before quoting them; do not infer live TPS impact from architecture alone.
+
+## Offline wallet display
+
+- Prefer existing web-DB snapshots for offline balance display when minimum Minecraft overhead is priority. Return a separate `lastKnownIngameBalance` display-only field; keep `ingameBalance` null while offline/stale so existing transfer gates remain fail-closed. Preserve original timestamp, label cached data explicitly, handle zero versus missing snapshots, and test logout presence without refreshing age. Do not add offline account scans, per-visitor Minecraft calls, or new cache processes for data already stored.
+- Do not equate no added Minecraft work with measured zero CPU/RAM. State unchanged polling and provider behavior; quantify usage only with runtime measurements.
+
+## Snapshot efficiency checks
+
+- For NoeWebApi bug/performance work, keep execution foreground when requested. Target low measured CPU/allocation without promising zero usage; preserve live Vault checks and fsync safeguards.
+- Reduce unchanged empty-presence heartbeats only below backend capability TTL; publish first player, last disconnect, and provider changes immediately and retry failed transport on normal ticks. Do not cache balances used to authorize money mutations.
+- Precompile per-player validation patterns. Isolate individual Vault read failures so one unavailable account does not suppress healthy players; omit unavailable account rather than invent its balance.
+- Rebuild the fixture-loaded JAR after class edits: PaperTest loads plugin classes from the JAR, so compiling build/classes alone tests stale code. Measure CPU time and allocated bytes separately from retained heap, report mocked provider/transport boundaries, and avoid presenting microbenchmark reductions as live-server savings.
+
 ## Pitfalls
+
+- Isolate snapshot-only release source lists when transfer workers share checkout; preserve exact JAR and verification outside mutable build outputs before releasing ownership. Compile cached official Vault API into dependency-only classes, never shade vendor classes into bridge JAR. Missing Vault linkage must remain inside optional snapshot boundary so web authentication still loads.
 
 - Guard same-JVM file ownership before opening another channel to an already locked inode; closing a rejected duplicate descriptor can drop process-associated POSIX locks while Java still reports the original FileLock valid. Reserve canonical path before open, release on actual close, and test a separate-process challenger after a rejected duplicate constructor.
 - Keep durable-success acknowledgement monotonic: replaying the exact stored receipt must preserve ACK and avoid a rewrite. Recovery must query provider receipts, never replay monetary mutation; bound HTTP retries per recovery cycle so outage recovery cannot monopolize the shared IO queue.
 
+- Before exact-JAR combined acceptance, check copied backend relative imports, snapshot source hashes, and pin disposable DB identity with `SELECT @@port,@@datadir`. Afterward compare copied inputs with current sources and read back schema absence, closed loopback ports, and stopped fixture processes. Report unrelated concurrent source changes separately; they invalidate whole-web freeze claims, not unchanged copied-module evidence. Keep native Bukkit dispatch distinct from client-packet command coverage and manually seeded snapshots distinct from production publication.
+- Validate the current ServicesManager economy provider name against real runtime evidence, not Vault startup log labels; EssentialsX may register `EssentialsX Economy` while Vault logs `Essentials Economy`. Exercise native PluginCommand dispatch through production HTTPS/HMAC wiring and rerun exact unmodified release bytes after correcting fixtures.
+- Saturate signed-auth replay caches in tests before sending fresh revocation. Capacity rejection must clear positive authorization and advance its issuance high-water mark; otherwise a dropped logout preserves access or an older positive revives when entries expire. Keep unsigned/mismatched input unable to alter grants.
+- Filter unrelated command labels before regex argument splitting. Benchmark the actual JAR-loaded handler with CPU time and allocation counters; keep case-insensitive/namespaced labels, cancellation, and password scrubbing regressions unchanged.
+- Include cached Vault API provider JAR in isolated reflection probes when plugin fields reference Economy: getDeclaredField can resolve every declared field type even though optional Vault absence does not prevent normal auth startup. Do not shade Vault into production plugin to fix a probe dependency.
 - Bound whole HTTP exchanges, not only response headers: JDK `BodyHandlers.ofInputStream()` can return before body arrives, leaving `readNBytes` stuck beyond request timeout. Use a fixed-size subscriber, timed completion wait, cancellation on timeout/interruption, and a real TLS partial-body regression; keep waiting on dedicated IO only.
 - Spread heartbeat and balance collection over bounded ticks; publish full presence snapshots only. Guard incremental iterators with a membership/auth generation, reject stale queued batches, and document that continuous churn can defer snapshots. A per-tick item cap is not a latency guarantee for arbitrary third-party Vault calls.
 - Test Gson parser modes with signed malformed fixtures. `setLenient(false)` in Gson 2.10.1 remains legacy-strict and accepts uppercase booleans and some non-JSON strings. Preserve cross-plugin Gson compatibility while rejecting lexical violations; never assume parser naming proves strictness.
