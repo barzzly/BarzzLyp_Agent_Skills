@@ -86,4 +86,6 @@ When mining fails with `enchantments.concat is not a function`, inspect installe
 
 ## 6. Report runtime honestly
 
+- For an explicit request to keep `LypPerfTest` in `noerpg` until told to stop, use idle-only mode without an automatic logout timer; that request overrides the bounded smoke-test default. Do not implicitly enable AI chat/gameplay. Retain process handle/PID for explicit logout, verify backend transfer and fresh heartbeat, and disclose headless mode. Do not promise immunity to server kicks or network loss. Absorb superseded-process completion notices silently when the active session is unaffected.
+
 Use a background PTY with stdin for operator-driven sessions and a finite lifetime. Verify current process plus fresh keepalives/backend state before saying online. State which functions remain automatic while the agent is not taking a turn; log capture does not mean an AI is continuously reading and replying. Treat old-process completion notices separately from the active session, and report only changed conclusions.

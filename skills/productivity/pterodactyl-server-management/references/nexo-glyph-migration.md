@@ -1,5 +1,16 @@
 # Nexo glyphs, branding, and visual acceptance
 
+## DamageIndicator literal glyph tokens
+
+- For DamageIndicator 1.24.0, reproduce with its actual DisplayBuilder: `bold-indicators: true` inserts legacy bold before every character, splitting `:sword:` and `:heart:` before Nexo replacement. Set global bold false and prefix each existing damage/heal format once with `&l`; preserve thresholds, numeric placeholders and other settings. Verify semantic-only YAML delta, native reload command `damageindicator:damageindicator reload`, fresh completion log and unchanged JAR.
+- Do not infer disabled Nexo parsing from stale `Plugin.packets.disable_glyph_handler: true` alone: installed Nexo 1.19.1 can retain this setting without consuming it. Trace actual bytecode and outgoing packet behavior before changing global parser settings. Native DamageIndicator holograms exclude their source player from viewers; use separate source entity/client for metadata checks. Assert expected Unicode glyph and `nexo:default`, not absence of contiguous word `sword`, because per-character format codes hide that substring. Packet proof does not certify graphical rendering or unrelated unidentified items.
+
+## MMOItems gradient-split glyph tokens
+
+- When a valid glyph token appears literally inside an item-name gradient, test actual MMOItems-generated components through Nexo: gradient splits each character across differently colored components, so literal replacement cannot match across them. Close the gradient before the affected glyph token, preserving all other config fields and original item-name gradient. Use parsed semantic equality to prove name-only edits; never replace premium JARs for this config defect.
+- Enumerate every item YAML entry separately from registered runtime templates. Files whose types are absent from item-types.yml are not runtime items; report config audit versus generated/native packet counts explicitly. Native audits must tolerate legitimately absent custom names and inspect both name components plus lore. Pace inventory batch commands below native spam limits and persist IDs/results.
+- Verify fresh native item packets contain expected glyph codepoint/font and no remaining textual tokens, then native `mmoitems reload`, exact config readback and unchanged JAR hashes. Report existing missing custom-skill warnings separately. New templates do not automatically rewrite old player items; do not force global item updates that could alter stats/gems. Check loopback ports before starting fixtures and leave independently owned test clients/servers untouched.
+
 ## 1. Discover actual sources and scope
 
 - For Noesantara tag additions, merge glyph definitions into the existing `Icon Tags ( 0xSTART - 0xEND )/Icon Tags ( 0xSTART - 0xEND ).yml`, not a standalone pack-named YAML. Derive both folder and filename ranges from actual minimum/maximum registered chars; preserve IDs/placeholders/metrics, move redundant definition files outside glyph tree, reload and verify one provider per char.
