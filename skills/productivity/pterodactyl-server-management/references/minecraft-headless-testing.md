@@ -75,6 +75,15 @@ When mining fails with `enchantments.concat is not a function`, inspect installe
 - For user-authorized simulated collection tests, inspect live `commands.yml` and loot IDs, then use `customfishing statistics query <online-test-player> AMOUNT_OF_FISH_CAUGHT` before and after `customfishing statistics add <online-test-player> AMOUNT_OF_FISH_CAUGHT <loot-id> 1`. Query requires online loaded user data. Verify actual index window separately; stat success does not prove visibility.
 - Check loot `disable-stat` before expecting index inclusion. Native index excludes those entries even if admin commands manually add their counts; report exclusion rather than changing gameplay config without authorization. Amount-only additions leave size record unchanged; disclose command simulation, not real catch.
 
+## Isolated dungeon QA pitfalls
+
+- Resolve current player session at each manual harness command; cached sessions from earlier runs produce false stale-world failures. Preserve named successful result files before scratch diagnostics overwrite them.
+- Respect configured cooldown after success, failure, and timeout; an online client or accepted console command does not prove a new session started. Require the EntryResult and running-session state before assertions.
+- Hold native X11 key/button presses across a short delay so Minecraft receives them. Scale screenshot coordinates to actual X11 window dimensions; screenshots of a death menu cannot prove loot UI state.
+- Separate native combat from scripted lifecycle verification. Record protocol kills and health, GUI inventory deltas, blocked-deposit unchanged contents, and full-run gaps independently. Pathfinder timeout alone does not prove map unreachable; cross-check collision geometry and actual adjacent walkable cells before editing artwork.
+- Inspect persisted player Invulnerable, gamemode, armor and effects before native survival tests; fixture invulnerability can survive logout. Exclude contaminated runs and disclose replacement gear after death as assisted progression, not balance proof. Begin combat immediately after crossing a wave trigger; operator delay and synchronous pathfinding can starve attacks.
+- Test reload against actual implementation contract: RukhDungeon reloadAll pins active templates and keeps sessions running. Verify same instance, continued native combat/loot, then leave/disconnect cleanup; do not reuse an old fixture expecting reload to terminate runs. Record timeout start/end positions because a travel-budget timeout can occur after substantial valid progress.
+
 ## 6. Report runtime honestly
 
 Use a background PTY with stdin for operator-driven sessions and a finite lifetime. Verify current process plus fresh keepalives/backend state before saying online. State which functions remain automatic while the agent is not taking a turn; log capture does not mean an AI is continuously reading and replying. Treat old-process completion notices separately from the active session, and report only changed conclusions.

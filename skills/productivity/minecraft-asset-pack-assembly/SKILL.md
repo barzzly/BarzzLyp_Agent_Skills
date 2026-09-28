@@ -55,6 +55,29 @@ Build clean, deployable plugin data from vendor archives while preserving asset 
    - ZIP parent folder so archive extracts as one named directory.
    - Run `ZipFile.testzip()` and verify archived file count equals staged file count before sending.
 
+## Badge and glyph artwork previews
+
+- For screenshot-only reconstruction, distinguish flattened RGB promotional previews from original RGBA textures before promising fidelity. Inventory every requested tag; preserve originals and label recovered textures as reconstructions. Occluded pixels and original alpha cannot be verified from flattened previews.
+- If vision requests return HTTP 413, make a separate JPEG preview at at most 768 pixels on the longest edge, quality 80; retry that preview. For small details, use tightly cropped original-resolution regions instead of enlarging the full image. Never replace source files with reduced previews.
+
+1. Resolve the exact target texture before drawing: tag and rank namespaces can contain identically named PNGs with different dimensions. Read source dimensions, RGBA alpha bounds, and glyph height/ascent when available; do not substitute the website wordmark for the in-game tag by filename alone.
+2. Inspect the original at native size and an integer nearest-neighbor enlargement. Tiny stylized lettering is easily misread; confirm the actual letters before redesigning. Inspect current brand artwork separately for palette and style.
+3. Preserve the requested canvas dimensions and transparency. Match apparent footprint and baseline as well as canvas size; check alpha bounds after downsampling because antialiasing can expand edges or clip bottom ornaments.
+4. For Noesantara tag concepts, follow current requested lettering: user rejected generic block `NOE` and requested only `N`, with ornate detail comparable to original noetags. Prefer extracting/masking actual crystalline N from current logo over inventing a font. Use royal blue `#0038FF` with icy `#90E0F0` highlights and intricate ocean curls instead of feathers; avoid broad flat swooshes. Treat each revision as unapproved until user accepts.
+5. Use Pillow for small deterministic artwork when sufficient: draw letter masks and sampled curves at higher resolution, apply gradients through masks, then downsample once with LANCZOS. Inspect the final native-sized PNG, not only the large working drawing; keep letter counters and dark separations legible.
+6. Deliver a preview sheet with nearest-neighbor enlargement plus true-size samples on dark and light backgrounds. Label exact pixel dimensions and retain a separate transparent PNG; the opaque preview sheet is not the deployable texture.
+7. When the user asks for preview first, stop after sending the preview. Do not upload, regenerate the resource pack, change glyph settings, or restart the server until separate installation approval. State clearly that the concept is not installed.
+
+## Reconstructing badges from flattened promotional images
+
+- Inventory and hash source bytes before processing; distinguish covers, detail screenshots, and actual transparent textures. Account for every requested label programmatically and verify ambiguous lettering with full-resolution crops rather than thumbnail OCR.
+- When image inspection rejects large PNG payloads, create <=768px JPEG previews and separate small full-resolution detail crops. Keep sources untouched.
+- Use guided silhouette masks plus selective scene-color removal; global sky/cyan keying can erase opaque pale ice and wing interiors. Restrict ambiguous color removal to silhouette edges, protect interiors, and inspect source-versus-cutout comparisons before accepting results.
+- Preserve genuine detached ornaments. For translucent bubble rings, remove scene-filled centers but document uncertain rims; never invent hidden segments and call them recovered.
+- Label chosen downsampled dimensions as reconstruction-native, not original vendor resolution. Retain high-resolution masked references, disclose omitted glow and edge-color uncertainty, and distinguish complete roster reconstruction from exact original recovery.
+- Preview every asset at 1x and integer nearest-neighbor zoom on both light/dark backgrounds; size rows for the tallest sprite so preview clipping cannot masquerade as missing artwork. Verify RGBA alpha extrema, trimmed nonempty bounds, zero RGB under transparent pixels, config paths, source hashes, and archive member count/bytes.
+- ItemsAdder font images use `contents/<namespace>/textures/font/<name>.png` with `font_images` entries containing `path: font/<name>.png`, `scale_ratio`, and `y_position`. Verify against current official docs. Large ornate badges need taller initial metrics than chat icons; document client-untested baseline and nametag integration separately. Do not assume ItemsAdder-assigned glyphs match a standalone vanilla font's codepoints.
+
 ## Standing Rules
 
 - User wants finished folder shaped like working reference pack, not copied reference assets.

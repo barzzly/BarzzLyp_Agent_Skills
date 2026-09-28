@@ -31,10 +31,18 @@ Pterodactyl environments expose two programmatic control surfaces:
 ## Execution preference
 
 - Prefer direct work in the active session for this user's plugin/web changes and deployment; do not move the critical path into background delegation without agreement. When taking over a stopped worker, inspect current files and test artifacts before editing because interruption does not undo completed writes. Separate worker status from verified test results.
+- For explicitly authorized timed background work, resolve the deadline in the user's timezone, reserve verification/cleanup time, and track remaining acceptance checks separately from process exit. If a worker ends early with unfinished checks, inspect its artifacts and remaining time before resuming a single writer; a scheduled report does not continue the work. On continuation, mark the shared status active before launch and retain earlier evidence so the report cannot mistake an old final status for the new run.
+- In progress and release replies, state target server, local-only versus deployed status, and JAR changes separately from YAML changes. Verify the active remote JAR against the release manifest before answering whether it changed; an unchanged filename or version string does not prove unchanged bytecode. List concrete engine fixes, configured gameplay content, and remaining gameplay gaps rather than an unsupported completion percentage.
+
+- When the user stops a background mission and its reminder, inspect both worker processes and scheduled jobs, remove the matching report/reminder, and stop only still-running mission workers and test clients. Verify both surfaces afterward; stopping automation does not authorize stopping the production game server or reverting deployed JARs/configs. Report running workers separately from waiting schedules and unrelated preview servers.
+
+## Noesantara message branding
+
+- Prefix NoeWeb player messages with `NoeWeb >> `: six-letter gradient from `#0038FF` to `#90E0F0`, gray separator, white body. Preserve original message text and transaction behavior; cover transfer outcomes/errors and webconnect replies, not only usage messages. Verify stripped text and real client rendering.
 
 ## Noesantara deposit interaction
 
-- Create the deposit request on the website, display its amount and account-bound expiring code, and use `/depositweb CODE` as the single in-game confirmation; do not add a second `/web confirm` step. Keep withdrawal behavior separate unless requested.
+- Create transfers on the website and display amount plus account-bound expiring code. For active Vault transfers, `/depositweb CODE`, `/web deposit CODE`, and `/web withdraw CODE` each process directly; do not require `/web confirm`. Keep prepare/claim, signed identity, expiry, balance, journal and duplicate fences intact. Update website instructions alongside command behavior; preserve inactive provider-specific flows unless separately migrated.
 - Check current Vault balance on the main thread immediately before withdrawal from the game account, not only when generating the web request. Reject insufficient funds before invoking the money mutation, with clear player feedback and zero website credit. Preserve signed identity, claim, journal, expiry and idempotency checks around this shortcut.
 - Test balance falling between request and confirmation, duplicate confirmation, foreign-owner and expired codes, and insufficient funds through the native command. Checking balance prevents overspending, not EssentialsX crash rollback.
 
@@ -65,10 +73,38 @@ Pterodactyl environments expose two programmatic control surfaces:
 - Retain definitive late mutation results after timeouts. Upgrade only the same validated attempt from UNKNOWN to SUCCESS, persist before delivery, and require a fresh acknowledgment. Never infer a refund from a timeout.
 - Reset browser secret fields and private async state on session identity changes; test expiry, replacement login, and stale completions in an actual browser, not only a bundling test.
 
+## RukhDungeon inventory layout deployment
+
+- Audit all 17 bundled menu YAMLs plus Java fallback positions; existing `plugins/RukhDungeon/menu/*.yml` override new JAR defaults, so deploy minimal layout changes alongside JAR. Preserve labels, actions, permissions, item metadata and dungeon data.
+- Use center close column 4 and back column 7 (zero-based), leaving columns 5–6 clear; align supporting actions at column 1 where appropriate. Center partial display rows without changing editable loot slots 0–44 or save boundary. Preserve explicit custom slot arrays.
+- Test legacy Gate/Region `rows: 3`, `close.slot: 26`: centering eight choices would overwrite eighth choice at 26. Keep sequential slots 18–25 when navigation shares picker row; only center when close has separate row. Exercise custom close collision too.
+- Verify all menu constructors on isolated loopback Paper and actual client screenshots; shorten overlong list titles, keep instructions in lore. Check Back destinations and native loot save roundtrip. Keep test fixture plugin off production. Separate local visual proof from live JAR/config hash readback and fresh startup logs.
+
+## Dungeon map-driven progression checks
+
+- Keep each progression gate closed until its area's objective completes. Read live `initial-state`, `required-objective`, and matching `OPEN_GATE` actions together; verify the runtime barrier blocks traversal before completion and opens afterward. Distinguish decorative map entrances from plugin-created barriers in disposable instances, because template screenshots cannot establish runtime locking.
+- For gate screenshot requests, capture the active barrier before objective completion and the same viewpoint after opening. Inspect images before sending, label local-copy versus live-server evidence, and do not substitute an architectural entrance, bossbar, or filename containing 'gate' for a visible locked gate. If only scenery images exist, state that the requested locked-state screenshot is missing.
+
+- Survey a copy of actual template with Paper matching its DataVersion; older Paper can replace unsupported blocks with AIR and invalidate route findings. Retain untouched downloads and include slab/carpet collision surfaces in walk graphs. Shape disposable gate cuboids around existing AIR passages; never overwrite map artwork to fit guessed coordinates.
+- Keep gate regions separate from forward-only gameplay stage indices while retaining ENTER_REGION trigger dispatch. Otherwise traversing multiple gate cuboids can trap respawned players behind an earlier region. Test both index lookup and actual return traversal.
+- Use full-block gate material when projectile gaps matter; bars admit pearls. Test survival teleport causes against closed gates and preserve trusted lifecycle teleports. Paper 1.21.11 exposes chorus behavior as CONSUMABLE_EFFECT; compile-compatible enum-name check may be needed when supporting older API.
+- Probe native and namespaced dungeon commands through authenticated live player. Existing DeluxeMenus can own /dungeon and reject subcommands; preserve menu and use verified /rd alias in dungeon instructions rather than hijacking registration.
+- Distinguish scripted Bukkit lifecycle assertions from native combat and inventory transfer. Keep per-run assertion files, validate counts programmatically, and test separate real clients for party clone isolation/personal claims. Native leave can be leader-only; verify implementation before assuming a member detaches independently.
+- Preserve CRLF files during scoped edits; run git -c core.whitespace=cr-at-eol diff --check when plain checks flag retained carriage returns. Do not normalize unrelated uncommitted patches.
+
 ## Dungeon lifecycle regression checks
 
 - Scope combat isolation to physical session containment, not registration alone: PRIVATE sessions register before async copying, and completed sessions stay indexed during evacuation. Check players, tameable mobs, projectiles, PREPARING and post-exit states so dungeon entry cannot grant outside-world immunity.
 - Exclude wave-listed spawn points from automatic objective spawning even when their explicit `waveId` is null. Establish wave ownership before first spawn; otherwise existing mobs can fill the cap without wave tags and their deaths never complete a zero-timeout wave.
+
+## Dungeon spawn and temporary-world checks
+
+- Treat editor point glass as client-only preview, not proof that template blocks changed. For generated PRIVATE worlds, clear exact persisted point cells before teleport, gates and spawn activation; preserve source template, unmarked blocks, floor below, external-world exits and existing loot chests. Clear stone/legacy glass at loot points so normal chest initialization runs. Test actual SessionService start on copied Paper world, exact mob Y and source reload; never clear all matching glass by material or mutate shared PUBLIC arenas without restoration design.
+
+- Inspect persisted `amount` and `max-alive` together: runtime fills `min(amount, maxAlive)`, so raising Amount alone can leave the default cap at one. Test actual menu clicks from 1 to 10, raise cap with upward Amount edits, and retain explicit lower-cap edits. Back up live spawner and change only requested fields.
+- Scope spawn restrictions to WorldManager-owned instances, including PREPARING, not arbitrary `rd_` prefixes or whole template worlds. Set mob gamerule at WorldInit and cancel non-dungeon CreatureSpawnEvent sources; saved template mobs require EntitiesLoadEvent cleanup, preserving decorations and owned entities.
+- Provider spawn events precede post-return PDC ownership. Wrap ordinary and boss provider calls in world-scoped synchronous permission with finally cleanup; do not allow every CUSTOM spawn. Delayed Mythic skill summons fall outside this scope and need explicit ownership integration if requested. Verify real Paper HARD spawns, cap, six non-dungeon sources, saved-template entities, and preserved armor stands.
+- Trace Multiverse missing-world spam to its caller. TAB animations using `%multiverse-core_alias%` query unregistered disposable worlds repeatedly. Prefer native `%world%` with explicit output replacements preserving existing aliases; do not import every ephemeral world into persistent Multiverse config or silence all warnings. Verify YAML readback and TAB reload; absence of warnings with no player inside an instance is not a live gameplay test.
 
 ## Live Bot Acceptance Rules
 
@@ -86,7 +122,13 @@ For ordered setup, authentication, resource-pack handling, and chat checks, read
 - SFTP connection details from server Settings (Host, Port, Username format `<user>.<server_id>`).
 - Optional Client API Key (`ptlc_...`) from Account Settings -> API Credentials for console & power control.
 
-For bulk glyph conversions, read [Nexo glyph migration](references/nexo-glyph-migration.md).
+## Noesantara visual changes
+
+- Use the website's blue identity for in-game branding: `#0038FF` with icy `#90E0F0` highlights. When asked to remove yellow/green branding, include solid yellow/gold text, animated TAB frames, command highlights, and NPC hologram gradients—not only logo/footer gradients. Preserve semantic error/status and item-rarity colors unless explicitly included; distinguish bitmap icon colors from text formatting.
+- Deliver actual in-game screenshots after visual changes. For “all holograms,” enumerate target IDs first and track readable screenshots separately from attempted captures; an image of an empty location is not visual verification. Include representative images directly and a labeled archive for bulk evidence, with permission/visibility gaps stated.
+- Verify configuration, generated pack, client-loaded pack, and public player delivery as separate gates. Do not call a locally loaded test pack a public deployment, or regenerate and replace a customized pack without preserving its additional assets.
+
+For ordered glyph, theme, pack, and screenshot procedures, read [Nexo glyph migration](references/nexo-glyph-migration.md).
 
 ## Procedure 1: SFTP File Access via SSH Key (Bypass Web/Cloudflare)
 

@@ -70,6 +70,13 @@ For durable economy transfer work, load [references/durable-economy-review.md](r
 - Precompile per-player validation patterns. Isolate individual Vault read failures so one unavailable account does not suppress healthy players; omit unavailable account rather than invent its balance.
 - Rebuild the fixture-loaded JAR after class edits: PaperTest loads plugin classes from the JAR, so compiling build/classes alone tests stale code. Measure CPU time and allocated bytes separately from retained heap, report mocked provider/transport boundaries, and avoid presenting microbenchmark reductions as live-server savings.
 
+## Inventory layout verification
+
+- Inventory symmetry changes must test packaged YAML and empty-layout Java fallbacks together, including row counts; moving only resource slots leaves missing-file menus inconsistent.
+- Center dynamic rows with the same slot passed to item rendering and click registration. Preserve explicit custom slot arrays, list capacities, conditional party controls, destructive confirmation, and editable loot data slots. Keep close/back gaps free of actions and paging arrows distinct from back.
+- For headless Paper API builds whose ItemStack constructors require registry-backed ItemType, use test-only boundary shims and restore Material item-type suppliers and Bukkit.server after each test. Exercise real menu build/set/click methods; do not claim native metadata/NBT or client rendering from those shims. Verify final JAR in separate Paper harness before deployment.
+- Preserve existing CRLF sources during narrow edits; use `git -c core.whitespace=cr-at-eol diff --check` rather than normalizing whole files merely to silence carriage-return warnings.
+
 ## Pitfalls
 
 - Isolate snapshot-only release source lists when transfer workers share checkout; preserve exact JAR and verification outside mutable build outputs before releasing ownership. Compile cached official Vault API into dependency-only classes, never shade vendor classes into bridge JAR. Missing Vault linkage must remain inside optional snapshot boundary so web authentication still loads.
