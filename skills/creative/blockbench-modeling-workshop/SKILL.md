@@ -148,6 +148,8 @@ metadata:
 
 ## Critique loop
 
+- Generate portable README opening paths from actual archive destinations, not workspace derivative folders. Assert each documented BBModel/Java/PNG path exists in planned entries; otherwise a valid ZIP can still ship unusable opening instructions. Keep source-history locations in workspace notes only.
+
 - When modeling gates finish before a reserved final-packaging window, prepare a no-build archive plan rather than repeatedly revalidating unchanged designs. Resolve chosen derivatives and accepted preview hashes, test safe unique relative paths and texture links, then gate actual archive creation by the authorized time window. Verify completed ZIP CRC and extracted bytes; a successful plan does not verify an unexecuted archive-build branch.
 
 - Compare delivery preview hashes against the immutable hashes recorded at visual acceptance; computing fresh hashes alone can silently bless replaced or stale evidence. Fail closed on missing acceptance hashes, and label native GUI/DOM inventory crops separately from Minecraft runtime screenshots.
