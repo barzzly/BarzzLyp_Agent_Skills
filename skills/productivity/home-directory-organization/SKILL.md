@@ -14,6 +14,12 @@ metadata:
 - Preserve hidden shell/application configuration in its expected location. Explain this exception briefly; moving .bashrc, .profile or application dotfiles can break startup and authentication.
 - Leave existing project folders, active workspaces, symlinks and running-task paths unchanged unless explicitly asked to reorganize those too. A request to tidy home is not permission to recursively flatten projects.
 
+## Minecraft consolidation convention
+
+- Keep Minecraft-related work under `/home/barzzly/Minecraft/`: `models/` (including `BlockbenchLab/`), `plugins/`, `packs/`, `docs/`, `backups/`, `projects/`, `maintenance/`, `references/`, and `server-assets/`. Preserve project and network boundaries inside these categories; do not merge similarly named server packs.
+- Before moving a directory, recheck live `/proc/*/cwd` immediately before execution; another session can start work after initial inspection. Leave active directories already within Minecraft in place and document exceptions instead of disrupting their workers.
+- Record recursive file SHA-256, modes and symlink targets before directory renames, then compare after. Update only exact relocation paths in scripts and retain originals. Also inspect extensionless venv launchers/activation scripts and absolute asset symlinks; ordinary code-extension scans miss them. Do not add home-root compatibility links that recreate clutter.
+
 ## Procedure
 1. Resolve the requested home to an absolute path. Inventory immediate children with `Path(root).iterdir()`, recording name, file/directory/symlink type and size. Do not start with a recursive search of the whole home: cache and dependency trees obscure the handful of loose files that matter.
 2. Read loose scripts and inspect filenames before categorizing. Avoid printing credential-bearing configuration or opening sensitive screenshots merely to classify them. Group images under Pictures/Images, Pictures/Generated or Pictures/Screenshots/<subject>; scripts under Scripts/<purpose>; exported config under Configs/<application>; documents under Documents/<purpose>. Prefer suitable existing directories.

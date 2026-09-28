@@ -20,6 +20,9 @@ metadata:
 - **Docker Containers:** Inspect container status with `docker inspect -f '{{.State.Status}}' <container>`. If stopped or unreachable on its exposed port, execute `docker restart <container>` and verify socket readiness after 2 seconds.
 - **Systemd Daemons:** Check unit status with `systemctl is-active <unit>`. Avoid calling restart wrappers on the active gateway from within its own execution context.
 
+## Delivery preference
+- Route VPS Sentinel reports and failure notices to Ruka (Telegram B), using explicit `telegram_b:<mapped_owner_chat_id>`, not Telegram A. Preserve schedule and model when changing delivery. Verify saved job after update; B currently requires its live adapter for delivery.
+
 ## Hermes Cronjob Integration
 - Use `hermes cron create <schedule> "<prompt>" --name "<name>" --script "<script>" --deliver "<target>" --model "<model>" --provider "<provider>"` to establish scheduled AI monitoring.
 - Pass telemetry script stdout directly into the model context. Instruct the model to report anomalies, self-healing recovery actions, and core health metrics concisely without conversational filler.

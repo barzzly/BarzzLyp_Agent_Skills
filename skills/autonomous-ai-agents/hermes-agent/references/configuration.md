@@ -23,6 +23,12 @@ Full reference: https://hermes-agent.nousresearch.com/docs/user-guide/configurat
 
 `hermes config check` reports sections missing from an older config.
 
+### Per-model context pins on custom endpoints
+
+- Check the configured default before setting `model.context_length`: that pin is scoped to the default model/route and is ignored for a different model selected through `/model`.
+- For a specific non-default model, use `hermes config set providers.<name> '<JSON mapping>'` with the existing route's `base_url` and `models: {"<exact model ID>": {"context_length": 800000}}`. Merge existing provider metadata when present; never overwrite unrelated model entries or copy secrets into settings. Passing the mapping as JSON preserves dots/slashes in model IDs that dot-path setters would split.
+- Verify using `hermes_cli.config.get_custom_provider_context_length(model, base_url, config=...)` after reading saved YAML. This verifies local resolution, not upstream support or an already-cached live agent. Keep other models/default unchanged.
+
 ### Toolsets
 
 Enable/disable via `hermes tools` (interactive) or `hermes tools enable/disable NAME`.
