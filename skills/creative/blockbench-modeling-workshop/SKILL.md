@@ -146,7 +146,18 @@ metadata:
 - Align curved fin ray centerlines with membrane radial stations, then sample intermediate linear spans. Matching analytic camber functions alone is insufficient when tessellation stations differ. Report centerline agreement separately from full tube/web intersection topology.
 - For localized fin-edge bowing, apply identical station offsets to paired membrane surfaces and entire corresponding ray rings; taper offsets to zero at roots and endpoints. Verify unchanged anchors, UVs, topology and unrelated elements with an exact native-round-trip diff. Three radial stations still produce an angular mid-span crest, so do not describe a modest silhouette gain as a smooth continuous curve.
 
+## Native shallow alpha-panel studies
+
+- For intentionally flat feathered accessories, use original binary-alpha pixel art on shallow cuboids with only north/south faces enabled, mirrored UVs and separate pendant bones. Keep painted feather layering distinct from individually modeled feather geometry; label Generic studies rather than plugin-ready assets.
+- Export authored external PNGs with native `Texture.getDataURL()` after final project reimport, then assert decoded embedded BBModel bitmap bytes match each external PNG. A source-image save alone does not prove native texture export.
+
 ## Critique loop
+
+- Crop authored sprite textures to alpha bounds before mirroring into model space. Transparent padding can turn into a large false wing-root gap even when pixels and UVs agree; compare paired silhouettes after native rendering.
+- For deliberately flat pixel cosmetics, prefer a few alpha-cut panels over one cuboid per opaque scanline. Keep back-face UV orientation explicit, hide unused edge faces, and verify native texture alpha and animation after reducing geometry. This does not recover unseen vendor thickness or make Generic bone clips Java-item compatible.
+- Treat public preview GIF duration as container timing, not proof of original animation period or keyframes. Inspect composited frame durations, including zero-duration frames, and separate measured timing from reconstructed motion.
+
+- Verify delivered BBModel texture dataURLs decode byte-for-byte to paired external PNGs inside the completed ZIP; nonempty texture fields and file counts alone can miss a stale embedded bitmap. Compare standalone README/contact sheet bytes to the ZIP entries too, and keep the check read-only so it remains runnable after a modeling cutoff.
 
 - Generate portable README opening paths from actual archive destinations, not workspace derivative folders. Assert each documented BBModel/Java/PNG path exists in planned entries; otherwise a valid ZIP can still ship unusable opening instructions. Keep source-history locations in workspace notes only.
 

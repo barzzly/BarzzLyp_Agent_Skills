@@ -30,6 +30,8 @@ Pterodactyl environments expose two programmatic control surfaces:
 
 ## Execution preference
 
+- User requires current healthbar/Minecraft maintenance directly on the existing remote server; do not launch local Paper or graphical Minecraft on the VPS because capacity is insufficient. Use narrow backed-up edits, read-back and native remote diagnostics. Do not run production stress tests or mass spawns as a substitute. Label visual/movement verification gaps when no live player view is available.
+
 - Prefer direct work in the active session for this user's plugin/web changes and deployment; do not move the critical path into background delegation without agreement. When taking over a stopped worker, inspect current files and test artifacts before editing because interruption does not undo completed writes. Separate worker status from verified test results.
 - For explicitly authorized timed background work, resolve the deadline in the user's timezone, reserve verification/cleanup time, and track remaining acceptance checks separately from process exit. If a worker ends early with unfinished checks, inspect its artifacts and remaining time before resuming a single writer; a scheduled report does not continue the work. On continuation, mark the shared status active before launch and retain earlier evidence so the report cannot mistake an old final status for the new run.
 - In progress and release replies, state target server, local-only versus deployed status, and JAR changes separately from YAML changes. Verify the active remote JAR against the release manifest before answering whether it changed; an unchanged filename or version string does not prove unchanged bytecode. List concrete engine fixes, configured gameplay content, and remaining gameplay gaps rather than an unsupported completion percentage.
@@ -106,6 +108,11 @@ Pterodactyl environments expose two programmatic control surfaces:
 - Distinguish scripted Bukkit lifecycle assertions from native combat and inventory transfer. Keep per-run assertion files, validate counts programmatically, and test separate real clients for party clone isolation/personal claims. Native leave must detach any participant independently, including non-leaders; verify both command and world-change paths rather than inferring them from death/disconnect tests.
 - Preserve CRLF files during scoped edits; run git -c core.whitespace=cr-at-eol diff --check when plain checks flag retained carriage returns. Do not normalize unrelated uncommitted patches.
 
+## Objective mob aliases
+
+- Configure per-dungeon `mob-names.<PROVIDER>.<exact mob ID>` in dungeon `config.yml`; values may include a short prefix such as `[Boss]`. Apply aliases only to wave/boss objective presentation, preserving provider+ID grouping, actual spawn IDs, counters and entity nametags. Blank/formatted-empty aliases fall back; persistence must survive editor save and repository reload.
+- Before isolated JAR tests, enumerate plugin descriptors and keep exactly one enabled JAR for each plugin name. Different filenames with duplicate RukhDungeon descriptors can load stale bytecode and cause misleading NoSuchMethodError despite correct release hashes.
+
 ## Objective bossbar and arrow verification
 
 - Keep objective presentation separate from optional timer bossbar; reuse shared timer tick, actual per-session death counts, and cleanup. Never infer kills from delayed or failed spawns. Restrict wave labels to wave objectives; preserve ordinary objective counters and boss/travel instructions.
@@ -121,6 +128,17 @@ Pterodactyl environments expose two programmatic control surfaces:
 - Use one short title, two low-pitch native sounds and three cosmetic `Player.playHurtAnimation` pulses (0/4/8 ticks) for weight without entities, damage, teleportation or permanent animation loops. Recheck membership/physical containment and running state for delayed pulses; own them through session TaskManager. Player hurt-camera settings can reduce or disable perceived shake.
 - Verify actual title/timing/hurt packets per grouped gate, six existing objective totem bursts per complete dungeon, and actual rendered title. Separate local packet/visual checks from live JAR hash/fresh-start verification; bounded packet counts are not a measured production MSPT benchmark.
 
+## MythicMobs reload warnings
+
+- Wrap placeholder arithmetic delay inside attributes (`delay{ticks="<random.14to24>*10"}`); bare `delay <random.14to24>*10` can enter health-conditional parsing and throw NumberFormatException. Verify exact deployed Mythic version through local reload before live change.
+- For animation increments whose initialized frame is 1, use documented numeric fallback `<caster.var.iteration|1>+1` when missing caster variables produce UNDEFINED arithmetic. Reproduce missing-variable aura locally first; preserve normal initialized increments and do not claim fallback explains why caster state disappeared. Validate live post-reload window; quiet logs alone do not prove every visual animation.
+- Distinguish bundled example dialog callbacks that reference nonexistent skills from real quests. Comment only nonexistent example bindings with backups, keeping dialog definitions. Deprecated Placeholder API warnings from MMO integrations/MCPets need provider updates, not disabled logging; absence after another reload may be warning deduplication.
+
+## Vanilla dungeon and MMOItems entry checks
+
+- Match isolated MythicMobs `mobs/VanillaMobs.yml` to live before asserting vanilla identity; generated example overrides can register ordinary WITHER_SKELETON as Mythic and produce false failures. Do not change production overrides merely to satisfy tests.
+- Test selected existing MMOItems key through real provider build/matches, plain-material rejection, no-key entry denial and exact one-item consumption. Clear only disposable test-player entry throttle between immediate negative/positive lifecycle probes; never weaken production throttling. Keep final boss definition byte-equivalent semantically when replacing other encounters, and distinguish scripted kills from survival balance.
+
 ## MythicMobs dungeon configuration acceptance
 
 - For modest dungeon length increases, add sequential reinforcement waves at verified spawn cells rather than raising simultaneous caps or inventing new map routes. Move COMPLETE_OBJECTIVE exclusively to the last wave; assert gates and boss remain locked through added waves. Preserve native pack IDs, map, loot and cosmetic JAR. Report extra wave/mob counts, not an unmeasured minutes estimate.
@@ -128,6 +146,12 @@ Pterodactyl environments expose two programmatic control surfaces:
 - Reuse installed pack internal IDs and inspect their skills before assigning dungeon spawns; premium pack models may require ModelEngine and delayed summons remain outside the current dungeon spawn-permission scope. Verify actual Mythic active-mob registry, wave counts, boss death progression and cleanup on an isolated copy with the exact deployed JARs. Scripted setHealth(0) tests do not prove native combat balance or every boss skill.
 - For gate material changes, preserve gate cuboids, objective dependencies and altar material. Check every gate cell closed and open locally, then read live block packets separately from YAML readback. Config-only reload needs no JAR replacement; active sessions pin previous templates until ending.
 - Use `execute as <test-player> at @s run tp @s ...` for disposable local-world screenshots; bare console `tp <player> ...` can resolve coordinates in the console default world and terminate the instance. Require actual changed position after remote console dispatch; accepted API calls may not move the player. Label local visuals and live packet checks separately.
+
+## Dungeon flight and god restrictions
+
+- Block Essentials FlyStatusChangeEvent/GodStatusChangeEvent using `getAffected().getBase()`, not controller; this covers console/other-player grants and aliases. Clear existing flight and raw Essentials god state on entry/join and with one shared bounded sweep. Preserve outside-world behavior and item enchant metadata; state disabled on entry need not auto-enable on exit.
+- For AdvancedEnchantments Wings, register `AEAPI.forceEnchantToTriggerEvent("wings")` before listening to EnchantActivateEvent, and add world conditions only to Wings. Copy live groups.yml into isolated runtime: missing MYSTIC group prevents Wings loading and invalidates tests. Native command dispatch from another command can queue until callback returns; execute PluginCommand directly or assert next tick instead of assuming immediate effects.
+- Test template world and generated managed instances; per-dungeon `worlds.instance-prefix: HOLLOW_` changes new worlds while `display.name: DungeonHollow` leaves internal dungeon ID/data intact. Distinguish rendered/native equip tests from synthetic activation-event assertions. Explicit spectator flight exemption is for admin inspection, not Essentials/Wings gameplay bypass.
 
 ## Dungeon friendly-fire protection
 
