@@ -1,0 +1,9 @@
+# Audio-only pack compression
+
+- For requests to shrink a pack without risking models, preserve all PNG, JSON, shader, font, metadata and paths byte-for-byte; recompress ZIP with standard DEFLATE, never unsupported methods. Verify every non-audio entry hash, identical member list, and ZIP CRC.
+- Inspect actual source ZIP, not another similarly named release. OGG/PNG may be ZIP_STORED while JSON already minified. Report measured savings rather than promising compression ratios.
+- Use Vorbis for Minecraft OGG, not Opus. Further audio transcoding is lossy: disclose quality tradeoff, preserve channels/sample rate, avoid normalization/mono conversion unless asked, keep original ZIP and write separate candidate.
+- Reencode with installed ffmpeg libvorbis q0 for small candidate; retain original for any clip that grows or shifts duration >=25ms. Probe metadata and fully decode candidates before packaging. A successful decode is not listening or in-game verification.
+- When PNG optimization is explicitly approved, preserve every non-IDAT chunk (including color metadata/palette), dimensions, decoded raw samples and RGBA pixels. Refilter/recompress IDAT losslessly, skip APNG changes, keep original when output grows; preserve .png.mcmeta and semantically verify minified JSON. Already optimized atlases may save almost nothing.
+- For stronger ZIP compression, use Zopfli-produced raw DEFLATE streams, retain smaller zlib alternative and verify every decoded member byte. Bound CPU time and skip OGG/PNG already compressed streams; whole-pack Zopfli can time out. Remove only own incomplete output before retry, never deliver partial ZIP. This reduces download bytes, not texture resolution or runtime RAM.
+- Very short clips can gain duration during Vorbis reencode; fail closed to original rather than relaxing timing gate. Record per-clip decisions and source/output hashes in workspace report. Bound parallel encoders to avoid host load.

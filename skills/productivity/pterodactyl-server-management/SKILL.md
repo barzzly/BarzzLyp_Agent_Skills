@@ -83,6 +83,22 @@ Pterodactyl environments expose two programmatic control surfaces:
 - Retain definitive late mutation results after timeouts. Upgrade only the same validated attempt from UNKNOWN to SUCCESS, persist before delivery, and require a fresh acknowledgment. Never infer a refund from a timeout.
 - Reset browser secret fields and private async state on session identity changes; test expiry, replacement login, and stale completions in an actual browser, not only a bundling test.
 
+## RukhDungeon overlapping points and stale editors
+
+- Resolve every point at the selected world/block and open coordinate-filtered paginated PointListMenu when multiple matches exist; retain type/ID and include start/exit. Verify existing overlapping spawners through native selector and selected editor title without editing template.
+- Use update-only Map.replace in editor replacement methods; missing IDs must not be resurrected by stale callbacks. Keep creation in explicit create paths.
+- Detect identical loot items with differing entry settings before accepting grid movement; lock ambiguous grid with clear feedback while retaining Chances controls. Rejecting only at close can discard newly deposited items. Block bottom-inventory COLLECT_TO_CURSOR as well as shift-transfer. Preserve unchanged grid snapshots and refresh snapshots after successful saves.
+- Allocate distinct loot navigation/control slots once and reuse for drawing/click routing; customized Save slots must not overlap hardcoded Next/Previous.
+
+## RukhDungeon editor interaction regressions
+
+- Resolve client-only point markers nearest-first on both RIGHT_CLICK_AIR and RIGHT_CLICK_BLOCK before creation-menu fallback; server can report terrain behind fake glass. Stop at real solid obstruction and bound reach. Test both event paths independently (reset captured menu), stale sessions, occlusion and unchanged point count; verify live point-menu title without mutating template.
+- Preserve complete LootEntry on unchanged grid saves, including amount range, provider and serialized metadata. Display configured minAmount rather than embedded stack count; chance editor must store exact zero now that LootEntry supports it. Distinguish proxy unit checks from real serialized-item roundtrip coverage; identical-item matching after reorder remains ambiguous.
+
+## RukhDungeon player browser design
+
+- User wants `/rd menu` four rows with contrasting blue glass perimeter, gray interior, and dungeon heads filled LEFT TO RIGHT from first interior slot 10, then 11–16 and 19–25. Never center a singleton or fill center-out; 3/4 dungeons occupy 10–12/10–13. Screenshot's highlighted center means interior area, not centered ordering. Use custom player-head treasure-chest texture for Hollow, preserving entry validation/lore. Migrate live legacy navigation slots 45/49/53 to 27/31/35 alongside JAR, because existing YAML overrides bundled defaults. Verify actual graphical screenshot after chat-security toast disappears and stop temporary client/Xvfb afterward.
+
 ## RukhDungeon inventory layout deployment
 
 - Audit all 17 bundled menu YAMLs plus Java fallback positions; existing `plugins/RukhDungeon/menu/*.yml` override new JAR defaults, so deploy minimal layout changes alongside JAR. Preserve labels, actions, permissions, item metadata and dungeon data.

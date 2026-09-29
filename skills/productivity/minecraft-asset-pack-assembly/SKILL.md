@@ -55,6 +55,8 @@ Build clean, deployable plugin data from vendor archives while preserving asset 
    - ZIP parent folder so archive extracts as one named directory.
    - Run `ZipFile.testzip()` and verify archived file count equals staged file count before sending.
 
+For vendor boss collisions, generated textures, native spawn checks and delivery boundaries, read [Boss pack integration](references/boss-pack-integration.md).
+
 ## Badge and glyph artwork previews
 
 - For nametag overlap, inspect PNG alpha bounds before altering size. Full-height reconstructed glyphs with `ascent < height` extend below their row and collide with subsequent normal text; increasing ascent to unchanged height raises them while respecting vanilla `ascent <= height`. Padded artwork may need a small decrease instead. Compare each target in a native multiline TextDisplay, distinguish logo lettering from subsequent name/team rows, and reframe tall artwork rather than accepting cropped screenshots. Label isolated fixtures separately from live nametag-plugin verification.
