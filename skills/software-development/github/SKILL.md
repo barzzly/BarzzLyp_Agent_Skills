@@ -50,6 +50,10 @@ Supporting assets: `scripts/gh-env.sh` + `scripts/git-credential-token.py`
 - Sweep for duplicates before creating anything:
   `gh pr list --search` / `gh issue list --search`.
 
+## Source publication scope
+
+- For this user's plugin repository push requests, publish the actual Java source, resources and tests from the canonical development checkout; a release JAR/config snapshot does not satisfy source publication. Inspect uncommitted canonical changes before using a fresh clone. Build and test the copied source, verify the remote commit, and distinguish its compiled artifact from older deployed binaries. Do not downgrade main to reconstruct an old deployment or deploy a newer build without authorization.
+
 ## Verification
 
 - The workflow's own reference file defines done for that task.

@@ -57,6 +57,8 @@ Build clean, deployable plugin data from vendor archives while preserving asset 
 
 For vendor boss collisions, generated textures, native spawn checks and delivery boundaries, read [Boss pack integration](references/boss-pack-integration.md).
 
+For missing MMOItems abilities, modern MythicLib aliases and invisible PAPER animations, read [Weapon skill repair](references/weapon-skill-repair.md).
+
 ## Badge and glyph artwork previews
 
 - For nametag overlap, inspect PNG alpha bounds before altering size. Full-height reconstructed glyphs with `ascent < height` extend below their row and collide with subsequent normal text; increasing ascent to unchanged height raises them while respecting vanilla `ascent <= height`. Padded artwork may need a small decrease instead. Compare each target in a native multiline TextDisplay, distinguish logo lettering from subsequent name/team rows, and reframe tall artwork rather than accepting cropped screenshots. Label isolated fixtures separately from live nametag-plugin verification.

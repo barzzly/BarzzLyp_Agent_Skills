@@ -152,6 +152,8 @@ Pterodactyl environments expose two programmatic control surfaces:
 
 ## Vanilla dungeon and MMOItems entry checks
 
+- Inspect the exact source RukhDungeon JAR before cross-version deployment: old builds can lack `REACH_REGION` and use obsolete `net.Indyuce.mmoitems.api.item.NBTItem`; current MMOItems identity comes from `io.lumine.mythic.lib.api.item.NBTItem` in MythicLib. Require fresh integration-enabled logs, not a successful YAML validator alone. Do not transplant newer packet holograms onto 1.21.1 without compatibility tests: `PositionMoveRotation` and teleport constructors differ. Check world `level.dat` AND region chunk DataVersion rather than relying on the server version string.
+
 - Match isolated MythicMobs `mobs/VanillaMobs.yml` to live before asserting vanilla identity; generated example overrides can register ordinary WITHER_SKELETON as Mythic and produce false failures. Do not change production overrides merely to satisfy tests.
 - Test selected existing MMOItems key through real provider build/matches, plain-material rejection, no-key entry denial and exact one-item consumption. Clear only disposable test-player entry throttle between immediate negative/positive lifecycle probes; never weaken production throttling. Keep final boss definition byte-equivalent semantically when replacing other encounters, and distinguish scripted kills from survival balance.
 
@@ -425,6 +427,10 @@ When wiping, replacing, or rebuilding a server's plugin suite:
 
 5. **Direct Delivery on Request**:
    Deliver requested JAR files from the local backup directly via `MEDIA:/absolute/path/to/file.jar`.
+
+## Maintenance cleanup preference
+
+- After completed and verified NoeRPG maintenance, remove agent-created remote `.pre-*` rollback copies and temporary fixtures instead of leaving them scattered beside live files. Keep recoverable backups consolidated in a private local Minecraft maintenance archive. Do not infer permission to delete plugin-managed backups, disabled content, world/player data or active JARs. Inventory exact paths, archive and verify hashes before removing obsolete copies, read back absence, compare active counterparts, and disclose pruned scan areas rather than claiming whole-server coverage.
 
 ## Procedure 7: Stale Config & Backup Scanning via Ephemeral SFTP
 
