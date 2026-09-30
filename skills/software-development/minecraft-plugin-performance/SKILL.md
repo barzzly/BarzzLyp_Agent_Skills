@@ -55,6 +55,8 @@ For biome-only CustomFishing configuration, read [references/biome-fishing-confi
 
 For durable economy transfer work, load [references/durable-economy-review.md](references/durable-economy-review.md): account ownership, async snapshot atomicity, pending-fund fences, exact receipts, and release layers.
 
+For native personal settings menus, read [references/system-settings-menu.md](references/system-settings-menu.md) for installed provider persistence, exact slots, TAB flag semantics and lightweight verification.
+
 ## Offline wallet expectations
 
 - For Noesantara minigames, the user expects ECO RPG balances to remain inspectable while the player is offline and cares about Minecraft request/load costs. Distinguish last-known cached balance from a fresh offline-provider lookup; label snapshot age, never present stale data as realtime, and never use display caches to authorize transfers.
@@ -97,6 +99,8 @@ For durable economy transfer work, load [references/durable-economy-review.md](r
 
 - Replace whole-table pairwise item ambiguity scans with amount-normalized ItemStack hash keys only after verifying native equals/hash compatibility and clone ownership. Preserve locking for visually identical items with different reward settings, display amounts, hidden entries, and page boundaries. Measure actual production menu calls with a counting test shim; report comparisons separately from live MSPT or native NBT guarantees.
 - Preserve baseline and optimized test XML outside mutable build outputs when replaying an old algorithm. Use an isolated source snapshot for comparative probes while another worker owns the main checkout; never revert the shared working file underneath their build.
+
+For shared PUBLIC objectives and scheduled ARENA mode, load [references/shared-dungeon-modes.md](references/shared-dungeon-modes.md): admission, global effect fan-out, late joins, persistent-world ownership and build evidence.
 
 ## Objective presentation optimization
 

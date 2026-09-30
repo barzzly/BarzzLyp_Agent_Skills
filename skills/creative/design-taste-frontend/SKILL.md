@@ -55,6 +55,13 @@ For a dark monitor console matching `https://megconverter.barzzly.com/`:
 - When removing verbose asset attribution, retain a concise discoverable credit/license link and complete attribution file; avoid silently dropping CC BY requirements.
 - Run generated wallet and login browser suites on separate fresh documents; both override global fetch/timers and overlap causes false polling failures. Wait for CSS to load before recording layout geometry.
 
+## Noe FisherMan arcade presentation
+
+- Treat fishing as an animated tap arcade, not a static illustration beside questionnaire cards. Keep rod cast, bobber/bite, tap ripples, reel progress, catch lift, and escape feedback inside one visible water arena; preserve private server-authoritative money and challenge protocol.
+- Keep challenge targets visible and interactive during casting/bite decoration; animation must not consume mandatory memory/timing windows or hide mobile controls below the scene. Verify actual moving transforms at multiple times and reduced-motion behavior, not keyframe declarations alone.
+- Scroll the whole fishing arena below sticky navigation, not only its challenge subtree; measure rod top and last target bottom in the full production shell. Verify arena foreground/background after Vite build because standalone component harnesses can miss inherited white-on-white text and CSS cascade differences.
+- Settle decorative cast/tug state with a cleaned-up timer fallback; reduced-motion disables animationend, so animation events alone can leave stale phases.
+
 ## Pre-flight
 
 1. Inspect reference CSS/HTML or screenshot.

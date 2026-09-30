@@ -477,6 +477,26 @@ Never fix bugs without a test.
 - Test session-bound CSRF with two real logins and replay the first CSRF against the second auth cookie. Replace plain CSRF fixtures with issued login tokens so persistence/logout fault tests still reach their intended DB operation.
 - Exercise production and development cookie modes against disposable DB schemas. Assert __Host- cookie issue/clear attributes, production rejection of legacy cookies, and client preference for host cookies while preserving login-response store behavior.
 
+## Private skill-game settlement checks
+
+- Test locked foreign primary keys before using `WHERE id=? AND owner=? FOR UPDATE`; InnoDB may wait on the foreign row before filtering owner. Discover ownership without a locking read, then lock only verified own primary keys under own-wallet serialization.
+- Test speed-derived rewards through actual persisted settlement, not only a helper. Subtract accumulated mandatory reveal/earliest-valid timing waits from DB elapsed time, compare fast and slow valid completions, and require identical skill weight when only forced reveal duration changes.
+- Use `RTRIM` on CHAR inputs in indexed MariaDB generated columns when padding SQL modes make the expression non-deterministic; exercise the migration on the real disposable server rather than assuming MySQL compatibility.
+
+## Private skill-based fishing games
+
+- Bound economy tuning against perfect automated play, not assumed human failures; publish base multipliers/odds and compute maximum expected gross payout with integer rounding. Browser-visible memory puzzles are automatable, not proof of cheating-resistant play.
+- Derive skill rewards from locked server time minus accumulated mandatory reveal/timing waits; never randomize weight when requirements tie it to completion speed. Test fast/slow completions and forced-wait neutrality independently.
+- Exercise every rarity through actual browser controls against disposable DB fixtures. Prime and foreground the browser before creating time-sensitive fixtures; navigation delay can consume a valid timing window and falsely suggest broken gameplay. Store each batch durably, aggregate latest results by rarity, and assert seven unique completed tiers.
+- Persist both cast intent and current action choice across reload. Clear a first definitive rejection only when no earlier ambiguous attempt exists; unrelated successful state/history reads must not clear an unresolved same-step action.
+- Preserve hidden-card positions after selecting first card, retaining disabled empty slot across steps. Hide cached faces locally at reveal deadline as well as in subsequent server payloads; step count alone does not make higher rarity harder.
+
+## Animated game frontend checks
+
+- Keep animation phases cosmetic: CSS animationend may never fire under reduced motion, so add a cleaned-up bounded phase fallback without delaying challenge availability or altering authoritative clocks.
+- Foreground browser before measuring running CSS transforms; background throttling can leave transforms unchanged despite a running animation. Assert computed transforms, pointer-down feedback before response, accepted-step progress, and reduced-motion completion separately.
+- Scroll the whole playable arena below sticky navigation, not only its nested challenge. Measure rod top and every target bottom at mobile dimensions; test against production CSS as well as isolated fixture CSS. Scope clue-list selectors to `ol` when protocol sections share their class names.
+
 ## Testing Anti-Patterns
 
 - **Testing mock behavior instead of real behavior** — mocks should verify interactions, not replace the system under test
