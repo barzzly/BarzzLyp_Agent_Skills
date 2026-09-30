@@ -74,6 +74,14 @@ For native personal settings menus, read [references/system-settings-menu.md](re
 - Precompile per-player validation patterns. Isolate individual Vault read failures so one unavailable account does not suppress healthy players; omit unavailable account rather than invent its balance.
 - Rebuild the fixture-loaded JAR after class edits: PaperTest loads plugin classes from the JAR, so compiling build/classes alone tests stale code. Measure CPU time and allocated bytes separately from retained heap, report mocked provider/transport boundaries, and avoid presenting microbenchmark reductions as live-server savings.
 
+## Dungeon victory effects
+
+- User chose blue-gradient DUNGEON SELESAI title, circular particles and victory sound for successful dungeon completion, not each wave. Keep effects private to surviving online participants, once per completion, with no entity or recurring task. Emit after immediate evacuation so world teleport does not discard particles; do not alter reward, failure or cleanup semantics. Test duplicate completion and excluded/failed participants. Arena boss rounds follow a separate lifecycle and need separate scope.
+
+## Party-scaled wave batches
+
+- User wants scaled kill quota unchanged (base two × five players gives ten), but at most two live mobs per spawn point. Spawn next pair only after current pair dies, with a bounded session-owned delay; don't refill indefinitely through respawnEnabled. Wave-clear must require quota deaths, not merely zero alive during inter-batch delay. Freeze quota at launch and preserve boss/unscaled behavior. Test party sizes one through five, no refill after first kill, no extra spawn after quota, and multi-entity provider capacity. Confirm restart timing with online players before deploying the JAR.
+
 ## Fixed five-player party layout
 
 - User wants party capacity consistently five, including global `party.max-size` and each dungeon `party.max-size`; update descriptive capacity text too. Pin the five Manage Party member slots to `[20, 21, 22, 23, 24]` under `menu.elements.members.slots` so heads/empty positions sit centered on the third row, not top interior row. Preserve unrelated paginated-list left-to-right conventions.
@@ -176,6 +184,11 @@ For shared PUBLIC objectives and scheduled ARENA mode, load [references/shared-d
 
 For Damage Indicator forks, load [references/damage-indicator-fork.md](references/damage-indicator-fork.md) for modern-only builds, low-resource testing, animation batching, toggle races and production migration.
 
+## MythicMobs child healthbar potion failures
+
+- For generic `Error processing skills for mob` warnings, MythicMobs 5.13 hides the underlying throwable at DebugLevel 0. Use a bounded native `mm debug 1` reproduction and always restore `mm debug 0`; retain separate red/green log deltas. Do not infer corrupt mob definitions from the generic warning.
+- HistoricalPack potion `WITHER` mechanics targeting `@Children` can include summoned TextDisplay healthbars; PotionMechanic then throws CraftTextDisplay-to-LivingEntity ClassCastException. Filter only these potion targets with `@Children{conditions=[  - isLiving true ]}`. Keep double-space inline condition syntax, original caster conditions, potion settings, living SILVERFISH hitboxes, healthbars, and vendor JARs. Check equivalent red/blue sibling mechanics, back up exact bytes, reload natively with no active player encounters, reproduce actual damage, verify zero fresh errors and full cleanup. Native isLiving excludes armor stands as well as displays; inspect intended child types before using it elsewhere.
+
 ## MythicMobs transient particle variables
 
 - For Cuboss Slime minion `PlaceholderFloat` errors on `<caster.var.modelScaled>*0.3`, inspect live mob defaults and every setter before editing. A narrow `<caster.var.modelScaled|2>*0.3` fallback preserves normal configured scale and protects missing-variable particle spread for minions whose declared default is 2; do not apply that value to the boss default 1.5 or rewrite all math expressions.
@@ -183,6 +196,10 @@ For Damage Indicator forks, load [references/damage-indicator-fork.md](reference
 - Back up exact YAML, reject concurrent remote edits, compare semantic non-target fields, read back uploaded bytes, require fresh native reload completion, and verify unchanged vendor JAR hash. Quiet post-reload logs do not prove boss spawn/despawn reproduction; request a normal encounter rather than mass-spawning or mutating player fights. Archived fixed warnings must not be presented as current failures.
 
 ## Authorized live multi-instance load tests
+
+- For a 20-instance ramp, reuse a disposable clone definition with its own concurrency cap; never raise the original dungeon cap or remove live skill/key rules. Preserve original timer, pass normal provider keys, and confine skill-requirement bypass to the disposable definition. Check health at every admission, fully verify world-scoped owned living mobs at 1/5/10/15/20 and throughout steady state, and scan whole inter-sample log windows rather than command-response windows alone. Report target-load duration from recorded timestamps; serialized per-player diagnostics add time beyond scheduled sleep. Treat container CPU as multi-core percentage, and report p95 separately from max spikes. Do not let a failed post-cleanup metric prevent cleanup receipts and configuration readback.
+
+- Scope native entity selectors spatially as well as by ownership PDC: `execute as <bot> at @s as @e[distance=..128,nbt={...}]` restricts the query to the bot's dimension; an unrestricted `@e[nbt=...]` can count matching mobs across worlds once per bot and inflate totals. Apply the same scope to temporary effects. Treat repeated MythicMobs `Error processing skills for mob` warnings as invalid custom-combat workload; stop ramp, preserve evidence and clean up rather than claiming capacity from TPS while skills fail. Record live JAR hash before/after and make aborted harness runs exit nonzero.
 
 - Require explicit live load-test authorization, gradual ramp, and cleanup plan. Snapshot dungeon concurrency cap and whitelist; use dedicated non-OP test identities. JPremium native console `forceregister <nickname> <password>` can register an already-connected fresh test profile without changing the global per-IP cap; never invoke on an existing unknown account. Serialize proxy joins to respect login throttling. Keep passwords out of command echoes and logs.
 - Gate bot login on actual proxy spawn/play readiness, not fixed sleep; configuration/resource-pack phase may take longer for later clients. Retry authenticated backend transfer boundedly and verify exact name in native player list. A premature login control error is a harness fault, not server capacity failure; clean up and respect cooldown before retrying.
