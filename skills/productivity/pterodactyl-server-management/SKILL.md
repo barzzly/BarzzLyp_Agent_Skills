@@ -99,6 +99,13 @@ Pterodactyl environments expose two programmatic control surfaces:
 
 - User wants `/rd menu` four rows with contrasting blue glass perimeter, gray interior, and dungeon heads filled LEFT TO RIGHT from first interior slot 10, then 11–16 and 19–25. Never center a singleton or fill center-out; 3/4 dungeons occupy 10–12/10–13. Screenshot's highlighted center means interior area, not centered ordering. Use custom player-head treasure-chest texture for Hollow, preserving entry validation/lore. Migrate live legacy navigation slots 45/49/53 to 27/31/35 alongside JAR, because existing YAML overrides bundled defaults. Verify actual graphical screenshot after chat-security toast disappears and stop temporary client/Xvfb afterward.
 
+## RukhDungeon live template reload and boss healthbars
+
+- Respect the user's choice to let an active dungeon run finish before maintenance. A later generic “continue” does not authorize stopping that run. Keep pending edits separate from deployed fixes, and never claim a waiting worker has applied them. Recheck exact target sessions before reload; unrelated idle arena sessions need not be interrupted.
+
+- In-memory dungeon templates are pinned by active sessions during `/rd reload`. Because ARENA mode sessions run continuously in the background, `/rd reload` skips reloading an active arena template from disk. Furthermore, running `rd disable <dungeon>` invokes `dungeon.save()`, which overwrites on-disk YAML with the in-memory state if disk edits were uploaded prior to disabling. To hot-reload an arena template without restarting the server or interrupting players in other instances: (1) run `rd disable <dungeon>`, (2) clean the idle session with `rd admin clean <sessionId>`, (3) upload the modified YAML via SFTP, (4) run `rd reload` (unpinned template loads freshly from disk), and (5) run `rd enable <dungeon>` (saves and re-registers the new configuration).
+- When bosses utilize custom MythicMobs floating display-entity healthbars (such as `NOE_HP`), disable Bukkit BossBars in `objectives.yml` via `boss-triggers.<id>.boss-bar: false` to eliminate duplicate health UI at the top of the player's screen.
+
 ## RukhDungeon inventory layout deployment
 
 - Audit all 17 bundled menu YAMLs plus Java fallback positions; existing `plugins/RukhDungeon/menu/*.yml` override new JAR defaults, so deploy minimal layout changes alongside JAR. Preserve labels, actions, permissions, item metadata and dungeon data.
@@ -106,8 +113,11 @@ Pterodactyl environments expose two programmatic control surfaces:
 - Test legacy Gate/Region `rows: 3`, `close.slot: 26`: centering eight choices would overwrite eighth choice at 26. Keep sequential slots 18–25 when navigation shares picker row; only center when close has separate row. Exercise custom close collision too.
 - Verify all menu constructors on isolated loopback Paper and actual client screenshots; shorten overlong list titles, keep instructions in lore. Check Back destinations and native loot save roundtrip. Keep test fixture plugin off production. Separate local visual proof from live JAR/config hash readback and fresh startup logs.
 
+For Hollow chest/material/boss edits, read [Hollow content maintenance](references/hollow-content-maintenance.md) for cached API reads, map marker diffs, native loot pools and verification boundaries.
+
 ## Full-map dungeon expansion
 
+- Audit every spawn point's activation binding before bulk mob replacement or chest relocation. Points with no objective, no explicit wave, and no membership in any wave auto-activate on entry; converting an overlooked editor/test point into a custom mob preserves that unwanted spawn. Match suspect coordinates to removed chest locations, remove only confirmed obsolete points, and assert every retained point has an intended activation path before release.
 - Inventory actual block entities in fresh region snapshots before assigning loot; distinguish constructed footprint from pregenerated terrain. Register existing chest coordinates without rewriting template map, and separate nonempty loot-service checks from physical player reach and native clicks.
 - Include partial collision surfaces and ladder transitions in route analysis. A bottom slab's occupied foot block is not passable even though its upper surface is walkable; air-only graphs falsely disconnect treasure platforms. Explicitly report parkour/high-chest gaps rather than calling a connected main-route graph complete coverage.
 - Extend from fresh deployed YAML and exact live JAR, preserving installed Mythic IDs, gate dependencies and per-player loot claims. Validate progression in isolated runtime before native reload; scripted teleport/kill checks do not establish survival balance or native navigation.

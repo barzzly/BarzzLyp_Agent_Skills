@@ -21,7 +21,7 @@ Build clean, deployable plugin data from vendor archives while preserving asset 
 
 2. **Choose deployable plugin variants**
    - Keep only plugin formats present in target stack, commonly `ItemsAdder`, `MMOItems`, `ModelEngine`, `MythicLib`, and `MythicMobs`.
-   - Exclude alternate delivery formats such as Oraxen/Nexo, raw player resource packs, MythicRPG, documentation, macOS metadata, and nested archives when equivalent expanded files are retained.
+   - Choose the installed resource provider before excluding alternatives: keep or convert Nexo-compatible definitions on Nexo servers; exclude Oraxen/Nexo only when another provider supplies equivalent assets. Vendor ItemsAdder/Oraxen/raw-pack variants can supply model, texture and icon mappings without installing those plugins. Omit documentation, macOS metadata and redundant archives from deployment.
    - For MythicMobs packages offering alternatives, select one compatible variant. Prefer explicit MMOItems/MMOCore damage variants over Crucible variants unless Crucible is requested.
 
 3. **Normalize destination layout**
@@ -52,8 +52,10 @@ Build clean, deployable plugin data from vendor archives while preserving asset 
    - Write machine-readable report containing source-package counts, semantic weapon count, final counts by plugin, skipped variants, collision policy, and unresolved conflicts.
 
 6. **Package for delivery**
-   - ZIP parent folder so archive extracts as one named directory.
+   - For plugin-folder bundles, ZIP the parent folder so extraction creates one named directory. For player resource packs, put `pack.mcmeta` and `assets/` directly at ZIP root; an enclosing project folder prevents Minecraft from loading the pack.
    - Run `ZipFile.testzip()` and verify archived file count equals staged file count before sending.
+
+For MCPets mount packs, Nexo icon conversion and reload/delivery checks, read [Pet mount integration](references/pet-mount-integration.md).
 
 For vendor boss collisions, generated textures, native spawn checks and delivery boundaries, read [Boss pack integration](references/boss-pack-integration.md).
 
@@ -95,14 +97,32 @@ For missing MMOItems abilities, modern MythicLib aliases and invisible PAPER ani
 - On low-memory software-rendering VPSs, test bounded client heap and one version at a time. Exit -9 proves forced termination, not OOM without kernel evidence. Do not count black screenshots or a launch helper's READY marker as gameplay success.
 - Back up and update matching official ViaVersion/ViaBackwards versions before testing newly released clients; check ViaRewind compatibility too. Read fresh startup logs and active JAR hashes. A literal `${version}` in plugin metadata can defeat a version-string readiness check despite successful startup; report it and verify independently.
 
+## Nexo COMPONENT migration and compatibility packs
+
+- When migration is explicitly requested, back up settings, verify matching item equippable IDs and CustomArmor layer paths, switch to COMPONENT with a controlled restart, and wait for `Finished generating resourcepack!` separately from server `Done`. Read back settings and compare downloaded generated ZIP hash with the remote file.
+- Prefer Nexo-generated equipment models/textures over reconstructed models. Merge only equipment changes into the previously verified compatibility pack so text/ModelEngine shader fixes survive. Validate humanoid and humanoid_leggings references under every active overlay; provide legacy `models/equipment` location for 1.21.2/1.21.3. Preserve original archives and report pre-existing unrelated warnings separately.
+- Native COMPONENT armor requires Java 1.21.2+. Retaining legacy models, trims and pack-format ranges does not guarantee older clients can render translated component items. Never advertise all-version armor compatibility from metadata or ZIP tests. Generated server pack, complete local variants and public pack URL distribution are separate delivery states.
+
+## Invisible worn armor diagnostics
+
+- Compare freshly generated MMOItems armor with a minimal native item using the same equipment asset. A valid equipment JSON cannot help an item that lacks both `minecraft:equippable` and trim metadata; a fully transparent vanilla chainmail texture then makes its worn armor invisible. Confirm actual alpha extrema and capture both native-plugin failure and component-control rendering before changing production configs.
+- Query modern entity `equipment.chest` before relying on legacy `Inventory[{Slot:102b}]`. An empty legacy query does not prove the armor slot is empty. Back up actual equipment before replacing test-player gear; preserve existing equipment even on disposable accounts.
+- Copy candidate ZIP into the test client's resourcepacks directory and verify its hash. Unapproved symlinks can be rejected silently with a log warning, causing vanilla-only tests. Require ResourceManager reload to name the candidate.
+
+- Read actual live equipment data before guessing armor identity from icons. Resolve `minecraft:equippable.asset_id` against the precise client pack, separately from inventory custom models and `minecraft:trim`. Restoring TRIMS does not erase equipment components already saved on items.
+- For a missing equipment model with existing full-color armor textures, test a small additive ZIP above the original pack. Supply `assets/<namespace>/equipment/<id>.json` for 1.21.4+ and `assets/<namespace>/models/equipment/<id>.json` for 1.21.2/1.21.3, with humanoid/humanoid_leggings textures under their matching `textures/entity/equipment/` paths. Preserve original bytes, item data and legacy trim assets; validate every layer reference and ZIP CRC. Do not generalize a single set fix to every armor set.
+- Separate reference-resolution success from client rendering. Missing assets are concrete evidence; server readiness, warning disappearance, and static ZIP tests do not prove visible armor. Ask for exact client version and active pack precedence if the isolated patch still fails. Do not launch a graphical Minecraft client on a capacity-constrained VPS against the user's standing restriction.
+
 ## Standing Rules
 
 - User wants finished folder shaped like working reference pack, not copied reference assets.
+- For pet packs, name matching Nexo and ModelEngine parent folders `<Pack> ( Brick Model <min>-<max> )`, using actual allocated Nexo CMD bounds. Inspect live neighboring folders first; preserve pet IDs, model IDs and blueprint filenames when renaming.
+- Treat “allversion like before” as a fresh-server pack rebuild with the previously verified, explicitly bounded compatibility patches—not support for every Minecraft version. Preserve current assets, deliver the actual ZIP, and distinguish static checks, client gameplay tests and public-host updates.
 - User prefers one consolidated `MMOItems/item/sword.yml` for this weapon-pack class; preserve only explicitly requested roster entries.
 - When sending a fix-only archive, include only files actually changed plus unavoidable shared registries; do not resend every asset for that class unless user requests a standalone ready-to-install pack.
 - Delete unused raw/vendor alternatives from final output; keep original source archives untouched unless explicitly asked.
 - Prefer deterministic Python `zipfile` processing over manual extraction for nested archives, path safety, counting, and verification.
-- Always perform 4-way cross-verification (`MMOItems` -> `ItemsAdder` -> `MythicLib` -> `MythicMobs`) before deploying, ensuring custom-model-data parity and valid ability cooldown numeric values.
+- Cross-verify the actual integration chain before deployment: weapons using MMOItems/ItemsAdder/MythicLib/MythicMobs need material/CMD parity and numeric cooldown checks; pets using MCPets/Nexo/MythicMobs/ModelEngine need root and skin icon mappings, mob/skill references, blueprint IDs and generated assets checked. Do not require absent plugins to validate an unrelated pack class.
 - **Multi-Version Resource Pack & ModelEngine Overlay Compatibility (1.20.1 to 26.x+)**:
   - Minecraft 1.20.1 (`pack_format: 15`) does not support `overlays` in `pack.mcmeta` (introduced in 1.20.2 / `pack_format: 18`); vanilla 1.20.1 clients strictly ignore overlays and read only root `assets/`. When ModelEngine places item overrides (e.g. `player_head.json`) inside an overlay directory like `modelengine_1_19_4/`, copy it directly to root `assets/minecraft/models/item/player_head.json` so 1.20.1 clients load model definitions without errors.
   - Use `pack_format: 15` for 1.20.1 plus legacy `supported_formats` and modern `min_format`/`max_format` bounded to actual targets. Declaring 32767 only suppresses compatibility warnings; it does not guarantee future rendering. Verify official Mojang manifest and downloaded client `version.json`; never guess snapshot/release format numbers. In mixed legacy/modern packs, every overlay needs `formats`, including modern-only entries, or modern clients can reject the entire pack.
