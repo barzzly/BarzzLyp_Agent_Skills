@@ -13,6 +13,13 @@
 - Label weighted material values as relative weights, not independent percentages. Per-player independent rolls may coincidentally match; do not promise all players receive different loot.
 - Verify live item identity/quantity via bounded native rolls without granting items. Distinguish this from player chest interaction, real boss combat and onDeath reward fan-out; these require separate live encounter checks. A successful loot probe and YAML validator do not verify entry-time spawn timing. Remove self-disabled temporary checker artifacts after retaining receipts.
 
+## Cross-server Hollow migration to external instances
+
+- Map standard spawn points to native vanilla mobs (`ZOMBIE`, `HUSK`, `SKELETON`, `STRAY`, `PILLAGER`, `WITCH`, `VINDICATOR`, `WITHER_SKELETON`, `WARDEN`) when migrating Hollow from Noesantara to target servers lacking proprietary mob packs.
+- Bind target-installed custom bosses strictly to requested encounters: map Boss 1 (`Archangel`) to the commander encounter/wave and Boss 2 (`wolfmob41` / Graceless Omen) to the core altar trigger.
+- When external item plugins (such as Nexo) are absent on the target server, populate generic exploration chests with weighted randomized vanilla loot tables (diamonds, emeralds, ingots, golden apples, arrows, bottles) rather than failing deserialization. Keep final boss loot table explicit to designated rewards (`DRAGON_EGG`, `DIAMOND`, MMOItems boosters, `WARDEN_SPAWN_EGG`).
+- Copy all 26 boundary and arrival regions, 34 objectives, 10 gates (including `peti_inti` chest materialization on core boss death), and updated 17 menu layout YAMLs alongside the updated plugin JAR.
+
 ## Unexpected mob immediately on entry
 
 1. Download fresh `spawner.yml`, `objectives.yml`, and `config.yml` with a unique cache-busting query; retain untouched bytes.

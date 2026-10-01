@@ -263,6 +263,8 @@ For Damage Indicator forks, load [references/damage-indicator-fork.md](reference
 
 ## PacketEvents concealment regression gates
 
+- Distinguish spectator from client freecam: spectator moves authoritative player position and normally triggers proximity reveal. For requested spectator concealment, carry packet-ordered gamemode state per viewer, force hidden target/room policy even with bypass, filter action/NBT updates before periodic rehide, and dirty tracking on return to normal mode. Retain bounded updates and explain already-known client information cannot be erased. Test gamemode packets, near targets, bypass, normal-mode return and respawn; do not equate headless wrapper tests with live rendering.
+
 - For section rewrites, use bounded primitive edit arrays indexed by local y/z/x rather than allocating and hashing a world-coordinate object for every cell. Preserve detached palette reconstruction; start from existing block/fluid counts and adjust only actual changed states, respecting protocol fluid-count support. Measure production conceal with identical fixture/warmup before and after; report per-call allocated bytes separately from retained RAM and server CPU. Clear world-info metadata alongside snapshots on world unload.
 
 - Reconcile every earlier reviewer finding explicitly; a newer broad pass does not close omitted BLOCK_ACTION leaks or shared-wrapper mutations. Cancel actions only for viewer-hidden tracked positions, preserving bypass and visible behavior.
