@@ -52,6 +52,8 @@ Supporting assets: `scripts/gh-env.sh` + `scripts/git-credential-token.py`
 
 ## Source publication scope
 
+- Before rebranding third-party source into a standalone repository, inspect the full tree, README, build metadata and source headers for licensing. GitHub `license: null` alone is inconclusive. A public repository or fresh Git history does not transfer authorship; preserve required notices and attribution. If no reuse grant is found, surface the permission gap before publishing copied derivatives; offer an independently implemented alternative without claiming copied code is wholly original.
+
 - For this user's plugin repository push requests, publish the actual Java source, resources and tests from the canonical development checkout; a release JAR/config snapshot does not satisfy source publication. Inspect uncommitted canonical changes before using a fresh clone. Build and test the copied source, verify the remote commit, and distinguish its compiled artifact from older deployed binaries. Do not downgrade main to reconstruct an old deployment or deploy a newer build without authorization.
 
 ## Verification
