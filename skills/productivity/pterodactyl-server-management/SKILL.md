@@ -154,6 +154,10 @@ For Hollow chest/material/boss edits, read [Hollow content maintenance](referenc
 - Use one short title, two low-pitch native sounds and three cosmetic `Player.playHurtAnimation` pulses (0/4/8 ticks) for weight without entities, damage, teleportation or permanent animation loops. Recheck membership/physical containment and running state for delayed pulses; own them through session TaskManager. Player hurt-camera settings can reduce or disable perceived shake.
 - Verify actual title/timing/hurt packets per grouped gate, six existing objective totem bursts per complete dungeon, and actual rendered title. Separate local packet/visual checks from live JAR hash/fresh-start verification; bounded packet counts are not a measured production MSPT benchmark.
 
+## Historical Pikeman sound targeting
+
+- When the user describes a bubbling sound on spear carriers, inspect shared `PikeHitDamage` before assuming Flail Knight's `entity.witch.throw` timer. Pikeman red/blue hit damage uses `item.wolf_armor.damage`; mute only that sound mechanic when targeting spear-hit noise, preserving damage/bleed, particles, other packs and other sounds. Distinguish verified config removal/native reload from user-confirmed acoustic match; onomatopoeia alone does not prove the exact sound ID.
+
 ## MythicMobs reload warnings
 
 - Wrap placeholder arithmetic delay inside attributes (`delay{ticks="<random.14to24>*10"}`); bare `delay <random.14to24>*10` can enter health-conditional parsing and throw NumberFormatException. Verify exact deployed Mythic version through local reload before live change.
