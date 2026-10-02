@@ -284,6 +284,8 @@ For Damage Indicator forks, load [references/damage-indicator-fork.md](reference
 - Test descriptor name/author/main, load renamed classes without initialization, and scan every final JAR entry plus uncompressed bytes for retired branding. Clean-build with one worker; keep immutable old releases outside the active deliverable rather than merely renaming old binaries. Preserve historical external fixture paths so a rename does not silently skip their assertions.
 - Treat a plugin rename as a persistence/API break: data folders, PDC pending exits/refunds, ownership markers, permissions, command references, companion dependencies and claim exclusions need separately verified migration. A clean renamed JAR is not authorization to deploy or proof old data migrates; ship migration warnings and leave live installations untouched unless requested.
 
+For class/quest plugins, load [references/class-quest-system.md](references/class-quest-system.md) for async profiles, starter rewards, provider event semantics, command migration and Chunky-safe deployment.
+
 ## Pitfalls
 
 - Isolate snapshot-only release source lists when transfer workers share checkout; preserve exact JAR and verification outside mutable build outputs before releasing ownership. Compile cached official Vault API into dependency-only classes, never shade vendor classes into bridge JAR. Missing Vault linkage must remain inside optional snapshot boundary so web authentication still loads.
