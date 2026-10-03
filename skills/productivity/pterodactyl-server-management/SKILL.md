@@ -170,6 +170,16 @@ For Hollow chest/material/boss edits, read [Hollow content maintenance](referenc
 
 - For permissions that work only after relog, inspect live `lp info` messaging/storage plus exact affected permission and plugin before changing sync configuration. SQL messaging enabled and DB connected do not prove every notification was received; command audit logs prove a grant, not consuming-plugin refresh. Distinguish local async command completion, cross-server propagation, context/negative nodes and plugin-owned cached benefits. UBR 2.0.51 checks `Player.hasPermission` during block breaking, so do not label UBR a join-only permission cache. Reproduce with the affected online player and actual failing action before claiming a cause or fix.
 
+## MMOItems kit lore and category icons
+
+- Give this user's kit entries short English flavor lore matching kit theme and visible item form, with existing three-stop MiniMessage palette and gradient `displayed-type` like sword.yml. Keep lore cosmetic: do not imply new abilities, crate unlocks, equipped flight or stat bonuses. Preserve enchants, material/CMD, identifiers, armor and Nexo originals.
+- Set category icons using `display: MATERIAL:CMD` in item-types.yml. Installed MMOUtils.readIcon splits on colon and calls setCustomModelData; an extra sibling custom-model-data field is not consumed there. Choose a real representative model per kit and verify exact source material/CMD pair. Distinct pairs prove configuration identity, not client rendering; disclose visual verification gaps.
+
+## MMOItems kit enchantment updates
+
+- Scope kit enchants to existing `kit_*.yml`; preserve ARMOR and Nexo source files. Match enchant eligibility to actual Bukkit material, not model names (a spear model on NETHERITE_SWORD uses sword enchants). User requests level V including Mending; skip non-enchantable COAL/EMERALD/BLAZE_ROD cosmetic/key entries. Avoid incompatible enchant pairs and unsafe Quick Charge V; disclose exclusions. Do not invent stat boosts or migrate already-issued items via revisions unless requested.
+- Use native `base.enchants` mapping with modern lowercase Minecraft keys; installed Enchants.getEnchant resolves NamespacedKey before legacy names, and numeric formulas retain requested unsafe levels. Verify all source fields except enchants unchanged, every applied level exact, fresh reload without kit errors, and old missing-skill warnings separately. Config reload verification does not prove already-issued items updated or native combat/equip behavior.
+
 ## MMOItems Nexo source boundary
 
 - For ECORPG kit grouping, leave existing ARMOR definitions and Nexo armor bindings untouched. User wants one kit-named type for weapons/tools/cosmetics/keys, not per-weapon subtypes. Final scope excludes chest (including opening variants) and backpacks, which stay Nexo-only. User explicitly accepts material/CMD model copies without a bridge; give each kit-themed item a readable three-stop MiniMessage gradient like sword.yml, preserving source material plus CMD together. Do not invent stats, crate-key bindings or cosmetic equip behavior.

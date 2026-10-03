@@ -113,7 +113,15 @@ For missing MMOItems abilities, modern MythicLib aliases and invisible PAPER ani
 - For a missing equipment model with existing full-color armor textures, test a small additive ZIP above the original pack. Supply `assets/<namespace>/equipment/<id>.json` for 1.21.4+ and `assets/<namespace>/models/equipment/<id>.json` for 1.21.2/1.21.3, with humanoid/humanoid_leggings textures under their matching `textures/entity/equipment/` paths. Preserve original bytes, item data and legacy trim assets; validate every layer reference and ZIP CRC. Do not generalize a single set fix to every armor set.
 - Separate reference-resolution success from client rendering. Missing assets are concrete evidence; server readiness, warning disappearance, and static ZIP tests do not prove visible armor. Ask for exact client version and active pack precedence if the isolated patch still fails. Do not launch a graphical Minecraft client on a capacity-constrained VPS against the user's standing restriction.
 
+## Nexo material and model-ID lookup
+
+1. Confirm the live target server, then recursively read `.yml`/`.yaml` under the requested Nexo category; for kits, use `plugins/Nexo/items/Kits/`. Use read-only SFTP/API and parse YAML rather than trusting stale local snapshots or filename matches.
+2. Filter top-level item definitions by exact `material`. Return `itemname`, top-level Nexo ID, `Pack.custom_model_data`, `Pack.model`, and containing kit/file. Treat absent fields as absent; do not infer allocated CMD from a folder label such as `Model <number>`.
+3. Count scanned files and matching definitions programmatically before claiming “only one” or listing all matches. Report compact bullets with target server and distinguish configured CMD from live-item/rendering verification. No reload or server mutation is needed for this lookup.
+
 ## Standing Rules
+
+- For three-mode resource-pack requests, use HDResourcePack, OPResourcePack and SPResourcePack with the established blue descriptions. Distinguish metadata-only copies from actual optimization; preserve source, keep HD quality intact, use lossless OP changes, and get explicit permission before reducing SP texture quality. Read [Named pack variants](references/named-pack-variants.md) and [Compression](references/audio-pack-compression.md) for build and verification details.
 
 - User wants finished folder shaped like working reference pack, not copied reference assets.
 - For pet packs, name matching Nexo and ModelEngine parent folders `<Pack> ( Brick Model <min>-<max> )`, using actual allocated Nexo CMD bounds. Inspect live neighboring folders first; preserve pet IDs, model IDs and blueprint filenames when renaming.

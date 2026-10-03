@@ -1,5 +1,11 @@
 # Headless Minecraft testing and chat control
 
+## Live kit screenshot checks
+
+- When user authorizes a temporary graphical client for ECORPG, verify whitelist and existing test-account session before connecting; another transport may already use the same identity. Do not impersonate the owner or kick another test session. Use proxy login with the stored test password and verified `/server noerpg`; direct backend login fails Velocity forwarding.
+- Check actual client resource download logs. If public server pack fails, a downloaded live Nexo pack loaded locally can verify live menu models, but disclose local-pack fallback and leave public URL unchanged. Use one bounded client, restore prior local options, stop client/Xvfb, and read back temporary whitelist removal. Keep preexisting permissions intact.
+- Hold X11 button/key presses for roughly 150 ms at low FPS. Immediate press/release can be missed. Resize analysis previews to 768px JPEG and retain full-resolution originals for delivery. Allow enough bounded lifetime for image-tool latency; repeated 15-minute exits can interrupt verification.
+
 ## Real graphical screenshots on a VPS
 
 - For authentic GUI screenshots, install official version assets with `minecraft-launcher-lib` in a project venv; run Java 21 client under Xvfb with `LIBGL_ALWAYS_SOFTWARE=1` and bounded heap/lifetime. Keep game directory in the project, not home root. Use existing authorized test identity only on its offline-auth test server; online-mode requires legitimate Microsoft authentication.
