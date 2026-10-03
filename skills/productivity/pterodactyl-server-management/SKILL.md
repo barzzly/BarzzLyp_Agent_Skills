@@ -170,6 +170,10 @@ For Hollow chest/material/boss edits, read [Hollow content maintenance](referenc
 
 - For permissions that work only after relog, inspect live `lp info` messaging/storage plus exact affected permission and plugin before changing sync configuration. SQL messaging enabled and DB connected do not prove every notification was received; command audit logs prove a grant, not consuming-plugin refresh. Distinguish local async command completion, cross-server propagation, context/negative nodes and plugin-owned cached benefits. UBR 2.0.51 checks `Player.hasPermission` during block breaking, so do not label UBR a join-only permission cache. Reproduce with the affected online player and actual failing action before claiming a cause or fix.
 
+## ExcellentCrates preview placeholders
+
+- Compare live `plugins/ExcellentCrates/previews/default.yml` with installed JAR constants for literal tooltip tokens. ExcellentCrates 6.6.1 uses `%reward_name%` and `%reward_description%`, not legacy `%reward_preview_name%` and `%reward_preview_lore%`. This is internal placeholder migration, not evidence of a resource-pack or PlaceholderAPI fault. When authorized, back up and change only confirmed stale tokens; preserve rewards, chances and layout. Read back config and verify native reload logs; client rendering needs a live view.
+
 ## MMOItems kit lore and category icons
 
 - Give this user's kit entries short English flavor lore matching kit theme and visible item form, with existing three-stop MiniMessage palette and gradient `displayed-type` like sword.yml. Keep lore cosmetic: do not imply new abilities, crate unlocks, equipped flight or stat bonuses. Preserve enchants, material/CMD, identifiers, armor and Nexo originals.
@@ -196,6 +200,8 @@ For Hollow chest/material/boss edits, read [Hollow content maintenance](referenc
 
 - Interpret “reduce by 80%” as old value multiplied by 0.2, not subtracting 80 percentage points. Inspect NumericStatFormula and `additive-spread-formula`: with relative spread, scale base while retaining spread/max-spread to scale the entire distribution; additive spread needs different treatment. Preserve unrelated stats and revisions. Verify exact remote bytes and native `mmoitems:mmoitems reload`; config reload does not prove already-issued or socketed gems migrated.
 - Separate dodge providers from consumers and labels: MMOItems gems/set bonuses supply stats, MythicLib mitigation rolls consume them and enforce caps, AdvancedEnchantments Dodge cancels attacks independently, and Skript/gkits may grant that enchant. Glyph/lore matches and named Evasive Shot skills are not additional random dodge bonuses. Report excluded compiled code, DB/player items and asset/state subtrees in cross-plugin config scans.
+
+For NoeSellwand normal/premium/charge menu migration, read [Sellwand CoinShop](references/sellwand-coinshop.md).
 
 ## Pickaxe shop and regeneration tool audits
 
@@ -278,6 +284,8 @@ For Hollow chest/material/boss edits, read [Hollow content maintenance](referenc
 - State the active bot's lifetime and what continues autonomously after the reply. A logged message is not continuous AI review; an allowlist is not natural-language understanding.
 
 For ordered setup, authentication, resource-pack handling, and chat checks, read [Headless Minecraft testing](references/minecraft-headless-testing.md).
+
+See [PlayerAuctions confirmation/bids](references/playerauctions-confirmation.md).
 
 ## Prerequisites
 

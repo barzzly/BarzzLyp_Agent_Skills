@@ -1,0 +1,8 @@
+# PlayerAuctions confirmation and bidding
+
+- Check JAR descriptor and startup log rather than filename: filename 1.34.1 may contain 1.34.2. Both auction-confirm and purchase-confirm may use title Confirm Purchase; title alone does not identify flow.
+- In 1.34.2, settings.auction.confirmation controls legacy chat/listing confirmation. guis/auction-confirm.yml auction-confirm.enabled independently opens listing GUI. Header-only enabled auction-confirm with no clickable-items renders empty and cannot accept/deny. Verify AuctionBuilder and AuctionConfirmMenu bytecode.
+- guis/purchase-confirm.yml purchase-confirm.enabled controls buyer confirmation. Disabling invokes buy for entire listing amount, removing quantity choice. Explain consequence before changing. Legacy confirm.yml and migration backups are not active buyer-menu source.
+- Inspect settings.bidding.enabled, expire-time, take-money-on-bid, cancel-bid, percentage-cut, and expansions.yml currency min-bid-amount together. /pa bid <price> [amount] lists held item; buyers offer via GUI. Verify Vault Money versus PlayerPoints Coin. Do not enable bidding merely because user asks how it works.
+- In 1.34.2, winning bids are claimed from Expired Auctions, not delivered straight to inventory. Verify `lang.bidder-success` (Check your expired auctions) and settlement code transferring auction ownership to winner. Use `/pa collect` or Expired Auctions menu; avoid falsely diagnosing delivery failure based only on elapsed time. If snapshot auction/recent tables are empty, disclose that the specific reported transaction cannot be traced.
+- Preserve offline state during read-only checks; distinguish config/bytecode findings from live gameplay. Do not initiate monetary tests without scope.

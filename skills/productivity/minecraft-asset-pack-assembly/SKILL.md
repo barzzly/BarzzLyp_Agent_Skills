@@ -113,6 +113,12 @@ For missing MMOItems abilities, modern MythicLib aliases and invisible PAPER ani
 - For a missing equipment model with existing full-color armor textures, test a small additive ZIP above the original pack. Supply `assets/<namespace>/equipment/<id>.json` for 1.21.4+ and `assets/<namespace>/models/equipment/<id>.json` for 1.21.2/1.21.3, with humanoid/humanoid_leggings textures under their matching `textures/entity/equipment/` paths. Preserve original bytes, item data and legacy trim assets; validate every layer reference and ZIP CRC. Do not generalize a single set fix to every armor set.
 - Separate reference-resolution success from client rendering. Missing assets are concrete evidence; server readiness, warning disappearance, and static ZIP tests do not prove visible armor. Ask for exact client version and active pack precedence if the isolated patch still fails. Do not launch a graphical Minecraft client on a capacity-constrained VPS against the user's standing restriction.
 
+## Kit armor naming and enchant parity
+
+- Derive armor collection name and exact gradient from the matching live `MMOItems/item/kit_*.yml` collection lore; do not reuse stale armor names or invent colors. Map Nexo armor through explicit `mmoitem.type: ARMOR` and `mmoitem.id`, update MMOItems `base.name`, and mirror Nexo `itemname`. Keep cosmetics separate.
+- When requested to enchant armor to pack tier, inspect existing weapon/tool enchant levels in that pack. Use armor-valid enchant types by slot, not weapon enchants; disclose unsafe higher levels inherited from pack. Preserve IDs, material/CMD, gems, combat stats, trim and equipment components unless separately authorized.
+- Save complete roster and before/readback snapshots, count all sets and pieces, and leave a runnable semantic YAML check permitting only requested fields. Nexo can rewrite formatting at boot; compare parsed values before reporting unintended changes. Existing player/crate item snapshots are not automatically migrated by editing templates.
+
 ## Nexo material and model-ID lookup
 
 1. Confirm the live target server, then recursively read `.yml`/`.yaml` under the requested Nexo category; for kits, use `plugins/Nexo/items/Kits/`. Use read-only SFTP/API and parse YAML rather than trusting stale local snapshots or filename matches.

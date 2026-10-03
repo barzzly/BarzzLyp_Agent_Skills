@@ -1,0 +1,6 @@
+# FancyHolograms fallback and RTP diagnosis
+
+- For literal `Could not load hologram text`, inspect actual FancyHolograms holograms.yml records and match coordinates, not only screenshots. FancyHolograms 2.12.0 TextHologramData.read sets this fallback when `getStringList("text")` is empty; autosave can persist it as literal text. A current nonempty fallback record does not prove the original missing-text cause.
+- Count and save exact affected records programmatically; distinguish static named holograms, UUID runtime records, and valid dungeon-chest text. Similar coordinates/text suggest a creator but do not identify it. Trace ownership before removal and never blanket-delete world TextDisplays or all holograms.
+- Pregen removes terrain generation work, not disk loading, deserialization, chunk-load plugin callbacks, entity activation, anti-xray, compression or packet sending. BetterRTP PreloadRadius and queue settings warrant inspection, but config alone cannot attribute an MSPT spike. A cancelled Chunky task with a large processed count is not proof every target chunk reached full status.
+- Preserve an already-running Spark capture. `profiler open` may answer asynchronously; read fresh log delta later. Distinguish sampler availability from having inspected call stacks; do not attribute measured spikes to hologram count without matching profiles.
