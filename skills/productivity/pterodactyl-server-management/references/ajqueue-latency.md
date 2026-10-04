@@ -1,0 +1,5 @@
+# ajQueue latency on Noesantara
+
+- Distinguish UniverseSpigot settings from proxy queue: ajQueuePlus lives on NOESANTARA VELOCITY (`plugins/ajqueue/config.yml`, lowercase). Lobby's backend `plugins/ajQueue/spigot-config.yml` only relays commands; RPG backend is not queue scheduler. Check queue via proxy console `ajqueue list` and inspect live server readiness, whitelist, max players before tuning.
+- Proxy config comments: `wait-time` sets seconds between sends, `send-instantly` bypasses wait for named joinable queues; `check-last-player-sent-time` still guards global pacing. For NoeRPG user latency, prior `wait-time: 3.0` / `send-instantly: [lobbys]` changed to `wait-time: 0.5` / `send-instantly: [lobbys, noerpg]`, leaving other servers untouched. Never disable cooldown or capacity protections merely to reduce waiting.
+- Back up exact YAML, validate only intended keys change, write to Velocity via client files API, read back target, send `ajqueue reload` to proxy console, require log `Config and messages reloaded successfully!`. Observe live transfers afterward; full/offline/whitelisted server can still queue, and no TPS gain follows from queue pacing.

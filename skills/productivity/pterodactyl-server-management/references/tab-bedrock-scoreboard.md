@@ -1,0 +1,5 @@
+# TAB per-platform scoreboard on NoeRPG
+
+- Use existing TAB `plugins/TAB/config.yml` `scoreboard.scoreboards`: insert Bedrock entry first with `display-condition: "%bedrock%=true"`, then keep Java/default entry unconditioned. TAB checks entries in order; `%bedrock%` comes from Floodgate on same backend as TAB. Never use only player-name prefix to detect Bedrock.
+- Copy all `lines` byte-for-byte / YAML semantic equality from Java scoreboard; change only `title`. For title `Noesantara ECORPG`, per-character legacy hex `&#RRGGBB` gradient from #90E0F0 to #0038FF works without Nexo glyph requirement. Retain Java glyph title `:noe:` untouched. Max 15 visible scoreboard lines; TAB/Geyser can truncate long Bedrock lines.
+- Back up live TAB config, structurally assert default scoreboard unchanged and Bedrock lines identical, upload, read back exact bytes, send `tab reload`, require fresh `[TAB] Successfully reloaded` log and state running. True Bedrock appearance still needs in-game client verification; `/tab parse <bedrock-player> %bedrock%` checks Floodgate detection.
