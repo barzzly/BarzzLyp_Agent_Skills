@@ -1,5 +1,9 @@
 # Hollow content maintenance
 
+- Hollow entry uses MMOItems identity `KIT_INFERNALRUNE:INFERNAL_RUNE_MOTH_KEY`, not similarly modeled Nexo key. Preserve type/ID when renaming; verify MMOItems give argument order from installed parser. Match drop delivery provider to entry validation provider.
+- Cursed trio shares one PERSONAL chest at its shared spawn; gate chest materialization on `komandan` completion after `cursed_trio`, not individual deaths. Remove replaced artifact command drops to prevent duplicate rewards; preserve unrelated amulet drops. User half quantities round up (15 becomes 8).
+- Hollow Keeper uses `basedamage{m=1}`; multiply mob Damage once, not both base and mechanic multiplier. Historical damage exists in literal mechanics and caster variables; variable names include digits (`axe_combo_2_damage`). Scale both sources once. Cursed arrow `shoot{damage=...}` also needs scaling; vanilla ignite has no numeric damage parameter, so disclose unchanged fire damage rather than claim all damage tripled.
+
 - Fresh Pterodactyl contents GETs can return stale cached logs. Add a unique `_t` query parameter and require fresh command timestamps before judging native effects or restart readiness.
 - Compare marker coordinates against an older untouched world snapshot: Hollow uses hundreds of decorative lodestones. Identify newly added altar blocks by coordinate diff, never replace every lodestone.
 - Take final region snapshots after confirmed server shutdown so pending player edits are flushed. nbtlib parsed LongArray can be read-only; replace with a fresh LongArray rather than assigning an element. Preserve non-marker blocks at old virtual points, including gray carpet. Verify chunk block-state differences remain restricted to authorized coordinates.

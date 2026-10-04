@@ -41,6 +41,10 @@ platforms: [linux, macos, windows]
 - Register new submenu in DeluxeMenus config, upload submenu before parent link/registration, reload natively, verify dm list plus exact live YAML. User rejected six pets arranged as three narrow pair rows and a standalone ARROW Back. Prefer 45 slots: pet categories in columns 11/20 (cosmetic), 13/22 (attack), 15/24 (mount); top row empty, 27–35 spacer, footer 36–44 and Back 40. User also rejected the seven-category parent 4+3 layout (10/12/14/16 then 20/22/24). Do not treat mathematical symmetry as visual approval. After repeated layout rejection, inspect real external in-game references and show a preview for direction approval before another live redesign; leave current menus unchanged during reference selection.
 - Match navigation to existing live submenu's material/model, name, sound and action rather than choosing a generic arrow. If reference contains malformed/truncated texture data, preserve its identifier literally when explicitly matching current behavior, disclose validation gap, and do not invent a repaired token or claim a valid texture. Config equality and successful reload are not rendered-client proof; request a fresh screenshot when no authorized visual client exists.
 
+## Pickpack resource menu
+
+- ECORPG `/pickpack` is DeluxeMenus `menupack.yml`, also opened by `pack` and `pick pack`. Keep manual-download chat links, not automatic server pack forcing. Three choices use slots 11/13/15: HD 55 MB, Optimize 33 MB, Super Optimize 23 MB; labels are user-requested sizes, not verified ZIP sizes. Preserve exact supplied URLs, including Dropbox dl=0 preview versus dl=1 direct-download semantics, and disclose that distinction. Check response content type rather than treating HTTP 200 HTML as a ZIP. Use valid 36-slot inventory instead of legacy 37, retain existing navigation/fillers, and reload only with `dm reload menupack`; require `menupack menu successfully reloaded!` plus exact readback.
+
 ## Pitfalls
 - A horizontal gap does not solve content pressed against footer; reserve vertical spacer too.
 - Never convert entire YAML to smallfont; technical tokens must remain executable.

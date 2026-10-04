@@ -1,0 +1,5 @@
+# HuskClaims wilderness flags
+
+- Inspect live `plugins/HuskClaims/config.yml` for `database.type` before diagnosing current flags; when `MYSQL`, local SQLite file can be stale. Read `huskclaims_claim_worlds.data` from configured live DB (JSON on MySQL) and compare `wilderness_flags` per world against `claims.wilderness_rules`. Existing worlds retain flags independently of YAML. Add only missing `cloplib:block_place` on affected world(s), never replace whole list or touch claim records.
+- With running server, stop gracefully before direct DB correction so cached world flags cannot overwrite change. Back up exact world row, use conditional update (`WHERE id=? AND data=?`), read back exact row, restart, confirm fresh HuskClaims enable and Paper `Done`, then read back DB flags again. Avoid touching unrelated worlds; config reload does not propagate wilderness flags into existing worlds.
+- Pterodactyl API behind Cloudflare needs `User-Agent: Mozilla/5.0`; urllib default user agent can get 403 despite valid key.

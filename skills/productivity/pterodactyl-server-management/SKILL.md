@@ -13,7 +13,7 @@ metadata:
 
 # Pterodactyl Server Management (SFTP & Client API)
 
-Manage Minecraft and game servers hosted on Pterodactyl panel environments (UltraServers, PebbleHost, BisectHosting, or custom Wings nodes).
+Honor explicit final power state: “stop and delete” leaves server offline. For player-data wipes, follow [database reset](references/player-data-reset.md).
 
 ## Overview
 
