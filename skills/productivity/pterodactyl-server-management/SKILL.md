@@ -22,6 +22,7 @@ Honor explicit final power state: “stop and delete” leaves server offline. F
 - Keep deployment critical path in the foreground. On takeover, inspect existing artifacts before changing files; interruption does not undo writes. For timed work, reserve verification time and distinguish a worker's exit from task completion.
 - In reports, name target server and separate local, deployed YAML, and JAR state. Hash the remote JAR against release artifact; version alone is insufficient. Distinguish config validation from real gameplay.
 - For persistent PUBLIC open-world dungeon setup, follow [world and spawner deployment](references/open-world-dungeon-deployment.md) and [read-only Anvil coordinate validation](references/anvil-readonly-spawn-validation.md). Restore original production power state after any temporary stop before reporting.
+- Panel signed upload may place files at server root despite `directory=/plugins`; list root and verify signed download before renaming into `/plugins`. When replacing a JAR, stop first, rename old JAR to a non-.jar backup, then rename staged JAR into exact original filename; multi-file rename can fail on destination collision. Read back exact hashes and verify fresh startup. For persistent PUBLIC edits, disable template before changing YAML: `rd disable` serializes in-memory state and overwrites disk, including newly added worldwide/chests. After disable, rewrite desired YAML, reload, then enable on the new JAR. Old JAR's validation of worldwide chests will report out-of-bound errors until the new JAR starts.
 
 - When the user stops a background mission and its reminder, inspect both worker processes and scheduled jobs, remove the matching report/reminder, and stop only still-running mission workers and test clients. Verify both surfaces afterward; stopping automation does not authorize stopping the production game server or reverting deployed JARs/configs. Report running workers separately from waiting schedules and unrelated preview servers.
 
@@ -416,6 +417,8 @@ Pterodactyl stores backup archives (.tar.gz) outside the server's chrooted SFTP 
         -H "Accept: application/json" \
         https://<PANEL_HOST>/api/client/servers/<SERVER_ID>/backups/<BACKUP_UUID>/download
    ```
+
+LegacySchool Nexo imports: [pack deployment](references/legacyschool-nexo-pack.md).
 
 ## Procedure 4: Bulk File Transfer & Unarchiving (Handling Wings Daemon Limits)
 
