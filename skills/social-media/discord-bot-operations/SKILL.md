@@ -52,3 +52,5 @@ metadata:
 - Do not claim a PM2 restart succeeded from exit code alone; read process status and recent logs because a crash-loop can briefly report a successful restart.
 - Do not use a second `setFooter()` after a centralized serialization hook unless intentionally preserving only the icon; Discord allows one footer object, so later calls replace earlier text.
 - Do not promise old Discord embeds will update; editing history requires a separate migration and message-fetch policy.
+- For ephemeral catalog previews, attach local image bytes with `AttachmentBuilder` and `attachment://<filename>` in embed; on select-menu `interaction.update`, pass `files` and `attachments: []` to replace prior preview. Validate selected IDs against a fixed allowlist before resolving paths. Test interaction payloads without launching a second bot, then restart only PM2 bot.
+- If a public catalog panel needs only text/option changes, fetch its exact bot-authored message and PATCH it in place through Discord REST; read back ID, description, options, mention content and URL button. This avoids duplicate panel messages or fresh `@everyone` notifications.

@@ -13,28 +13,15 @@ metadata:
 
 # Pterodactyl Server Management (SFTP & Client API)
 
-Honor explicit final power state: “stop and delete” leaves server offline. For player-data wipes, follow [database reset](references/player-data-reset.md).
-
-## Overview
-
-Pterodactyl environments expose two programmatic control surfaces:
-1. **SFTP Daemon (Wings)**: File transfers, configs, plugin jars, world data, logs.
-2. **Client REST API**: Server power states (start/stop/restart), live console commands, resource metrics.
-
-## When to Use
-
-- Interacting with Minecraft or game servers hosted on Pterodactyl panels.
-- Web automation fails or is blocked by Cloudflare Turnstile / anti-bot challenges on the panel domain.
-- Uploading, inspecting, editing, or backing up server plugins (`plugins/` or `plugins_new/`), configs, and logs.
-- Triggering server power actions or executing console commands programmatically.
+Honor explicit final power state: “stop and delete” leaves server offline. For player-data wipes, follow [database reset](references/player-data-reset.md). For dungeon WorldGuard/ability scope, inspect PRIVATE vs PUBLIC world binding before promising a global flag works; follow [dungeon-worldguard scope](references/dungeon-worldguard-scope.md).
 
 ## Execution preference
 
-- User requires current healthbar/Minecraft maintenance directly on the existing remote server; do not launch local Paper or graphical Minecraft on the VPS because capacity is insufficient. Use narrow backed-up edits, read-back and native remote diagnostics. Do not run production stress tests or mass spawns as a substitute. Label visual/movement verification gaps when no live player view is available.
-
-- Prefer direct work in the active session for this user's plugin/web changes and deployment; do not move the critical path into background delegation without agreement. When taking over a stopped worker, inspect current files and test artifacts before editing because interruption does not undo completed writes. Separate worker status from verified test results.
-- For explicitly authorized timed background work, resolve the deadline in the user's timezone, reserve verification/cleanup time, and track remaining acceptance checks separately from process exit. If a worker ends early with unfinished checks, inspect its artifacts and remaining time before resuming a single writer; a scheduled report does not continue the work. On continuation, mark the shared status active before launch and retain earlier evidence so the report cannot mistake an old final status for the new run.
-- In progress and release replies, state target server, local-only versus deployed status, and JAR changes separately from YAML changes. Verify the active remote JAR against the release manifest before answering whether it changed; an unchanged filename or version string does not prove unchanged bytecode. List concrete engine fixes, configured gameplay content, and remaining gameplay gaps rather than an unsupported completion percentage.
+- Work directly on the active remote server; use narrow backed-up edits and read-back checks. Avoid local Minecraft/Paper launches and production mass-spawn tests. Mark untested gameplay and visuals clearly.
+- For dungeon mob substitutions or stat scaling, scope new MythicMobs IDs to the requested dungeon/server rather than editing shared vanilla overrides or existing custom mobs; back up live dungeon files, preserve wave/objective IDs and bosses, check every new spawn reference, reload MythicMobs before the dungeon plugin, then validate the dungeon and read back deployed files. Config validation does not prove in-game health or combat.
+- Keep deployment critical path in the foreground. On takeover, inspect existing artifacts before changing files; interruption does not undo writes. For timed work, reserve verification time and distinguish a worker's exit from task completion.
+- In reports, name target server and separate local, deployed YAML, and JAR state. Hash the remote JAR against release artifact; version alone is insufficient. Distinguish config validation from real gameplay.
+- For persistent PUBLIC open-world dungeon setup, follow [world and spawner deployment](references/open-world-dungeon-deployment.md) and [read-only Anvil coordinate validation](references/anvil-readonly-spawn-validation.md). Restore original production power state after any temporary stop before reporting.
 
 - When the user stops a background mission and its reminder, inspect both worker processes and scheduled jobs, remove the matching report/reminder, and stop only still-running mission workers and test clients. Verify both surfaces afterward; stopping automation does not authorize stopping the production game server or reverting deployed JARs/configs. Report running workers separately from waiting schedules and unrelated preview servers.
 
