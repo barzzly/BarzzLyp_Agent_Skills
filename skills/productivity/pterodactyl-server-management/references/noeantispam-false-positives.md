@@ -1,0 +1,5 @@
+# NoeAntiSpamChat false positives
+
+Inspect live config and installed `ToxicWordFilter` bytecode before editing. It matches exact tokens, then normalized substring matches for forbidden terms of length >=4. Thus `edan` blocks `sedang`, `semen` blocks `sementara`, `kera`/`asu` block `kerasukan`, and `mani` blocks `maniak`. To ease normal chat with config-only change, remove only ambiguous direct terms `edan`, `semen`, `kera`, `mani` from `forbidden-words`; keep exact-token `asu`, aliases, and stronger profanity. Removing `kera` also leaves `kerasukan` safe because `asu` is length 3 and only matches full tokens.
+
+Run regression against exact installed JAR (`TextNormalizer` + `ToxicWordFilter`) with safe and blocked phrases. Back up exact YAML, confirm live unchanged before writing, POST `/files/write` (UltraServers returns 405 for PUT), read back exact bytes, issue `antispam reload`, require success log and running state; verify JAR unchanged. No restart required. Test in-game player chat separately before claiming visual/player behavior.
