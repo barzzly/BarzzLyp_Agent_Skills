@@ -1,0 +1,5 @@
+# MMOItems kit weapon damage on Noesantara ECORPG
+
+- Inspect live `plugins/MMOItems/item/kit_*.yml` and `item-types.yml` first: kit categories inherit `MISCELLANEOUS`, so NETHERITE_SWORD material alone does not guarantee vanilla melee damage. Phoenix docs: set numeric `base.attack-damage` on each melee item, preserving cosmetic/Nexo materials and other fields. Netherite sword baseline total = 8, axe = 10; do not add base-material bonus twice.
+- MMOItems generated instances persist NBT stats; set `base.revision-id: 1` (or increment existing ID) to migrate old instances; confirm `item-revision` preserves gems/enchants before doing so. Do not alter ranged/cosmetic/tool items without request.
+- Download all affected YAML first, validate each live file against snapshot, make per-file backups, apply narrow insertion, parse original/updated YAML and assert only target fields differ, read back each file. Then `mi reload` via client API; verify `MMOItems ... reloaded` in new logs and inspect errors. Unrelated existing template warnings should be reported separately. Live damage still needs in-game measurement.

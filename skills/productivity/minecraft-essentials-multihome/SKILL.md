@@ -1,6 +1,6 @@
 ---
 name: minecraft-essentials-multihome
-description: Use when setting EssentialsX home quotas by rank.
+description: Use when configuring Minecraft EssentialsX home quotas.
 metadata:
   hermes:
     category: productivity
