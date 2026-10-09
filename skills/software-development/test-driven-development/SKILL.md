@@ -364,6 +364,8 @@ Never fix bugs without a test.
 
 ## React pages without a DOM test dependency
 
+- Build standalone SSR harnesses with esbuild `jsx: 'automatic'`; project JSX config may otherwise emit `React.createElement` without a React binding. Put generated CJS inside project-local temporary folders (or supply project module resolution), since `/tmp` outputs with external packages cannot find project React. Keep React Query provider and hooks on the same CJS export to avoid duplicate contexts. Distinguish harness failures from production regressions.
+
 - When a formerly public helper starts rejecting authorization failures, search every caller, including legacy modals and raw-fetch duplicates. Test private failures independently from public-profile loading, and render account switches before effects run to catch stale private rows. Report active callers outside assigned ownership rather than silently widening edits.
 
 - Use installed esbuild with CSS loader `empty`, external React packages, and `react-dom/server` to assert rendered access gates and form states without adding a test framework; wrap wouter pages with `Router` and `ssrPath` to avoid browser-location errors.
@@ -458,6 +460,9 @@ Never fix bugs without a test.
 - When SSR tests bundle pages as CJS, obtain React Query provider from the same CJS export. Mixing ESM provider and CJS hook creates separate contexts and false missing-provider failures.
 
 ## Storefront session and history checks
+
+- Before retiring game routes, trace shared account sessions and purchase-history verification links. Keep a non-game verification page and narrowly allow auth/password bridge endpoints; block economy APIs before parsers with case/trailing-slash coverage, including GET handlers that settle or expire money. Never remove financial tables as feature cleanup.
+- For Node SSR checks of TSX pages, set esbuild `jsx: 'automatic'` and create temporary bundles beneath the staged project so external dependencies resolve through its node_modules; clean them after each run.
 
 - Test session insertion/invalidation failures with SQL triggers on disposable MariaDB, and require no cookie before commit. Freeze time across two logins to catch identical JWTs; add random `jti` without changing existing session schema.
 - Test both authentication and history query identity semantics. A matching-account middleware cannot close IDOR when downstream SQL expands Java `Foo` into Bedrock `.Foo`; keep leading dots significant and test actual returned rows after route integration.

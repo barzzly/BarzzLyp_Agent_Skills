@@ -45,6 +45,12 @@ metadata:
 7. For panel refreshes, keep channel IDs in one small sender script, target only requested channels, delete only bot-authored messages, send item/rank/coin payloads, and avoid starting a second long-lived bot process. Build Coins from the existing panel convention or source-of-truth product builder, including its coin emoji/list/description and `Webstore Noesantara` link; omit only the body image when requested while retaining footer logo. Add `content: '|| @everyone ||'` when the panel convention requires a visible everyone mention, then verify it through the API. Never replace a rich existing panel with a minimal placeholder just because the catalog is available.
 8. Check source for stale branding and inspect `git diff --check`. Report changed scope, runtime status, message IDs verified, and that unrelated human messages were preserved.
 
+## RCON migration
+
+- Resolve ambiguous ECO RPG labels against exact old/new panel server identifiers before changing the bot. Match target RCON allocation and active `server.properties` password; preserve other bot env keys and back up `.env` with owner-only permissions.
+- Inspect PM2 RCON override key names without printing secrets. If no overrides exist and bot loads dotenv, restart only intended bot without `--update-env`; verify a fresh Discord ready log and `unstable_restarts: 0`.
+- Recheck target power state immediately before final verification; earlier offline state may have changed. When running, use bot's installed `rcon-client` to authenticate and send read-only `list`, then close connection. TCP reachability alone does not prove password authentication. Never start a second Discord bot instance for this check.
+
 ## Pitfalls
 
 - Do not add footer logic only to a shop panel when the requirement covers every embed; donation, announcement, moderation, utility, webhook, and future embeds use separate construction paths.

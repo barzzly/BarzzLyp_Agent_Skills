@@ -331,6 +331,8 @@ When web panel logins are blocked by Cloudflare Turnstile, bypass the web UI ent
    EOF
    ```
 
+For IP/port migration, follow [network allocations](references/network-allocation-migration.md).
+
 ## Procedure 2: Server Control & File Editing via Client REST API
 
 1. **Authentication & User-Agent**:
@@ -457,7 +459,7 @@ When performing server wipes, seasonal resets, or clearing game databases associ
    Extract `name`, `host.address`, `host.port`, `username`, and `relationships.password.attributes.password`.
 
 2. **Stop Server Before Database Operations**:
-   Always transition server state to `offline` via `POST /api/client/servers/<SERVER_ID>/power` with `{"signal": "stop"}` before wiping or truncating tables. This prevents HikariCP connection pool errors, locked tables, and in-flight write crashes during shutdown.
+   Confirm `offline` before target wipes/truncation. For imports/clones with an unchanged source, follow [database clone verification](references/database-clone-verification.md).
 
 3. **Pre-Wipe Local Backup (Mandatory)**:
    Always dump all databases locally before any destructive command:

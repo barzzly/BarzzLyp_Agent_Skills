@@ -195,6 +195,13 @@ Standard procedure for deploying web applications (Node.js/Express, Vite/React, 
   ```
 - Verify default Nginx virtual host handles raw IP visits so internal applications only answer when requested by their exact domain name.
 
+## Store game-server cutover
+
+- Resolve game database credentials from target Pterodactyl `/databases?include=password` and match exact plugin schemas. Changing only database names is insufficient when host, port, username, or password changes. Verify target required tables with read-only queries before changing website pools. Preserve local storefront transaction DB and shared LuckPerms when target plugin still uses that shared connection.
+- Match RCON to target labeled allocation and target `server.properties` password. Keep target power state unchanged unless startup is requested; configuration success while server offline does not prove purchase delivery.
+- Remove game UI/routes without dropping wallet, transfer, or transaction history. Audit shared auth/session dependencies before unmounting `/api/minigames`: storefront private history can depend on that namespace. Preserve real owner authentication; nickname-only store login cannot replace it. Reject removed game/transfer API paths explicitly before SPA fallback and large body parsing, including case/trailing-slash variants.
+- Preserve dirty live source through an isolated snapshot. Read PM2 override key names without printing secrets; when PM2 has no DB/RCON overrides, app dotenv reload can pick up edited `.env` without `--update-env`. Verify public leaderboard JSON equals read-only queries against new DB, not merely HTTP 200.
+
 ## Verification Gates
 
 - **Paid-item delivery fencing**: Atomically claim a DB order before any RCON call, persist each item intent before dispatch, and retain ambiguous `processing`/`review` outcomes across restart. Never auto-reset or retry a command whose response/persistence was lost; RCON acknowledgement is not durable provider settlement. Test concurrent callbacks beyond pool capacity, partial delivery, post-command DB failure, and signed gateway amount/reference/order binding using an isolated DB and transport fixtures.
