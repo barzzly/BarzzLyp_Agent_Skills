@@ -13,11 +13,11 @@ metadata:
 
 # Pterodactyl Server Management (SFTP & Client API)
 
-Honor explicit final power state: “stop and delete” leaves server offline. For player-data wipes, follow [database reset](references/player-data-reset.md). For dungeon WorldGuard/ability scope, inspect PRIVATE vs PUBLIC world binding before promising a global flag works; follow [dungeon-worldguard scope](references/dungeon-worldguard-scope.md).
+Honor final power state. For player wipes, see [database reset](references/player-data-reset.md). For schedule/task cloning, see [schedule replication](references/pterodactyl-schedule-replication.md). For dungeon WorldGuard/abilities, see [dungeon-worldguard scope](references/dungeon-worldguard-scope.md).
 
 ## Execution preference
 
-- Work directly on the active remote server; use narrow backed-up edits and read-back checks. Avoid local Minecraft/Paper launches and production mass-spawn tests. Mark untested gameplay and visuals clearly.
+- Work directly on active remote server; use backed-up edits and read-back checks. Avoid local Paper launches and mass-spawn tests. Mark untested items clearly.
 - For dungeon mob substitutions or stat scaling, scope new MythicMobs IDs to the requested dungeon/server rather than editing shared vanilla overrides or existing custom mobs; back up live dungeon files, preserve wave/objective IDs and bosses, check every new spawn reference, reload MythicMobs before the dungeon plugin, then validate the dungeon and read back deployed files. Config validation does not prove in-game health or combat.
 - Keep deployment critical path in the foreground. On takeover, inspect existing artifacts before changing files; interruption does not undo writes. For timed work, reserve verification time and distinguish a worker's exit from task completion.
 - In reports, name target server and separate local, deployed YAML, and JAR state. Hash the remote JAR against release artifact; version alone is insufficient. Distinguish config validation from real gameplay.
