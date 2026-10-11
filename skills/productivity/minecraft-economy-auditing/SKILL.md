@@ -28,4 +28,16 @@ For DeluxeMenus CoinShop price changes, discover the actual registered menu in `
 - AuraSkills +50% ALL skill XP uses `auraskills.multiplier.50`, not `1.5`. Use the same temporary/contextual LuckPerms grant, then native `auraskills:skills multiplier <live-player>` to verify 1.5x / +50%. Existing AuraSkills multiplier nodes add together; do not infer absence from `lp search auraskills.multiplier.*`, which can match the literal node rather than every numeric suffix. Preserve existing boosters and exact node identity.
 - Record activation timestamps from fresh console receipts and calculate local expiry with timezone-aware arithmetic. Distinguish native multiplier-state checks from an actual sale or XP-gain test; do not manipulate a real player's inventory or balance merely to prove a config event.
 
+## Player wealth, money transfers, and illicit economy auditing
+
+When investigating suspicious player wealth spikes, money transfers, or player `/pay` auditing:
+1. **Resolve UUID and Alts**: Query `/usercache.json` to map usernames to UUIDs. Check target's `plugins/Essentials/userdata/<uuid>.yml` for exact balance, IP address, and logout coordinates; matching IP subnets and identical XYZ logout coordinates confirm alt accounts.
+2. **Never mass-fetch individual userdata files**: Fetching hundreds of `userdata/*.yml` files sequentially or via concurrent API calls triggers Pterodactyl panel HTTP 429 rate limits. Instead, trigger `/baltop` or `/bal <player>` via Pterodactyl console command API (`/servers/<id>/command`), then read the sorted leaderboard formatted in `logs/latest.log`.
+3. **Account for silent `/pay` commands**: When `spigot.yml` has `commands.log: false` and Essentials has `economy-log-enabled: false`, player `/pay` transactions do not log command text to console or `latest.log`. Never infer no money moved from empty `/pay` log search.
+4. **Inspect alternative wealth transfer channels**:
+   - **Auction House (`plugins/PlayerAuctions/data/database.db`)**: Often used to bypass direct trade scrutiny. Download the SQLite file and query `playerauctions_recents` (`uuid`, `target`, `price`, `recent` for `BOUGHT`/`SOLD`/`AUCTIONED`) to find multi-million transactions. To identify exact items traded, parse the `item` BLOB: locate the GZIP stream offset (`\x1f\x8b\x08`) and decompress (`zlib.decompress(blob[offset:], 16 + zlib.MAX_WBITS)`) to extract Paper NBT custom names, lore, MMOItems ability sets, and `PublicBukkitValues` such as `excellentcrates:crate_key.id`.
+   - **Trade Plugin Logs (`plugins/AxTrade/logs/YYYY-MM-DD.log`)**: Review daily trade logs to see direct player-to-player item and currency exchanges, including aborted vs completed trades.
+   - **Sellwand & Server Shops**: Inspect `plugins/NoeSellwand/history/YYYY-MM-DD.log` (tab-delimited: `timestamp`, `uuid`, `name`, `wand`, `chest_uuid`, `item_breakdown`, `count`, `payout`, `multiplier`) and `plugins/ShopGUIPlus/` to calculate exact grinding earnings vs illicit injections, and console logs for crate key debits (`/eco take <player> <amount>`).
+   - **Sanction and Staff Action History**: Extract ban context from `plugins/LiteBans/litebans.mv.db` (or console search around `Temp-Banned` / `Temp-IP-Banned`) to verify staff interventions and reason codes.
+
 For server connection, backups, and deployment rules, load `pterodactyl-server-management` too.
