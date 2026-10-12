@@ -226,6 +226,14 @@ For Damage Indicator forks, load [references/damage-indicator-fork.md](reference
 - Fix: enforce a non-zero forward offset (e.g. `@forward{f=1;y=0;lockpitch=true}` or `@forward{f=0.5;y=0}`) so direction vectors have non-zero magnitude and normalize to valid unit vectors without `NaN`.
 - Apply live fixes without server restart by executing console `mm reload` (or `mythicmobs reload`), which immediately reloads skill and mob definitions in memory with zero downtime.
 
+## Economy spike and transaction auditing
+
+- To trace unexpected player wealth spikes on Paper economy servers, check transaction logs across plugins before suspecting dupe glitches:
+  1. Essentials `userdata/<uuid>.yml`: check exact balance and fractional digits (long floating point remainders typically indicate percentage multipliers).
+  2. `plugins/AxTrade/logs/`: search player name for direct peer-to-peer trades involving high-value currency (`Currencies: money: ...`).
+  3. `plugins/NoeSellwand/history/`: inspect bulk chest sell logs; elevated sellwand multipliers (e.g. 1.5x) on mass farm crops (Nether Wart, Potato) accumulate tens of millions rapidly through normal farming.
+  4. Server logs (`logs/*.log.gz`): search for administrative intervention (`/eco take` / `/eco give`) or automated crate purchases.
+
 ## MythicLib fake damage and AdvancedEnchantments guard threading
 
 - For `Cannot add entity off-main` with MythicLib `EntityManager.canInteract` → `CanTargetCondition` → AE `DefenseTrigger` → `GuardEffect`, distinguish fake DamageCheckEvent from real damage. Installed AE 9.24.13 does not exclude that event; MythicMobs 5.13.0 evaluates child `isUsable` conditions before applying MetaSkillMechanic `forceSync`, so adding `sync=true` to that child alone does not fix condition threading.
