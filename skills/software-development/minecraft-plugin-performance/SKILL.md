@@ -221,9 +221,10 @@ For Damage Indicator forks, load [references/damage-indicator-fork.md](reference
 
 ## MythicMobs projectile zero-vector NaN position crashes
 
-- For Paper errors reporting `New entity position is invalid! Tried to set invalid position (NaN,NaN,NaN) for entity ... ArmorStand` accompanied by repeated `[MythicMobs] getEntitiesNearLocation: invalid location (∞/NaN)` warnings: inspect projectile and missile mechanics targeting `@Forward{f=0;y=0}` or origin (`distance=0`).
-- When target distance is zero, MythicMobs calculates a `(0, 0, 0)` direction vector. Normalizing a zero-length vector divides by zero, producing `(NaN, NaN, NaN)` velocity and coordinates. Each tick of projectile movement warns `invalid location (∞/NaN)`, and when `close()` fires `onEnd` or `onHit` skills, mechanics like `summon{type=...}` inherit `(NaN, NaN, NaN)` as `@origin`. Paper's `Entity.checkPosition` rejects placement at `NaN` coordinates and throws an error before discarding the entity.
-- Fix: enforce a non-zero forward offset (e.g. `@forward{f=1;y=0;lockpitch=true}` or `@forward{f=0.5;y=0}`) so direction vectors have non-zero magnitude and normalize to valid unit vectors without `NaN`.
+- For Paper errors reporting `New entity position is invalid! Tried to set invalid position (NaN,NaN,NaN) for entity ... ArmorStand` accompanied by repeated `[MythicMobs] getEntitiesNearLocation: invalid location (∞/NaN)` warnings:
+  1. Inspect `onHitBlockSkill`, `onEnd`, or `onHit` skills targeting `@ProjectileForward{...}`: when a projectile impacts or terminates, `currentVelocity` is `(0, 0, 0)`. `ProjectileForwardTargeter` calls `currentVelocity.normalize()`, dividing 0 by 0 to yield `NaN`. Fix: replace `@ProjectileForward` with `@origin{y=...}` or `@forward{f=1}` in impact skills.
+  2. Inspect returning missiles targeting `@self` with `hugsurface=true` (`hs=true`): `surfaceMode != NONE` executes `currentVelocity.setY(0).normalize()`. When the missile reaches the player (`distance=0`), dividing by zero yields `(NaN, NaN, NaN)`. Fix: set `hs=false;hfs=0` on returning missiles.
+  3. Inspect sub-projectiles in explosion skills lacking explicit targeters: they inherit target metadata which may be at origin distance 0. Fix: enforce explicit non-zero targeters like `@forward{f=1}`.
 - Apply live fixes without server restart by executing console `mm reload` (or `mythicmobs reload`), which immediately reloads skill and mob definitions in memory with zero downtime.
 
 ## Economy spike and transaction auditing
