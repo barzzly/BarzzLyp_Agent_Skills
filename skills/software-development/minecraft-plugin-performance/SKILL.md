@@ -412,3 +412,11 @@ For built-in CustomFishing menus, load [references/native-fishing-index.md](refe
 - Keep `hooks.LuckPerms.use_permission_cache: false` in AuraSkills on this server to prevent stale multiplier caches on LP rank/group removals.
 - Apply config-only changes live using console `/skills reload` and `/ae reload` without restarting the server.
 
+## UltraCosmetics NMS Morph ElderGuardian ClassCastException
+
+- In UltraCosmetics 3.16-RELEASE on modern Paper (1.21.x / Universe 1.21.11), `MorphElderGuardian` spawns an internal NMS entity `CustomGuardian` with `EntityTypes.ELDER_GUARDIAN`.
+- However, `CustomGuardian` extends `EntityGuardian` (regular Guardian) instead of `ElderGuardian`.
+- When the morphed player performs any left click (attacking, breaking, clicking air), `PlayerInteractEvent` triggers `MorphElderGuardian.shootLaser()`, which calls `customGuardian.getBukkitEntity()`.
+- CraftBukkit's `CraftEntity.getEntity` attempts to cast `CustomGuardian` to `net.minecraft.world.entity.monster.ElderGuardian`, throwing a fatal `java.lang.ClassCastException` on every single interaction (spams console thousands of times).
+- Mitigation: Disable `ElderGuardian` under `Morphs` in `plugins/UltraCosmetics/config.yml` (`Enabled: false`, `Skill-Enabled: false`, `Treasure-Chest-Weight: 0`) and reload live via `/uc reload`. This prevents players from equipping the broken morph and stops the `PlayerInteractEvent` error cascade without server restart.
+
