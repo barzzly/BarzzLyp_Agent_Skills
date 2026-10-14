@@ -397,3 +397,17 @@ See [references/paper-threading-and-verification.md](references/paper-threading-
 For whole CustomFishing audits, load [references/fishing-audit-regressions.md](references/fishing-audit-regressions.md) for delayed rewards, bag/market boundaries, atomic storage, and real-runtime fixture pitfalls.
 
 For built-in CustomFishing menus, load [references/native-fishing-index.md](references/native-fishing-index.md): shaded Adventure compatibility, native stats aliases, command migration, read-only inventory safety, and isolated Paper smoke tests.
+
+## AuraSkills and AdvancedEnchantments optimization and glyphs
+
+- AuraSkills serializes action bar messages through `LegacyComponentSerializer` / `fromLegacyText` before dispatching packets via PacketEvents/Spigot.
+- Because legacy formatting (`§` codes) cannot represent font keys, any custom font tags (such as `<font:nexo:default>`) are stripped or lost, forcing the Minecraft client to look up characters in `minecraft:default`.
+- Any Nexo private-use Unicode characters (`\uE307`, `\uE30D`) sent in AuraSkills action bar will ALWAYS render as tofu boxes `[]` because they do not exist in vanilla `minecraft:default`.
+- Action bar icons in `messages/global.yml` must use standard Minecraft font symbols:
+  - Health: `<red>{hp}/{max_hp} ❤` (`\u2764` heavy black heart)
+  - Mana: `<aqua>{mana}/{max_mana} ✦` (`\u2726` four-pointed star / mana sparkle) or `{{units.mana}}`
+- In AuraSkills 2.x, farming mana ability is `auraskills/replenish` (not legacy `auraskills/growth_aura`).
+- In `plugins/AdvancedEnchantments/config.yml`, set `settings.enable-combo-for-mobs: false` to stop unnecessary combo tracking overhead on hostile/passive mob damage events.
+- Keep `hooks.LuckPerms.use_permission_cache: false` in AuraSkills on this server to prevent stale multiplier caches on LP rank/group removals.
+- Apply config-only changes live using console `/skills reload` and `/ae reload` without restarting the server.
+

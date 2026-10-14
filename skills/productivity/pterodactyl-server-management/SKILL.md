@@ -638,14 +638,3 @@ When auditing server storage or cleaning up obsolete configs (`.old`, `.bak`, `.
      - Minecraft 1.20.1 does not support resource pack `overlays` (introduced in 1.20.2). Any item models placed inside overlay directories (such as `modelengine_1_19_4/assets/minecraft/models/item/player_head.json`) MUST also be copied directly to the root `assets/minecraft/models/item/player_head.json` so 1.20.1 clients load without missing models.
      - In `pack.mcmeta`, declare `pack_format: 15` alongside `"supported_formats": {"min_inclusive": 15, "max_inclusive": 32767}` to eliminate red incompatible-version warnings across both legacy and modern clients.
 
-- **AuraSkills Action Bar Glyphs & Farming Ability Compatibility**:
-  - AuraSkills serializes action bar messages through `LegacyComponentSerializer` / `fromLegacyText` before dispatching packets via PacketEvents/Spigot. Because legacy formatting (`§` codes) cannot represent font keys, any custom font tags (such as `<font:nexo:default>`) are stripped or lost, forcing the Minecraft client to look up characters in `minecraft:default`.
-  - Any Nexo private-use Unicode characters (`\uE307`, `\uE30D`) sent in AuraSkills action bar will ALWAYS render as tofu boxes `[]` because they do not exist in vanilla `minecraft:default`.
-  - Action bar icons in `messages/global.yml` must use standard Minecraft font symbols:
-    - Health: `<red>{hp}/{max_hp} ❤` (`\u2764` heavy black heart)
-    - Mana: `<aqua>{mana}/{max_mana} ✦` (`\u2726` four-pointed star / mana sparkle) or `{{units.mana}}`
-  - In AuraSkills 2.x, the farming mana ability is `auraskills/replenish` (not legacy `auraskills/growth_aura`). Using `growth_aura` triggers error `Could not find mana ability auraskills/growth_aura while loading auraskills/farming`.
-  - In `plugins/AdvancedEnchantments/config.yml`, set `settings.enable-combo-for-mobs: false` to stop unnecessary combo tracking overhead on hostile/passive mob damage events.
-  - Keep `hooks.LuckPerms.use_permission_cache: false` in AuraSkills on this server to prevent stale multiplier caches on LP rank/group removals.
-  - Apply config-only changes live using console `/skills reload` and `/ae reload` without restarting the server.
-
