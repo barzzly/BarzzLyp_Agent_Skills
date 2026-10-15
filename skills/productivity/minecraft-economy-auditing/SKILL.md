@@ -46,5 +46,9 @@ When investigating suspicious player wealth spikes, money transfers, or player `
      - Webstore DB (`transactions` table): trace web purchases vs manual donations (`MAN-...` prefix).
    - **API Client UA Pitfall**: When scripting Pterodactyl API file downloads or contents fetches in Python, always supply an explicit header like `User-Agent: curl/7.88.1`; default `Python-urllib` is blocked by Cloudflare/WAF with HTTP 403 Forbidden.
    - **Sanction and Staff Action History**: Extract ban context from `plugins/LiteBans/litebans.mv.db` (or console search around `Temp-Banned` / `Temp-IP-Banned`) to verify staff interventions and reason codes.
+   - **Player Warp Inspection across Servers**: Identify the exact player warp plugin per server before inspecting player shops or community warps:
+     - `AxPlayerWarps` (EcoRPG): persists in H2 MVStore database (`plugins/AxPlayerWarps/data.mv.db`). Query with H2 JDBC driver (`org.h2.Driver`) using URL `jdbc:h2:<path>;mode=MySQL` and empty properties (`user=null`, `password=null`) against table `AXPLAYERWARPS_WARPS` (`NAME`, `OWNER_ID`, `CATEGORY_ID`, coordinates).
+     - `PlayerWarps` (LegacySchool): persists in structured YAML (`plugins/PlayerWarps/data.yml`) under `warps.<uuid>.name` and `display-name`.
+   - **Pterodactyl File Fetch Limits & Downloads**: The panel API `/files/contents?file=...` rejects files larger than ~100KB–200KB with `HTTP 400: Bad Request` (e.g. live `logs/latest.log`, Shopkeepers `save.yml`, or `.mv.db` databases). Retrieve a signed node URL using `/files/download?file=...` and stream to `/tmp/` instead. Avoid sequential per-file HTTP/SFTP loops across hundreds of records (such as `userdata/`), which exhaust 180s command execution timeouts.
 
 For server connection, backups, and deployment rules, load `pterodactyl-server-management` too.
