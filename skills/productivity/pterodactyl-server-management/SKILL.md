@@ -638,3 +638,13 @@ When auditing server storage or cleaning up obsolete configs (`.old`, `.bak`, `.
      - Minecraft 1.20.1 does not support resource pack `overlays` (introduced in 1.20.2). Any item models placed inside overlay directories (such as `modelengine_1_19_4/assets/minecraft/models/item/player_head.json`) MUST also be copied directly to the root `assets/minecraft/models/item/player_head.json` so 1.20.1 clients load without missing models.
      - In `pack.mcmeta`, declare `pack_format: 15` alongside `"supported_formats": {"min_inclusive": 15, "max_inclusive": 32767}` to eliminate red incompatible-version warnings across both legacy and modern clients.
 
+## LuckPerms World Context Scoping and Parent Inheritance Pitfalls
+
+- When scoping permissions (such as `/gamemode`, `/gms`, `/gmsp`) to specific worlds:
+  1. Never pass multiple world parameters in a single LuckPerms set command (`world=w1 world=w2`). LuckPerms forms a single conjunction context set where ALL worlds must match simultaneously, which is impossible since a player occupies only one world at a time.
+  2. Always add discrete nodes per target world:
+     `lp group <group> permission set <perm> true server=<server> world=<target_world>`
+  3. **Parent Group Leakage**: If a child group (e.g. `tajir`) inherits a parent group (e.g. `donatur`), and the parent has an unrestricted node (`server=<server>` without world filter), the child group will inherit the permission in unauthorized worlds (e.g. `lobby`, dungeons) despite having scoped nodes on the child. Unset the unscoped node on the parent group and apply the matching world-scoped nodes to both parent and child.
+  4. Always verify effective permission evaluation on online players using `lp user <player> permission check <node>` across target and restricted worlds.
+
+
