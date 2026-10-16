@@ -419,4 +419,31 @@ For built-in CustomFishing menus, load [references/native-fishing-index.md](refe
 - When the morphed player performs any left click (attacking, breaking, clicking air), `PlayerInteractEvent` triggers `MorphElderGuardian.shootLaser()`, which calls `customGuardian.getBukkitEntity()`.
 - CraftBukkit's `CraftEntity.getEntity` attempts to cast `CustomGuardian` to `net.minecraft.world.entity.monster.ElderGuardian`, throwing a fatal `java.lang.ClassCastException` on every single interaction (spams console thousands of times).
 - Mitigation: Disable `ElderGuardian` under `Morphs` in `plugins/UltraCosmetics/config.yml` (`Enabled: false`, `Skill-Enabled: false`, `Treasure-Chest-Weight: 0`) and reload live via `/uc reload`. This prevents players from equipping the broken morph and stops the `PlayerInteractEvent` error cascade without server restart.
+- Similarly, disable `Dragon` under `Mounts.Dragon` (`Enabled: false`, `Show-Description: false`, `Treasure-Chest-Weight: 0`) and reload live via `/uc reload` to eliminate Ender Dragon mount hitbox, flight, and chunk loading abuse.
+
+## LuckPerms World-Scoped Permissions and Inheritance Pitfalls
+
+- When restricting commands (e.g. `essentials.gamemode`, `/gms`, `/gmsp`) to specific worlds (`world`, `world_nether`, `world_the_end`, `resource`), check the parent group inheritance first.
+- If a parent group (such as `donatur` inherited by `tajir`) holds the permission globally on `server=noerpg` without world contexts, child groups will inherit the permission in ALL worlds, ignoring intended restrictions in lobby or dungeons. The global permission on the parent must be unset and scoped to the allowed worlds on both groups.
+- In LuckPerms, each permission node's context set is evaluated as a conjunction (AND). Never pass multiple world keys in one command (`world=a world=b`) expecting an OR match; set separate permission nodes for each allowed world (`world=world`, `world=world_nether`, `world=world_the_end`, `world=resource`).
+
+## DeluxeMenus Base64 Head Truncation and "Illegal base64 character 2e"
+
+- In DeluxeMenus, custom heads are specified via `material: basehead-<base64>`.
+- If a menu YAML contains an ellipsis or placeholder string like `material: basehead-eyJ0ZX...9fX0=` (commonly introduced by copying redacted/truncated console output or tutorial snippets), Java's `Base64$Decoder.decode` throws `java.lang.IllegalArgumentException: Illegal base64 character 2e` (`2e` hex = ASCII `.` period) whenever the menu is opened.
+- Mitigation:
+  1. Generate untruncated base64 payloads programmatically: `{"textures":{"SKIN":{"url":"http://textures.minecraft.net/texture/<hash>"}}}` encoded as Base64 (180-184 characters without whitespace or dots).
+  2. Upload patched menu YAML via SFTP.
+  3. Run live reload `/dm reload` from console without restarting the server.
+
+## Noesantara ECORPG Asset Architecture and Inventory
+
+- **RPG Packs / Kits (15 Packs):** Registered across MMOItems (`plugins/MMOItems/item/kit_*.yml`) and Nexo (`plugins/Nexo/items/Kits/`): Arcanist, Asura, BlueFlame, Cardael, Cosmo, Crystalline, DragonMecha, DrakeGoat, EternalBones, InfernalRune, Luminite, Lunar, MoltenMagma, Oni, Skeleton.
+- **Senjata Legend (49 Weapons):** Registered across MMOItems (`plugins/MMOItems/item/slfree.yml`), Nexo (`plugins/Nexo/items/Senjata Legend/`), and MythicMobs (`plugins/MythicMobs/skills/Senjata Legend/`): 10 Awakened Class weapons, 16 Hero/Legend weapons, 23 Class Legendaries.
+- **Bosses (8 Major Boss Packs):** Configured across MythicMobs (`plugins/MythicMobs/packs/`) and ModelEngine (`plugins/ModelEngine/blueprints/BOSS/`): Slime Cuboss (30K HP — `dungeonSlime`), Hollow Keeper (10K HP — `DungeonHollow`), Aloc The Demonic Mech (5K HP — `DungeonAloc`), The Nyx (`DungeonDreadLands`), Piglin Mech, Tower Skeleton, Historical Knight Infantry, Cursed Mobs.
+- **Pets & Mounts (105 Total):** 31 MCPets ModelEngine 3D pets/mounts (`plugins/MCPets/Pets/`: CubeDragons [8], CubeSweets [8], EliteMounts [5], RPGMountVol3 [5], RPGMountVol4 [5]) + 74 UltraCosmetics animated pets (`plugins/UltraCosmetics/config.yml`).
+- **Cosmetics (546 Total):** 102 Nexo custom 3D cosmetic items (`plugins/Nexo/items/Cosmetics/`: Wings [30], Vehicles [36], Hats [10], Valentine [13], Unicorn [6], etc.) + 444 UltraCosmetics cosmetics (157 Hats, 70 Morphs, 33 Particles, 33 Projectile Effects, 28 Gadgets, 22 Mounts, 13 Emotes, 7 Suits, 7 Death Effects, 74 Pets).
+- **Tags (19 Tags):** Configured in DeluxeTags (`plugins/DeluxeTags/config.yml`): 4 server tags (`winner`, `sultan`, `noe`, `noebiru`), 10 point/event tags (`pt_*`), 5 custom tags (`shane_1`, `shane_2`, `noeinon_1`, `noeinon_2`, `Kia`).
+
+
 
