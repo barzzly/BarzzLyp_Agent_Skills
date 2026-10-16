@@ -647,4 +647,14 @@ When auditing server storage or cleaning up obsolete configs (`.old`, `.bak`, `.
   3. **Parent Group Leakage**: If a child group (e.g. `tajir`) inherits a parent group (e.g. `donatur`), and the parent has an unrestricted node (`server=<server>` without world filter), the child group will inherit the permission in unauthorized worlds (e.g. `lobby`, dungeons) despite having scoped nodes on the child. Unset the unscoped node on the parent group and apply the matching world-scoped nodes to both parent and child.
   4. Always verify effective permission evaluation on online players using `lp user <player> permission check <node>` across target and restricted worlds.
 
+## DeluxeMenus Base64 Head Truncation and "Illegal base64 character 2e"
+
+- In DeluxeMenus, custom heads can be defined via `material: basehead-<base64>`.
+- If a menu YAML contains an ellipsis or placeholder string like `material: basehead-eyJ0ZX...9fX0=` (frequently caused by accidentally copy-pasting truncated/redacted console output or tutorial templates), Java's `Base64$Decoder.decode` fails with `java.lang.IllegalArgumentException: Illegal base64 character 2e` (`2e` hex = ASCII `.` period) whenever the menu is rendered for a player.
+- Mitigation:
+  1. Generate the untruncated base64 payload programmatically: `{"textures":{"SKIN":{"url":"http://textures.minecraft.net/texture/<hash>"}}}` encoded as Base64 (180-184 chars without line breaks or dots).
+  2. Upload patched menu YAML via SFTP.
+  3. Run live reload `/dm reload` from console without restarting the server.
+
+
 
