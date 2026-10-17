@@ -135,6 +135,15 @@ For missing MMOItems abilities, modern MythicLib aliases and invisible PAPER ani
 - User prefers one consolidated `MMOItems/item/sword.yml` for this weapon-pack class; preserve only explicitly requested roster entries.
 - When sending a fix-only archive, include only files actually changed plus unavoidable shared registries; do not resend every asset for that class unless user requests a standalone ready-to-install pack.
 - Delete unused raw/vendor alternatives from final output; keep original source archives untouched unless explicitly asked.
+
+## Nexo Custom Material Definitions and Live Reloading
+
+- When transforming unconfigured vendor pack items (e.g. `plugins/Nexo/items/Material/Material_PixelMine ( Sugar Model 1204 )/`):
+  1. Rename the item YAML key directly (e.g. `charred_skull` -> `charm_skull`, `bat_wing` -> `bat_fragment`, `spirit_mask` -> `ruka_ragnamok`) rather than duplicating keys with the same `Pack.custom_model_data`. Nexo strictly warns on startup/reload if two items share the same material and CustomModelData.
+  2. Format `itemname` using Adventure MiniMessage gradients: `itemname: "<gradient:#hex1:#hex2>sᴍᴀʟʟᴄᴀᴘs</gradient>"`.
+  3. Format `lore` using standard empty line `- ''` followed by `§7` and smallcaps unicode lines.
+  4. Apply changes live via console `nexo reload items`. Never restart the production server for Nexo item or lore adjustments.
+
 - Prefer deterministic Python `zipfile` processing over manual extraction for nested archives, path safety, counting, and verification.
 - Cross-verify the actual integration chain before deployment: weapons using MMOItems/ItemsAdder/MythicLib/MythicMobs need material/CMD parity and numeric cooldown checks; pets using MCPets/Nexo/MythicMobs/ModelEngine need root and skin icon mappings, mob/skill references, blueprint IDs and generated assets checked. Do not require absent plugins to validate an unrelated pack class.
 - **Multi-Version Resource Pack & ModelEngine Overlay Compatibility (1.20.1 to 26.x+)**:
