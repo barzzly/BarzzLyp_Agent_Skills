@@ -6,3 +6,14 @@
 - EnchantListData.mergeWith uses Math.max: existing level V plus gem VII gives VII, not XII. Keep enchant levels explicit, preserve stronger levels and do not imply mining enchants help fishing catches. Shared kit types contain rods/weapons/armor: item-type restriction alone does not distinguish material; socket color is another gate, not a universal material constraint.
 - Ensure modern stats have language/stats.yml labels and language/lore-format.yml placeholders; otherwise valid modifiers can lack visible lore. Preserve unrelated labels and reward templates.
 - Compare remote bytes before writing, use native mmoitems reload, verify fresh response and all catalog IDs through mmoitems itemlist GEM_STONE. Itemlist confirms registration, not item build/socket behavior. Report live socket gameplay and existing item migration gaps. Serialized Shopkeepers/ExcellentCrates stock is not refreshed by template edits; do not claim shop stock updated unless read back explicitly.
+
+## RPG Kit Gem Socket Synchronization & Live Reload
+
+- Gem sockets in kit templates (`plugins/MMOItems/item/kit_*.yml`, `armor.yml`) live strictly under `base.gem-sockets` as a string list.
+- Standard 4-socket kit baseline by item category:
+  - **Weapons** (Sword, Staff, Trident, Hammer, Spear, Scythe, Mace, Bow, Crossbow, Dagger, Rapier): `Cosmic Weapon`, `Fire Weapon`, `Air Weapon`, `Heroic Weapon`
+  - **Tools** (Axe, Pickaxe, Shovel, Hoe, Fishing Rod): `Cosmic Tools`, `Fire Tools`, `Air Tools`, `Commet Tools`
+  - **Shields**: `Cosmic Armor`, `Fire Armor`, `Air Armor`, `Void`
+  - **Armor** (Helmet, Chestplate, Leggings, Boots): `Void`, `Cosmic Armor`, `Fire Armor`, `Air Armor`
+- **Revision ID Auto-Update**: When adding or altering gem socket slots on existing items, increment `base.revision-id` (e.g. `1` -> `2`) on templates. With `item-revision.keep-data.gems: true` and `keep-data.enchantments: true` configured in `config.yml`, bumping `revision-id` ensures held items auto-refresh in players' hands to expose the new empty gem slot without wiping existing socketed gems or player enchants.
+- **Zero-Restart Deployment**: Never reboot the server for item template edits. Deploy the updated YAML and execute console command `mi reload` (or `mmoitems reload`). Confirm `[MMOItems] MMOItems <version> reloaded.` and `Loading item templates` in `logs/latest.log`.

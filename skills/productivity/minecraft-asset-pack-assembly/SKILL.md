@@ -139,10 +139,11 @@ For missing MMOItems abilities, modern MythicLib aliases and invisible PAPER ani
 ## Nexo Custom Material Definitions and Live Reloading
 
 - When transforming unconfigured vendor pack items (e.g. `plugins/Nexo/items/Material/Material_PixelMine ( Sugar Model 1204 )/`):
-  1. Rename the item YAML key directly (e.g. `charred_skull` -> `charm_skull`, `bat_wing` -> `bat_fragment`, `spirit_mask` -> `ruka_ragnamok`) rather than duplicating keys with the same `Pack.custom_model_data`. Nexo strictly warns on startup/reload if two items share the same material and CustomModelData.
-  2. Format `itemname` using Adventure MiniMessage gradients: `itemname: "<gradient:#hex1:#hex2>sᴍᴀʟʟᴄᴀᴘs</gradient>"`.
-  3. Format `lore` using standard empty line `- ''` followed by `§7` and smallcaps unicode lines.
-  4. Apply changes live via console `nexo reload items`. Never restart the production server for Nexo item or lore adjustments.
+  1. **Rename key directly**: Rename the top-level YAML key (e.g. `charred_skull` -> `charm_skull`, `bat_wing` -> `bat_fragment`, `spirit_mask` -> `ruka_ragnamok`) rather than duplicating keys with identical `Pack.custom_model_data`. Nexo emits duplicate CustomModelData warnings on reload if multiple IDs share the same base material and model ID.
+  2. **Gradient and Smallcaps Display Name**: Use Adventure MiniMessage gradients with unicode smallcaps: `itemname: "<gradient:#hex1:#hex2>sᴍᴀʟʟᴄᴀᴘs</gradient>"`.
+  3. **Lore Format**: Standardize lore with a leading blank line `- ''` followed by gray prefix `§7` and smallcaps unicode text lines.
+  4. **Command Syntax**: Use `/nexo give <item> [amount] [player]` (item ID is the first argument, followed by quantity, then player).
+  5. **Live Reloading**: Execute console command `nexo reload items` for live updates in milliseconds with zero server restart and zero TPS loss.
 
 - Prefer deterministic Python `zipfile` processing over manual extraction for nested archives, path safety, counting, and verification.
 - Cross-verify the actual integration chain before deployment: weapons using MMOItems/ItemsAdder/MythicLib/MythicMobs need material/CMD parity and numeric cooldown checks; pets using MCPets/Nexo/MythicMobs/ModelEngine need root and skin icon mappings, mob/skill references, blueprint IDs and generated assets checked. Do not require absent plugins to validate an unrelated pack class.
