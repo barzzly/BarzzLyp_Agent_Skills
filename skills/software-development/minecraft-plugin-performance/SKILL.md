@@ -445,5 +445,21 @@ For built-in CustomFishing menus, load [references/native-fishing-index.md](refe
 - **Cosmetics (546 Total):** 102 Nexo custom 3D cosmetic items (`plugins/Nexo/items/Cosmetics/`: Wings [30], Vehicles [36], Hats [10], Valentine [13], Unicorn [6], etc.) + 444 UltraCosmetics cosmetics (157 Hats, 70 Morphs, 33 Particles, 33 Projectile Effects, 28 Gadgets, 22 Mounts, 13 Emotes, 7 Suits, 7 Death Effects, 74 Pets).
 - **Tags (19 Tags):** Configured in DeluxeTags (`plugins/DeluxeTags/config.yml`): 4 server tags (`winner`, `sultan`, `noe`, `noebiru`), 10 point/event tags (`pt_*`), 5 custom tags (`shane_1`, `shane_2`, `noeinon_1`, `noeinon_2`, `Kia`).
 
+## Nexo Custom Material and Item Formatting
+
+- When modifying material definitions in `plugins/Nexo/items/Material/`:
+  1. Rename the item YAML key directly (e.g. `charred_skull` -> `charm_skull`, `bat_wing` -> `bat_fragment`, `spirit_mask` -> `ruka_ragnamok`) rather than duplicating keys with the same `Pack.custom_model_data`. Nexo strictly warns on startup/reload if two items share the same material and CustomModelData.
+  2. Use Adventure MiniMessage gradient formatting for item names: `itemname: "<gradient:#hex1:#hex2>sᴍᴀʟʟᴄᴀᴘs</gradient>"`.
+  3. Format lore lines with standard spacing: empty line `- ''` followed by `§7` and smallcaps unicode text (e.g. `§7ᴍᴀᴛᴇʀɪᴀʟ sᴘᴇsɪᴀʟ ᴇᴠᴇɴᴛ ʜᴀʟʟᴏᴡᴇᴇɴ`).
+  4. Reload live via console `nexo reload items` without server reboot. Verify with `nexo give <item> <amount> <player>`.
+
+## FancyHolograms Live Management and Deletion
+
+- In FancyHolograms (`plugins/FancyHolograms/holograms.yml`), holograms can be named with UUID strings (such as abandoned loot chest markers or external dungeon scripts).
+- To delete holograms live without server restart or editing YAML manually: execute console command `holo remove <name>` (or `hologram remove <name>`).
+- The command fires `HologramDeleteEvent`, despawns the TextDisplay/Display entity from the world, evicts it from memory, and asynchronously updates `holograms.yml`.
+- To reload configuration from disk without rebooting: execute console `fancyholograms reload`.
+
+
 
 

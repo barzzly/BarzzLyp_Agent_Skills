@@ -127,6 +127,13 @@ For missing MMOItems abilities, modern MythicLib aliases and invisible PAPER ani
 
 ## Standing Rules
 
+- **Server Content & Asset Roster Auditing (NoeRPG / Nexo Stack)**:
+  When auditing content counts (RPG packs, legendary weapons, bosses, pets, cosmetics, tags):
+  1. **Source of Truth**: Count custom assets defined in the resource pack and primary content plugins (Nexo, ModelEngine, MCPets, MMOItems, MythicMobs).
+  2. **Exclude Procedural & Vanilla Cosmetics**: Do not count UltraCosmetics vanilla particle effects, suits, or procedural pets into custom cosmetic pack totals unless specifically asked.
+  3. **Tags Scoping**: Count custom font glyph tags (Nexo `plugins/Nexo/glyphs/`) as custom tags; exclude text-only chat prefix/title plugins (e.g. DeluxeTags) unless chat titles are explicitly requested.
+  4. **RPG Packs**: Count full item/armor sets configured under `Nexo/items/Kits/` or `MMOItems/item/kit_*.yml`.
+
 - For three-mode resource-pack requests, use HDResourcePack, OPResourcePack and SPResourcePack with the established blue descriptions. Distinguish metadata-only copies from actual optimization; preserve source, keep HD quality intact, use lossless OP changes, and get explicit permission before reducing SP texture quality. Read [Named pack variants](references/named-pack-variants.md) and [Compression](references/audio-pack-compression.md) for build and verification details.
 
 - User wants finished folder shaped like working reference pack, not copied reference assets.
