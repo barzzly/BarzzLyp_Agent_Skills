@@ -17,7 +17,8 @@ Honor final power state. For player wipes, see [database reset](references/playe
 
 ## Execution preference
 
-- Work directly on active remote server; use backed-up edits and read-back checks. Avoid local Paper launches and mass-spawn tests. Mark untested items clearly.
+- Work directly on active remote server; use backed-up edits and read-back checks. First resolve the exact server from the user's name and live server inventory, then inspect the relevant remote files before editing. Avoid local Paper launches and mass-spawn tests. Mark untested items clearly.
+- For a remote inventory/config task, treat access denial as a blocker: do not infer absent files or item names from unrelated local snapshots, and do not claim work complete. Report the exact access boundary and request repaired authorized access or the needed file/input; resume after verifying access.
 - For dungeon mob substitutions or stat scaling, scope new MythicMobs IDs to the requested dungeon/server rather than editing shared vanilla overrides or existing custom mobs; back up live dungeon files, preserve wave/objective IDs and bosses, check every new spawn reference, reload MythicMobs before the dungeon plugin, then validate the dungeon and read back deployed files. Config validation does not prove in-game health or combat.
 - Keep deployment critical path in the foreground. On takeover, inspect existing artifacts before changing files; interruption does not undo writes. For timed work, reserve verification time and distinguish a worker's exit from task completion.
 - In reports, name target server and separate local, deployed YAML, and JAR state. Hash the remote JAR against release artifact; version alone is insufficient. Distinguish config validation from real gameplay.

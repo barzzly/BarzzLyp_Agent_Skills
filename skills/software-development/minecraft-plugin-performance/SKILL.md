@@ -14,8 +14,16 @@ For this user's Minecraft work, use Astra for parent and delegated agents. Inspe
 For this user's VPS, do not launch local Minecraft/Paper servers or graphical clients unless explicitly reauthorized. Use one Gradle worker and lightweight production-class regressions; perform runtime checks only on the authorized remote server after backup. Do not substitute production stress tests or mass spawns. Confirm restart timing when players are online; when the user defers restart until they say so, save and read back the config but do not restart or claim the live setting changed. Report visual/gameplay gaps separately. This constraint overrides isolated-server recipes below.
 
 1. Establish build gate before edits.
-   - Run project identity/verification scripts, `git diff --check`, and project build command.
-   - If dependency resolution blocks compilation, record exact missing artifacts; do not claim runtime compatibility or release a JAR.
+   - Run `git diff --check`; build with one Gradle worker and compatible JDK. Record artifact path, commit, size, and SHA-256.
+   - If Gradle fails before compilation, fix toolchain first. For JDK 25 patch metadata failures, retry with JDK 21: `JAVA_HOME=/usr/lib/jvm/java-21-openjdk-amd64 PATH=/usr/lib/jvm/java-21-openjdk-amd64/bin:$PATH ./gradlew clean build --no-daemon`. Clean build before artifact inspection; incremental output can retain deleted classes.
+   - After each logical source stage, run a focused compile before deleting interfaces, hooks, or shared helpers.
+
+2. Remove cross-module features by dependency graph, not regex sweep.
+   - Search every module, test, API surface, implementation, config loader, and descriptor for the feature symbols before deleting any type; remove callers first, then implementations, then orphaned files.
+   - Keep non-target integration behavior, such as item lookup or backpack state, separate from cosmetic-height code; do not delete a whole integration because one method is being removed.
+   - Inspect the full diff and run `git diff --check` after each edit; never use a broad rewrite when it can alter method signatures or leave duplicate declarations.
+   - Deploy only newly compiled artifact with verified source commit/checksum. Preserve remote JAR, upload to `plugins/`, and never restart unless explicitly asked.
+   - Scan source and `jar tf` for removed symbols/classes. After upload, verify exact remote path, filename, size, and SHA-256; unchanged remote metadata means upload failed.
 
 2. Audit execution context before optimizing hot paths.
    - Search plugin code for `CompletableFuture.runAsync`, `supplyAsync`, executor services, async scheduler calls, and Bukkit/Paper world/entity/event API calls.
@@ -362,8 +370,11 @@ For Damage Indicator forks, load [references/damage-indicator-fork.md](reference
 - Exercise real Next/Previous clicks and inviting a target on later pages, not only direct page constructors. Refresh the existing inventory for paging; avoid full candidate/head rebuild on successful, duplicate or full-party invite clicks. Render at most 28 entries, sort stably, recheck visibility/online/membership at click time, and keep inbox free of offline-profile/disk lookups. Benchmark production build/click methods with explicit mocked boundaries; do not label headless timings live lag guarantees.
 - Treat inbox/manage sharing slot 46 as mutually exclusive states in collision tests; preserve create at 49, invitation/disband at 40 and paging corners. Verify packaged and fallback layouts, exact selected denial/acceptance, expiry, full-party retries, foreign-recipient rejection and duplicate invitation TTL.
 
-## Plugin identity renames
+## Cross-plugin source and identity alignment
 
+- Verify dependency identity from the fresh upstream checkout's `plugin.yml` before wiring a companion plugin: use exact `name`, `main`, package, and API class names; source directory names and old artifact filenames are not authoritative. Build the upstream source before compiling the consumer, and scan consumer source/config/JAR descriptors for retired fork branding.
+- When the upstream API targets a newer Java release than the consumer, do not force the API JAR onto the consumer compiler or shade it. Use a small reflection-only optional bridge against exact upstream class/method names, fail closed when the provider is absent, and test the consumer on its own supported Java target; runtime compatibility still requires the actual server's Java version and provider JAR.
+- Separate provider plugin ID from source class/package branding: `softdepend` must match descriptor `name`, while imports or reflection must match compiled API packages. Verify both from the final upstream JAR before claiming integration.
 - Canonical dungeon source is `/home/barzzly/Minecraft/plugins/NoeDungeon` after the full identity rename; older Hollow checkouts and backups are historical, not automatically current. Verify Git state before selecting a source. NoeDungeon uses `barzzly.noesantara.noedungeon`, author `BarzzLy`, `/nd`, `/noedungeon`, `/ndparty`, `noedungeon.*`, default `nd_` and `.noedungeon-instance`.
 - User requires `/noedungeon` as the registered root with only `/nd` as its dungeon alias, not `/dungeon` retained as primary. Update plugin.yml, getCommand binding, help/usage/messages and docs together; preserve the separate party command unless requested. Check command-token boundaries so resource paths such as `menu/dungeon_list.yml` and data folders are not renamed. Packaging must not restore old source snapshots over current docs.
 - Test descriptor name/author/main, load renamed classes without initialization, and scan every final JAR entry plus uncompressed bytes for retired branding. Clean-build with one worker; keep immutable old releases outside the active deliverable rather than merely renaming old binaries. Preserve historical external fixture paths so a rename does not silently skip their assertions.
