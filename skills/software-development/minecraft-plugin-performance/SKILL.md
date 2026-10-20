@@ -7,6 +7,8 @@ author: Hermes Agent
 
 # Paper Minecraft Plugin Performance
 
+For async event threading collisions between MythicMobs/MythicLib and listener plugins (AdvancedEnchantments, etc.), see [MythicLib off-main threading](references/mythiclib-offmain-threading.md).
+
 ## Procedure
 
 For this user's Minecraft work, use Astra for parent and delegated agents. Inspect the delegation model override and verify a spawned child's actual model; changing the parent does not change a pinned child model. If correcting model selection, stop old-model workers before assigning their files to replacements.
