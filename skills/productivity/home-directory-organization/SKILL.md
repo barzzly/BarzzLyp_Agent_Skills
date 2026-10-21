@@ -10,7 +10,9 @@ metadata:
 # Home directory organization
 
 ## User preference and scope
-- Keep ordinary loose files out of the home directory root; group them by type and, where useful, subject. Use Pictures/, Scripts/, Configs/ and Documents/ rather than one unsorted dump folder.
+- Follow `/home/barzzly/DIRECTORY_RULES.md` as the authoritative single source of truth for filesystem organization.
+- Keep ordinary loose files out of the home directory root; group them by type and domain into existing domain folders (Minecraft/, Website/, Bot/, Projects/, Perkuliahan/, Research/, Scripts/, Pictures/, Documents/, Configs/).
+- When requested to create a new folder, NEVER place it directly under `/home/barzzly/` unless explicitly instructed for a top-level domain. Always route it to the proper parent domain according to DIRECTORY_RULES.md decision tree.
 - Preserve hidden shell/application configuration in its expected location. Explain this exception briefly; moving .bashrc, .profile or application dotfiles can break startup and authentication.
 - Leave existing project folders, active workspaces, symlinks and running-task paths unchanged unless explicitly asked to reorganize those too. A request to tidy home is not permission to recursively flatten projects.
 
