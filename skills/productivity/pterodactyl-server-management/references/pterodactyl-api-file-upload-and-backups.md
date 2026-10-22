@@ -15,6 +15,10 @@ To deploy or upload plugins/files without SFTP credentials:
    - Content-Type: `multipart/form-data; boundary=...`
    - Payload: binary contents of the file with filename attribute (e.g., `DriveBackupV2.jar`).
 
+## Remote Directory Creation & Archive Extraction Caveats
+- Do not rely on panel archive extraction: decompression endpoint (`/api/client/servers/{server_id}/files/decompress`) returns `404 Not Found` and unarchive endpoint (`/api/client/servers/{server_id}/files/unarchive`) can return `500 Internal Server Error` on restricted container nodes.
+- To deploy multi-directory trees cleanly, create parent folders recursively using `POST /api/client/servers/{server_id}/files/create-folder` with payload `{"root": parent_dir, "name": folder_name}`, then upload files directly to their target directories using the signed Wings upload URL (`multipart/form-data` with `directory` query param).
+
 ## Remote Cloud Backups (DriveBackupV2)
 - For off-site Google Drive backups, avoid manual GCP project/OAuth setup on headless VPS.
 - Deploy `DriveBackupV2.jar` (latest official release from `MaxMaeder/DriveBackupV2`) directly into `/plugins`.
