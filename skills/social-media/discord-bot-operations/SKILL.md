@@ -33,8 +33,11 @@ metadata:
    node --check index.js
    for f in commands/*.js donation-logger.js webhook-server.js items-handler.js rank-handler.js; do node --check "$f" || exit 1; done
    ```
-5. Run one serialization self-check that constructs an `EmbedBuilder` and asserts footer text is exactly `Noesantara Network` and native timestamp exists. Avoid starting a second bot instance because its webhook port can collide with PM2.
-6. Restart only intended PM2 process and verify liveness:
+5. When adding or modifying slash commands, register guild commands with `node deploy.js` so Discord updates the command definitions immediately without waiting for global cache propagation.
+6. For temporary Discord role assignments (e.g. 7-day passes), track grant and expiration timestamps in a persistent JSON store; check and remove expired roles on bot startup and via a periodic `setInterval` (e.g. 60s). Never use in-memory `setTimeout` alone.
+7. For in-game RCON commands triggered by Discord interactions, strip leading `/` from console commands, ensure `rcon.end()` runs in a `finally` block to prevent lingering socket connections, and append executed actions to `rcon-log.txt`.
+8. Run one serialization self-check that constructs an `EmbedBuilder` and asserts footer text is exactly `Noesantara Network` and native timestamp exists. Avoid starting a second bot instance because its webhook port can collide with PM2.
+9. Restart only intended PM2 process and verify liveness:
    ```bash
    pm2 restart <bot-name> --update-env
    sleep 3
@@ -42,8 +45,8 @@ metadata:
    pm2 logs <bot-name> --lines 30 --nostream
    ```
    Require `status: online`, `unstable restarts: 0`, and a ready log before reporting success.
-7. For panel refreshes, keep channel IDs in one small sender script, target only requested channels, delete only bot-authored messages, send item/rank/coin payloads, and avoid starting a second long-lived bot process. Build Coins from the existing panel convention or source-of-truth product builder, including its coin emoji/list/description and `Webstore Noesantara` link; omit only the body image when requested while retaining footer logo. Add `content: '|| @everyone ||'` when the panel convention requires a visible everyone mention, then verify it through the API. Never replace a rich existing panel with a minimal placeholder just because the catalog is available.
-8. Check source for stale branding and inspect `git diff --check`. Report changed scope, runtime status, message IDs verified, and that unrelated human messages were preserved.
+10. For panel refreshes, keep channel IDs in one small sender script, target only requested channels, delete only bot-authored messages, send item/rank/coin payloads, and avoid starting a second long-lived bot process. Build Coins from the existing panel convention or source-of-truth product builder, including its coin emoji/list/description and `Webstore Noesantara` link; omit only the body image when requested while retaining footer logo. Add `content: '|| @everyone ||'` when the panel convention requires a visible everyone mention, then verify it through the API. Never replace a rich existing panel with a minimal placeholder just because the catalog is available.
+11. Check source for stale branding and inspect `git diff --check`. Report changed scope, runtime status, message IDs verified, and that unrelated human messages were preserved.
 
 ## RCON migration
 
@@ -53,6 +56,10 @@ metadata:
 
 ## Pitfalls
 
+- Do not rely on in-memory `setTimeout` for temporary Discord role assignments; PM2 reloads and process restarts discard in-memory timers, permanently orphaning expired roles on users. Use a persistent JSON store with a startup and interval check.
+- Do not leave RCON client sockets open or unhandled on exceptions; always place `rcon.end()` inside a `finally` block to prevent socket exhaustion.
+- Do not prefix console commands with `/` in Minecraft RCON; console dispatchers expect bare command names and will fail or behave unpredictably.
+- Do not forget to run `node deploy.js` when adding or modifying slash commands; Discord does not register new commands in the guild until `applicationGuildCommands` is updated.
 - Do not add footer logic only to a shop panel when the requirement covers every embed; donation, announcement, moderation, utility, webhook, and future embeds use separate construction paths.
 - Do not run `node index.js` as a verification probe while PM2 bot is online; the real webhook listener already owns its port and the probe exits with `EADDRINUSE`.
 - Do not claim a PM2 restart succeeded from exit code alone; read process status and recent logs because a crash-loop can briefly report a successful restart.

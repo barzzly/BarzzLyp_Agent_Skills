@@ -3,6 +3,18 @@
 ## Cloudflare / WAF User-Agent Requirement
 - When querying Pterodactyl Client API (`/api/client/...`) on WAF-protected panels (e.g., UltraServers), always specify a standard browser `User-Agent` header (e.g., `User-Agent: Mozilla/5.0`). Omitting it or using default Python `urllib` causes `HTTP Error 403: Forbidden`.
 
+## Direct Config Writing & Console Commands via Client API
+- **Write text/config directly**:
+  `POST /api/client/servers/{server_id}/files/write?file={url_encoded_path}`
+  Headers: `Content-Type: text/plain`, standard browser `User-Agent`.
+  Body: Raw UTF-8 string/text. Returns `204 No Content`. Use this instead of multipart file uploads for modifying `.yml`, `.json`, or properties files.
+- **Execute console command**:
+  `POST /api/client/servers/{server_id}/command`
+  Headers: `Content-Type: application/json`, standard browser `User-Agent`.
+  Payload: `{"command": "<command_without_slash>"}`. Returns `204 No Content`.
+- **LuckPerms MCPets trial permission safety**:
+  When granting trial pet access using wildcards (`mcpet.*`, `mcpets.*`, `skin.*`), always explicitly negate `mcpets.admin false` (e.g. `lp user %player% permission settemp mcpets.admin false <duration> server=<server>`), because `mcpets.*` wildcard grants `mcpets.admin` allowing players to execute administrative/reload commands.
+
 ## Direct File Upload to Wings
 To deploy or upload plugins/files without SFTP credentials:
 1. Request signed upload URL from panel:

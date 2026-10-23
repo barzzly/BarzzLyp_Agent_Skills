@@ -56,3 +56,26 @@ holo remove <hologram_name_or_uuid>
 hologram remove <hologram_name_or_uuid>
 ```
 This triggers `HologramDeleteEvent`, immediately despawns display entities from online player views, evicts the entry from the memory map, and updates `holograms.yml` on disk cleanly without requiring server restarts.
+
+---
+
+## 3. Hot-Reloading Proxy Routing & Queue Bypass (ajQueue, DeluxeHub, FancyNpcs)
+
+When bypassing a proxy queue (like ajQueue) for specific backend servers without restarting servers:
+
+### Pterodactyl API Write & List Quirks
+- **Payload Encoding**: When writing configs via `POST /api/client/servers/{server_id}/files/write?file={path}`, always pass raw UTF-8 encoded bytes (`data=content.encode('utf-8')`). Passing unencoded strings can truncate multibyte characters or corrupt YAML files.
+- **Root Directory Listing**: In `GET /api/client/servers/{server_id}/files/list`, never pass `directory=""` (which returns HTTP 422). Omit the `directory` query parameter or use `"/"`.
+
+### Queue Bypass Matrix
+- **DeluxeHub Menus (`menus/*.yml`)**: Replace `[COMMAND] queue <server>` with `[PROXY] <server>`. DeluxeHub's `ProxyAction` dispatches a native BungeeCord/Velocity `ConnectOther` plugin message directly to the proxy, bypassing the queue plugin entirely.
+- **FancyNpcs (`npcs.yml`)**: Under `actions.ANY_CLICK`, replace `action: player_command` / `value: queue <server>` with `action: send_to_server` / `value: <server>`. FancyNpcs' `SendToServerAction` issues a native BungeeCord `Connect` plugin message directly to the proxy.
+- **ajQueue Velocity (`plugins/ajqueue/config.yml`)**: Add the target server identifier to `send-instantly` list. If players still type `/queue <server>` or `/server <server>`, ajQueue forwards them immediately without holding them in the queue.
+
+### Zero-Restart Hot-Reload Workflow
+Dispatch reload commands directly via Pterodactyl Client API (`POST /api/client/servers/{server_id}/command` with `{"command": "..."}`):
+1. Lobby: `fancynpcs reload`
+2. Lobby: `deluxehub reload`
+3. Velocity / Proxy: `ajqueue reload`
+Verify confirmations in `logs/latest.log` (e.g. `Plugin has been reloaded`, `All configuration files has been reloaded in ...ms`) instead of rebooting server instances.
+
