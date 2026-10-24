@@ -24,9 +24,11 @@ For DeluxeMenus CoinShop price changes, discover the actual registered menu in `
 ## Temporary farming sell and skill XP events
 
 - Use ShopGUIPlus native permission modifiers in `pricemodifiers.yml`: `scope: SHOP`, exact live shop ID, `type: SELL`, and `value: 1.5` for +50%. Verify existing `priceModifiersType` allows permissions. Back up/read back the file and use native `shopguiplus:shop reload`; require loaded modifier count and `shop checkmodifiers <live-player>` showing farming buy 100%, sell 150%. Keep base prices unchanged and check boosted sell prices against buy prices for arbitrage.
-- Grant the named modifier through LuckPerms default group with `permission settemp <node> true 10h server=<live-LP-server>`. Shared DB requires explicit server context. Permission expires natively; leaving an inactive modifier definition is safe and needs no scheduled rewrite/reload. Verify actual player inheritance rather than assuming group assignment.
-- AuraSkills +50% ALL skill XP uses `auraskills.multiplier.50`, not `1.5`. Use the same temporary/contextual LuckPerms grant, then native `auraskills:skills multiplier <live-player>` to verify 1.5x / +50%. Existing AuraSkills multiplier nodes add together; do not infer absence from `lp search auraskills.multiplier.*`, which can match the literal node rather than every numeric suffix. Preserve existing boosters and exact node identity.
-- Record activation timestamps from fresh console receipts and calculate local expiry with timezone-aware arithmetic. Distinguish native multiplier-state checks from an actual sale or XP-gain test; do not manipulate a real player's inventory or balance merely to prove a config event.
+- When applying temporary multipliers until a target cutoff (e.g. until 07:00 AM tomorrow), calculate the remaining duration with timezone-aware arithmetic (`Asia/Jakarta`) into exact hours and minutes (e.g. `8h31m`).
+- Grant the named modifier and XP booster to LuckPerms default group without server restarts:
+  - Sell modifier: `lp group default permission settemp shopguiplus.pricemodifiers.<id> true <duration> server=<live-LP-server>` (e.g. `shopguiplus.pricemodifiers.farming_event_50`).
+  - AuraSkills: `lp group default permission settemp auraskills.multiplier.<percent> true <duration> server=<live-LP-server>` (e.g. `auraskills.multiplier.50` for +50% XP).
+- Verify live inheritance non-disruptively without manipulating player balances: run `lp user <online-player> permission check <node>` via console; verify `Result: true` inheriting from `default` (`Processor: common.DirectProcessor`). LuckPerms auto-expires the nodes natively at the deadline.
 
 ## Player wealth, money transfers, and illicit economy auditing
 
