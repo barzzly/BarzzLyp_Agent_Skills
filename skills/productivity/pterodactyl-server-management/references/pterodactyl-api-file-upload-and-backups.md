@@ -37,3 +37,27 @@ To deploy or upload plugins/files without SFTP credentials:
 - Link Google Drive via console command:
   `drivebackup linkaccount googledrive`
   This uses DriveBackupV2's hosted authenticator (`auth.drivebackupv2.com`), generating a direct browser authorization link without needing custom Google Cloud API keys.
+
+## Tenant Database Inventory & Storage Profiling
+- **Database Inventory & Credentials via Client API**:
+  `GET /api/client/servers/{server_id}/databases?include=password`
+  Returns full database list, credentials (`attributes.relationships.password.attributes.password`), and host/port mapping for tenant databases.
+- **Tenant Permission Boundaries & Shared RAM Architecture**:
+  - Shared MySQL hosts restrict tenant users: querying `information_schema.innodb_buffer_page` fails with `ERROR 1227: Access denied; you need the PROCESS privilege`.
+  - MySQL memory (InnoDB Buffer Pool) is shared across the entire instance and daemon, not isolated or limited per database schema. When answering questions regarding database RAM usage, explain this shared-buffer architecture and distinguish it from plugin-side JVM memory caching (e.g. leaderboard caches in `ajLeaderboards` or UUID/balance caches in `PlayerPoints`).
+- **Disk Storage Profiling per Database**:
+  To profile database disk footprint across tables:
+  ```sql
+  SELECT 
+      table_schema AS db_name,
+      ROUND(SUM(data_length + index_length) / 1024 / 1024, 2) AS total_mb,
+      ROUND(SUM(data_length) / 1024 / 1024, 2) AS data_mb,
+      ROUND(SUM(index_length) / 1024 / 1024, 2) AS index_mb,
+      COUNT(table_name) AS table_count,
+      SUM(table_rows) AS total_rows
+  FROM information_schema.tables 
+  WHERE table_schema = DATABASE()
+  GROUP BY table_schema;
+  ```
+  An allocated Pterodactyl database may be 0 MB (0 tables) if the owning plugin fell back to flatfile storage (e.g. BetterTeams using `teams.yml`).
+

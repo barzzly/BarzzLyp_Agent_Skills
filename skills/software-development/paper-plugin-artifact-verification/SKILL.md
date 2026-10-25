@@ -33,6 +33,19 @@ metadata:
    - Report compiled, packaged, headless-tested, live-tested, and deployed as separate states. A successful build does not prove removed optional integrations still work.
    - Do not deploy or restart without explicit authorization. When sending a local artifact, use exact plugin filename and provide verified absolute path plus checksum.
 
+## Emergency Class-Level Hotfixing (`jar uf`)
+
+1. Compile class with complete transitive classpath.
+   - When compiling a single class patch against a prebuilt plugin JAR without its build repository, include the server's Paper libraries directory (`find <libraries_dir> -name '*.jar' | tr '\n' ':'`). Omission causes `javac` failures for Adventure text types (`Audience`, `HoverEventSource`) referenced in Bukkit interfaces.
+
+2. Run zero-dependency assert test before packaging.
+   - Validate edge cases and recursive replacement limits using `java -ea <TestRunner>.java` against the compiled bytecode before JAR modification.
+
+3. Inject and verify bytecode in final JAR.
+   - Inject the class into the archive: `jar uf <plugin>.jar <package/path/Class.class>`.
+   - Disassemble with `javap -c -cp <plugin>.jar <fully.qualified.Class>` to verify that intended bytecode instructions replaced the original.
+   - Back up the remote JAR (`.bak`), upload the patched JAR via panel API, and compare remote SHA-256 against local before authorizing startup.
+
 ## Pitfalls
 
 - Do not call a 200 KB or 800 KB size safe without identifying which artifact was measured; build outputs can live in multiple directories.
