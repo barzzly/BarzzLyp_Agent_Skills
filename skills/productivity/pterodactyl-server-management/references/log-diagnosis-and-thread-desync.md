@@ -39,3 +39,38 @@
   Player client entity position stuck or desynced with server physics/blocks, forcing the server to send constant correction packets on the main tick thread.
 - **Immediate Mitigation**:
   Teleport the player to a safe spawn location (`/tp <Player> <spawn_coords>`) or issue a kick (`/kick <Player> fix desync`) to cleanly reset the connection state without restarting the server.
+
+### 4. BetterTeams StringUtil Infinite Loop / Watchdog Timeout
+- **Signature**:
+  - `The server has not responded for 10/30/60 seconds! Creating thread dump`
+  - Stack trace on Server thread in `java.lang.StringBuilder.replace` called by `com.booksaw.betterTeams.util.StringUtil.setPlaceholders`.
+  - Console STDOUT right before freeze: `[BetterTeams] [STDOUT] Description : {0}`.
+  - Server halts with `Exit code: 70`.
+- **Root Cause**:
+  In BetterTeams upstream (including 5.1.8), `StringUtil.setPlaceholders(String, Object...)` uses `while ((index = formatted.indexOf(placeholder)) != -1)`. Because it searches from index 0 on every iteration, if a team description or input contains `{n}` (e.g. `{0}`), it replaces `{0}` with `{0}` infinitely on the main tick thread.
+- **Fix**:
+  1. **Data Cleanup**: In `plugins/BetterTeams/teams.yml`, remove any `description: '{0} '` or `{n}` patterns.
+  2. **Bytecode / Source Patch**: Update `StringUtil.java`:
+     ```java
+     int index = 0;
+     while ((index = formatted.indexOf(placeholder, index)) != -1) {
+         formatted.replace(index, index + placeholder.length(), replacement);
+         index += replacement.length();
+     }
+     ```
+     Recompile and inject `StringUtil.class` back into `BetterTeams-<ver>.jar`.
+
+
+### 4. Recursive Placeholder Infinite Loop (Watchdog Timeout / Exit Code 70)
+- **Signature**:
+  - `[ERROR]: The server has not responded for X seconds! Creating thread dump`
+  - Thread dump on `Server thread` stuck at `StringBuilder.replace` / `StringUtil.setPlaceholders` called via plugin message formatters (e.g. `BetterTeams.message.MessageManager.sendSafeReplacedMessage` -> `ReferencedFormatSafeMessage.sendMessage`).
+  - Server killed by Paper Watchdog with `Exit code: 70`, `Out of memory: false`.
+- **Root Cause**:
+  Plugin string replacement routines (e.g. `BetterTeams.util.StringUtil.setPlaceholders`) scan for indexed placeholders like `{0}` from index 0 repeatedly via `while ((index = formatted.indexOf(placeholder)) != -1)`. If user-controlled input (e.g. team description, team tag, or custom rank title) contains `{0}` or `{n}`, replacing `{0}` with the input string leaves `{0}` in the buffer. The matcher hits the same placeholder again, causing an infinite while loop that pegs CPU to 100% and completely locks the main tick thread.
+- **Immediate Mitigation / Fix**:
+  1. Inspect the thread dump in the latest crash report or log for the exact plugin method and logged values (e.g. `[BetterTeams] [STDOUT] Description : {0}`).
+  2. Search data files (e.g. `plugins/BetterTeams/teams.yml`) for entries containing `{0}` or placeholder syntax:
+     - Search regex: `description:\s*['"]?\{[0-9]+\}`
+  3. Cleanse the offending strings (set to `''` or strip `{n}`) directly in the data file.
+  4. Ensure input validation or command pre-processing filters out indexed format strings (`{[0-9]+}`) from user-submitted text fields.

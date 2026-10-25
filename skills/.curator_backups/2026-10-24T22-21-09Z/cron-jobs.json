@@ -25,15 +25,15 @@
       "schedule_display": "0 6 * * *",
       "repeat": {
         "times": null,
-        "completed": 13
+        "completed": 48
       },
       "enabled": true,
       "state": "scheduled",
       "paused_at": null,
       "paused_reason": null,
       "created_at": "2026-09-06T21:03:55.153558+00:00",
-      "next_run_at": "2026-09-20T06:00:00+00:00",
-      "last_run_at": "2026-09-19T06:00:29.804686+00:00",
+      "next_run_at": "2026-10-25T06:00:00+00:00",
+      "last_run_at": "2026-10-24T06:00:56.287664+00:00",
       "last_status": "ok",
       "last_error": null,
       "last_delivery_error": null,
@@ -51,9 +51,9 @@
       "enabled_toolsets": null,
       "workdir": null,
       "last_dispatch": {
-        "scheduled_at": "2026-09-19T06:00:00+00:00",
-        "dispatched_at": "2026-09-19T06:00:29.294434+00:00",
-        "lateness_seconds": 29.3,
+        "scheduled_at": "2026-10-24T06:00:00+00:00",
+        "dispatched_at": "2026-10-24T06:00:55.789235+00:00",
+        "lateness_seconds": 55.8,
         "kind": "on_time"
       },
       "fire_claim": null
@@ -83,15 +83,15 @@
       "schedule_display": "0 14 * * *",
       "repeat": {
         "times": null,
-        "completed": 13
+        "completed": 48
       },
       "enabled": true,
       "state": "scheduled",
       "paused_at": null,
       "paused_reason": null,
       "created_at": "2026-09-06T21:03:55.588150+00:00",
-      "next_run_at": "2026-09-20T14:00:00+00:00",
-      "last_run_at": "2026-09-19T14:00:34.576096+00:00",
+      "next_run_at": "2026-10-25T14:00:00+00:00",
+      "last_run_at": "2026-10-24T14:00:59.664620+00:00",
       "last_status": "ok",
       "last_error": null,
       "last_delivery_error": null,
@@ -109,9 +109,9 @@
       "enabled_toolsets": null,
       "workdir": null,
       "last_dispatch": {
-        "scheduled_at": "2026-09-19T14:00:00+00:00",
-        "dispatched_at": "2026-09-19T14:00:34.083841+00:00",
-        "lateness_seconds": 34.1,
+        "scheduled_at": "2026-10-24T14:00:00+00:00",
+        "dispatched_at": "2026-10-24T14:00:59.234279+00:00",
+        "lateness_seconds": 59.2,
         "kind": "on_time"
       },
       "fire_claim": null
@@ -141,15 +141,15 @@
       "schedule_display": "0 22 * * *",
       "repeat": {
         "times": null,
-        "completed": 13
+        "completed": 49
       },
       "enabled": true,
       "state": "scheduled",
       "paused_at": null,
       "paused_reason": null,
       "created_at": "2026-09-06T21:03:56.094398+00:00",
-      "next_run_at": "2026-09-19T22:00:00+00:00",
-      "last_run_at": "2026-09-18T22:00:26.233888+00:00",
+      "next_run_at": "2026-10-25T22:00:00+00:00",
+      "last_run_at": "2026-10-24T22:00:04.056894+00:00",
       "last_status": "ok",
       "last_error": null,
       "last_delivery_error": null,
@@ -167,9 +167,9 @@
       "enabled_toolsets": null,
       "workdir": null,
       "last_dispatch": {
-        "scheduled_at": "2026-09-18T22:00:00+00:00",
-        "dispatched_at": "2026-09-18T22:00:25.773691+00:00",
-        "lateness_seconds": 25.8,
+        "scheduled_at": "2026-10-24T22:00:00+00:00",
+        "dispatched_at": "2026-10-24T22:00:03.604057+00:00",
+        "lateness_seconds": 3.6,
         "kind": "on_time"
       },
       "fire_claim": null
@@ -199,21 +199,21 @@
       "schedule_display": "every 120m",
       "repeat": {
         "times": null,
-        "completed": 108
+        "completed": 524
       },
       "enabled": true,
       "state": "scheduled",
       "paused_at": null,
       "paused_reason": null,
       "created_at": "2026-09-09T00:51:54.121329+00:00",
-      "next_run_at": "2026-09-19T21:01:11.599721+00:00",
-      "last_run_at": "2026-09-19T19:01:11.599721+00:00",
+      "next_run_at": "2026-10-24T23:52:04.593065+00:00",
+      "last_run_at": "2026-10-24T21:52:04.593065+00:00",
       "last_status": "ok",
       "last_error": null,
       "last_delivery_error": null,
       "last_delivery_unverified": null,
       "failure_streak": 0,
-      "deliver": "telegram:6393670311",
+      "deliver": "telegram_b:6393670311",
       "origin": {
         "platform": "telegram",
         "chat_id": "6393670311",
@@ -226,12 +226,13 @@
       "workdir": null,
       "fire_claim": null,
       "last_dispatch": {
-        "scheduled_at": "2026-09-19T18:58:44.674502+00:00",
-        "dispatched_at": "2026-09-19T18:59:36.962530+00:00",
-        "lateness_seconds": 52.3,
+        "scheduled_at": "2026-10-24T21:50:42.245942+00:00",
+        "dispatched_at": "2026-10-24T21:51:03.321151+00:00",
+        "lateness_seconds": 21.1,
         "kind": "on_time"
-      }
+      },
+      "failure_deliver": "telegram_b:6393670311"
     }
   ],
-  "updated_at": "2026-09-19T19:01:11.599940+00:00"
+  "updated_at": "2026-10-24T22:00:04.082952+00:00"
 }
