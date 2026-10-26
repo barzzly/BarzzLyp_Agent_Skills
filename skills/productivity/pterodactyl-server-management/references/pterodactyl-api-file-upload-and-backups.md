@@ -3,6 +3,19 @@
 ## Cloudflare / WAF User-Agent Requirement
 - When querying Pterodactyl Client API (`/api/client/...`) on WAF-protected panels (e.g., UltraServers), always specify a standard browser `User-Agent` header (e.g., `User-Agent: Mozilla/5.0`). Omitting it or using default Python `urllib` causes `HTTP Error 403: Forbidden`.
 
+## Fleet Inventory & Ownership Filtering via Client API
+- **Distinguish Owned Fleet from Delegated Access**:
+  Querying `GET /api/client` returns all servers accessible to the API key, including servers where the account is merely an invited sub-user.
+  - Check `attributes.is_owned` (`true` for server owner, `false` for shared/guest servers) and `attributes.is_shared`.
+  - When computing monthly hosting infrastructure costs, counting owned fleet quotas, or performing owner-scoped operations, filter strictly by `attributes.is_owned == true`.
+  - Sub-user instances (such as shared partner networks like LegacySchool or guest servers like JawaCamp) belong to external accounts and must not be included in primary fleet cost or capacity totals without explicit separation.
+- **Resource Allocations per Server**:
+  Inspect `attributes.limits`:
+  - `memory`: RAM in megabytes (e.g. 4096 = 4 GB, 32768 = 32 GB).
+  - `cpu`: CPU limit percentage (e.g. 200 = 2 vCores, 800 = 8 vCores).
+  - `disk`: Storage limit in megabytes.
+  - On hosts with flat memory-tiered pricing (e.g. UltraServers at ~$1/GB), pricing aligns directly with `attributes.limits.memory` tiers.
+
 ## Direct Config Writing & Console Commands via Client API
 - **Write text/config directly**:
   `POST /api/client/servers/{server_id}/files/write?file={url_encoded_path}`
@@ -75,4 +88,3 @@ When decommissioning a plugin MySQL database in favor of local flatfile storage 
     - `PetStats`: list of raw Base64 strings from column `data` (split by `;;;`).
     - Use `[]` for empty lists (`Names: []`, `Inventories: []`, `PetStats: []`).
 - **Transfer**: Upload converted YAML files via SFTP or staged zip directly into `plugins/MCPets/PlayerData/` before deleting the remote database.
-
