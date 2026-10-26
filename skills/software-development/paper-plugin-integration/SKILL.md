@@ -61,6 +61,8 @@ metadata:
 - Keep `folia-supported: false` unless every Bukkit/entity/world operation is region-scheduler safe.
 - Treat viewer-side visibility as distinct from owner broadcast visibility. Viewer hide/show must not remove an owner's nametag from other viewers.
 - Do not deploy or restart live Minecraft server during local integration unless explicitly authorized. Built JAR is not deployed JAR.
+- Zero-downtime plugin staging: When server restart is forbidden, stage new verified JARs directly into `/plugins/`, rename existing JARs to `.jar.old` via Pterodactyl API (`PUT /api/client/servers/{server}/files/rename`), and update on-disk configs (`.properties` / `.yml`) so updates take effect on the next scheduled server restart without causing immediate service downtime.
+- Simple Voice Chat on Velocity proxy: Proxy versions prior to 2.6.26 fail to disconnect stale bridges on `SecretPacket` handling, routing reconnect packets to dead client UDP ports and permanently wedging voice chat. Keep `voicechat-velocity` at 2.6.26+ and set `keep_alive=3000` (30s timeout tolerance) in `voicechat-server.properties` across backend servers to prevent short network jitter from triggering mass disconnects.
 - Prefer smallest diff: existing providers, menu structure, config keys, and tests before new abstractions.
 
 ## Common pitfalls
