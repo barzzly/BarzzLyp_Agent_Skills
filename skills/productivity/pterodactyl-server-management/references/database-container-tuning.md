@@ -1,0 +1,80 @@
+# Pterodactyl MariaDB Database Container Tuning
+
+Use when managing, diagnosing, or tuning dedicated database containers (`DB-Container-<server_id>`) in Pterodactyl without unexpected restarts.
+
+## Container Identification
+
+Database containers are mapped in Pterodactyl under the parent server:
+1. Query parent server databases: `GET /api/client/servers/{server_id}/databases`.
+2. Extract container identifier: `attributes.data[i].attributes.container.server_identifier`.
+3. Check container resource utilization: `GET /api/client/servers/{container_id}/resources`.
+
+## Interactive Database Console
+
+Pterodactyl MariaDB containers (`ghcr.io/ptero-eggs/yolks:mariadb_*`) run an interactive `mysql` CLI session connected locally as `container@localhost` with `GRANT ALL PRIVILEGES ON *.* WITH GRANT OPTION`.
+- Console commands sent via `POST /api/client/servers/{container_id}/command` (`PteroClient.send_command(...)`) execute directly as SQL statements.
+- Query results and MariaDB engine notices output to `logs/server.log`.
+
+## Live Memory Diagnostics & Dynamic Trimming (No Restart)
+
+Containers allocated 1024 MB RAM frequently exceed limits and spill into swap when defaults (`innodb_buffer_pool_size=384M`, `table_open_cache=2000`, `thread_cache_size=256`) collide with multiple HikariCP connection pools (typically 10 idle connections per active plugin) and glibc heap allocation arenas.
+
+### Diagnostic Queries
+Execute via console or direct MySQL client:
+```sql
+SHOW GLOBAL STATUS WHERE Variable_name IN ('Threads_connected', 'Connections', 'Aborted_connects', 'Memory_used');
+SHOW GLOBAL STATUS LIKE '%innodb_buffer_pool%';
+SHOW VARIABLES WHERE Variable_name IN ('innodb_buffer_pool_size', 'table_open_cache', 'thread_cache_size', 'max_connections');
+```
+
+### Live Shrink Steps
+1. **Verify Chunk Size**:
+   ```sql
+   SELECT @@innodb_buffer_pool_chunk_size; -- default 134217728 (128M)
+   ```
+2. **Resize Buffer Pool Live**:
+   InnoDB buffer pool size must be an integer multiple of chunk size:
+   ```sql
+   SET GLOBAL innodb_buffer_pool_size = 268435456; -- 256M (2 chunks)
+   ```
+   MariaDB immediately frees allocated chunks and withdraws free blocks online without restarting the daemon.
+3. **Trim Table & Thread Caches**:
+   ```sql
+   SET GLOBAL table_open_cache = 400;
+   SET GLOBAL thread_cache_size = 16;
+   FLUSH TABLES;
+   FLUSH QUERY CACHE;
+   ```
+4. **Cgroup Memory Caveat**:
+   Live SQL shrinking reduces MariaDB internal `Memory_used` instantly (typically 140+ MB saved). However, Linux cgroup memory metrics in Pterodactyl dashboard include glibc heap pages and kernel page cache, which remain held until container reboot.
+
+## Persisting Configuration
+
+Prevent configuration regression on container restart:
+1. **Update `.my.cnf`** in container root:
+   ```ini
+   [mysqld]
+   port                           = 1026
+   bind-address                   = 0.0.0.0
+   pid-file                       = /home/container/run/mysqld/mysqld.pid
+   socket                         = /home/container/run/mysqld/mysqld.sock
+   general_log_file               = /home/container/log/mysql/mysql.log
+   max_connections                = 150
+   innodb_buffer_pool_size        = 256M
+   table_open_cache               = 400
+   thread_cache_size              = 16
+   skip-name-resolve              = 1
+   innodb_flush_log_at_trx_commit = 2
+   ```
+2. **Update Egg Startup Variables**:
+   Update panel startup variables via API (`PUT /api/client/servers/{container_id}/startup/variable`):
+   - `INNODB_BUFFER_POOL_SIZE`: `256M` (or `128M` for light workloads)
+   - `MAX_CONNECTIONS`: `150`
+
+## Connection Leak & Aborted Connect Storms
+
+If `logs/server.log` floods with recurring authentication warnings (`[Warning] Access denied for user '...'@'...'`):
+1. Note the client IP and connection ID in the log entry.
+2. Match IP against Pterodactyl server allocations (`GET /api/client` relationships allocations) to locate the offending node.
+3. Inspect plugin database configurations on that node (e.g. plugins still trying to connect to decommissioned databases after migrations).
+4. Update plugin config to SQLite or correct active database host, then hot-reload the plugin (`<plugin> reload`).
