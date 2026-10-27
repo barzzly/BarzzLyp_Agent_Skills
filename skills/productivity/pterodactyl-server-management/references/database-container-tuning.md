@@ -78,3 +78,10 @@ If `logs/server.log` floods with recurring authentication warnings (`[Warning] A
 2. Match IP against Pterodactyl server allocations (`GET /api/client` relationships allocations) to locate the offending node.
 3. Inspect plugin database configurations on that node (e.g. plugins still trying to connect to decommissioned databases after migrations).
 4. Update plugin config to SQLite or correct active database host, then hot-reload the plugin (`<plugin> reload`).
+
+## Synchronized Daily Restart Schedule
+
+To prevent database corruption during scheduled parent server restarts:
+1. Schedule the container restart at the same time as parent game server (e.g. 03:00 UTC), but set a 20-second time offset on the database restart task (`time_offset: 20`).
+2. This ensures the game server kicks players, saves all world data (`save-all`), and gracefully closes HikariCP database connections before the database container restarts.
+3. The database container boots in 2-3 seconds, fully ready before the game server finishes booting (~30-40 seconds later).

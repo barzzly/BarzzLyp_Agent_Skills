@@ -6,3 +6,10 @@
 - Leave secret raw weights unchanged but explain normalization can still increase their final odds after trash reduction. Sparse jungle/cave fish pools can remain trash-heavy; report remaining imbalance rather than secretly multiplying rare fish manyfold.
 - Assert exact semantic delta, positive weights and decreased base-pool trash across all biome subgroups; label calculations as no-gear theoretical pools, not measured catches. Back up fresh remote source, compare before write, read back bytes, and use registered customfishing reload.
 - A concurrent restart can queue console reload while latest.log rotates. Require fresh Done, current running state, reload confirmation and final source readback; do not claim own task restarted server when no power signal was sent.
+
+## CustomFishing EXP scaling & live reload
+
+- CustomFishing lacks native EXP or global EXP multiplier in `config.yml`. EXP is granted via commands in item catch events: `command_action: type: command, value: ['sk xp add {player} fishing <amount>']` under `contents/item/default.yml`.
+- Scaling fishing EXP requires multiplying the command amount for all item entries AND updating the corresponding `index-xp: <amount> XP` custom-data attribute so the `/fishingindex` GUI displays accurate numbers to players.
+- Also inspect `contents/competition/default.yml` for competition reward tiers (`sk xp add {player} fishing <amount>`) and scale them proportionally so competition rewards remain balanced against standard fishing catches.
+- Hot-reload live using `/cfishing reload` or `/customfishing reload` via console (completes in ~50-150ms without server restart).

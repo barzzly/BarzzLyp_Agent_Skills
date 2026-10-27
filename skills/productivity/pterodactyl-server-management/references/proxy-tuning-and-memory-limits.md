@@ -79,3 +79,51 @@ Dispatch reload commands directly via Pterodactyl Client API (`POST /api/client/
 3. Velocity / Proxy: `ajqueue reload`
 Verify confirmations in `logs/latest.log` (e.g. `Plugin has been reloaded`, `All configuration files has been reloaded in ...ms`) instead of rebooting server instances.
 
+---
+
+## 4. Simple Voice Chat (SVC) Velocity Sniffer & Reconnect Timeout
+
+### Root Cause
+- Older builds of `voicechat-velocity` (e.g. 2.6.13) fail to clear the client UDP socket bridge on reconnection packets (`handleSecretPacket` does not invoke `voiceProxy.disconnectBridge`), causing packets to route to stale sockets until the player reconnects to proxy.
+- Default `keep_alive=1000` ms on backend servers triggers a strict 10s timeout (`keepAlive * 10L`). ISP latency spikes or packet drops cause mass voice disconnects.
+
+### Zero-Restart Mitigation
+1. **Proxy Update**: Stage official `voicechat-velocity-2.6.26.jar` into `/plugins` and rename old jar to `voicechat-velocity-<ver>.jar.old` via `PUT /api/client/servers/{server_id}/files/rename`.
+2. **Backend Config**: In backend `plugins/voicechat/voicechat-server.properties`, set `keep_alive=3000` (raises timeout window from 10s to 30s).
+3. Post-restart (scheduled or manual), the updated proxy bridge logic and relaxed timeout take effect seamlessly.
+
+---
+
+## 5. MariaDB Container Memory Hot-Shrink & Persistent Variables
+
+When a Pterodactyl MariaDB container exceeds memory quotas due to buffer pool expansion or HikariCP idle connections:
+1. **Live Resize InnoDB Pool**: MariaDB 10.6+ supports online buffer pool resizing. Run:
+   ```sql
+   SET GLOBAL innodb_buffer_pool_size = 268435456; -- 256MB (chunk size 128MB)
+   SET GLOBAL table_open_cache = 400;
+   SET GLOBAL thread_cache_size = 16;
+   FLUSH TABLES;
+   ```
+2. **Eliminate Connection Leaks**: Inspect `/logs/server.log` for access denied / aborted connection loops (e.g. dev servers querying obsolete databases) and reconfigure offending plugins to SQLite or valid credentials.
+3. **Persist Across Restarts**: Update `.my.cnf` and Pterodactyl startup variables via API:
+   ```python
+   PUT /api/client/servers/{server_id}/startup/variable
+   {"key": "INNODB_BUFFER_POOL_SIZE", "value": "256M"}
+   {"key": "MAX_CONNECTIONS", "value": "150"}
+   ```
+
+---
+
+## 6. CustomFishing Exp Multiplier & Index Sync Workflow
+
+### Architecture & Mechanism
+In `CustomFishing`, fishing skill EXP is granted via action commands upon catch success rather than internal variables:
+- Loot commands: `- sk xp add {player} fishing <amount>` in `contents/item/default.yml`.
+- Index GUI: `custom-data.index-xp: <amount> XP` in `contents/item/default.yml` (displayed in `/fishingindex`).
+- Competition rewards: `sk xp add {player} fishing <amount>` in `contents/competition/default.yml`.
+
+### Multiplier Update & Hot-Reload Procedure
+1. Backup `default.yml` to `.bak` in both `contents/item/` and `contents/competition/`.
+2. Apply multiplier proportionally: update both `sk xp add ... fishing <N*multiplier>` and `index-xp: <N*multiplier> XP` so player-facing index matches actual XP gained.
+3. Reload without server restart: dispatch `cfishing reload` via console (`POST /api/client/servers/{server_id}/command`). Verify reload time (~50-150ms) in `logs/latest.log`.
+
