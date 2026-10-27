@@ -38,15 +38,26 @@ SHOW VARIABLES WHERE Variable_name IN ('innodb_buffer_pool_size', 'table_open_ca
    SET GLOBAL innodb_buffer_pool_size = 268435456; -- 256M (2 chunks)
    ```
    MariaDB immediately frees allocated chunks and withdraws free blocks online without restarting the daemon.
-3. **Trim Table & Thread Caches**:
+3. **Trim Table, Thread, and Unused Key Caches**:
    ```sql
+   -- Verify if any tables use MyISAM
+   SELECT engine, count(*) FROM information_schema.tables GROUP BY engine;
+
+   -- If zero MyISAM tables, trim key_buffer_size from default 128M to 16M (instantly frees ~112 MB with zero data risk)
+   SET GLOBAL key_buffer_size = 16777216;
+
+   -- Trim open table and thread caches
    SET GLOBAL table_open_cache = 400;
    SET GLOBAL thread_cache_size = 16;
    FLUSH TABLES;
    FLUSH QUERY CACHE;
    ```
-4. **Cgroup Memory Caveat**:
-   Live SQL shrinking reduces MariaDB internal `Memory_used` instantly (typically 140+ MB saved). However, Linux cgroup memory metrics in Pterodactyl dashboard include glibc heap pages and kernel page cache, which remain held until container reboot.
+   *Note on `aria_pagecache_buffer_size`:* In MariaDB 10.6, `aria_pagecache_buffer_size` is read-only at runtime (`ERROR 1238`). Set it in `.my.cnf` (`32M`) to take effect on the next boot.
+
+4. **Cgroup Memory Caveat & Cross-Node Discrepancies**:
+   - Live SQL shrinking reduces MariaDB internal `Memory_used` instantly (typically 200+ MB saved across buffer pool and key buffer).
+   - Linux cgroup memory metrics in Pterodactyl dashboard include glibc heap fragmentation and OS kernel Page Cache (active disk I/O buffers from `ib_logfile0`, `ibdata1`, and `.ibd` tablespaces).
+   - Do not compare cgroup RAM numbers across different physical nodes directly: an idle container with 9+ days uptime on one node may show ~144 MB because inactive pages were pushed to host swap, while an active container on another node shows ~920 MB because the kernel keeps working pages in RAM. Always check internal `Memory_used` via `SHOW GLOBAL STATUS` to verify actual allocation.
 
 ## Persisting Configuration
 
