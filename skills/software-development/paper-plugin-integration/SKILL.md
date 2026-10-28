@@ -62,6 +62,9 @@ metadata:
 - Treat viewer-side visibility as distinct from owner broadcast visibility. Viewer hide/show must not remove an owner's nametag from other viewers.
 - Do not deploy or restart live Minecraft server during local integration unless explicitly authorized. Built JAR is not deployed JAR.
 - Zero-downtime plugin staging: When server restart is forbidden, stage new verified JARs directly into `/plugins/`, rename existing JARs to `.jar.old` via Pterodactyl API (`PUT /api/client/servers/{server}/files/rename`), and update on-disk configs (`.properties` / `.yml`) so updates take effect on the next scheduled server restart without causing immediate service downtime.
+- Player teleportation into instances/arenas: Always invoke `if (player.isInsideVehicle()) player.leaveVehicle();` and `player.eject();` before `player.teleport(loc, PlayerTeleportEvent.TeleportCause.PLUGIN)`. Seated players (GSit chairs/stairs) or players carrying passengers/cosmetics cause Bukkit's bare `teleport(loc)` to return `false`. Always specify `TeleportCause.PLUGIN` rather than default `UNKNOWN` to avoid false cancels by teleport interception plugins.
+- Case-insensitive world matching: Always use `loc.getWorld().getName().equalsIgnoreCase(worldName)` for containment checks and region boundaries. Multiverse aliases, folder casings (`/DungeonAloc`), and internal dimension keys (`minecraft:dungeonaloc`) frequently differ in case; strict `.equals()` causes false containment/teleport failures.
+- Teleport refusal diagnostics: Always include detailed diagnostics (teleport boolean result, containment boolean, registration status, source and destination world names, coordinates) when throwing or catching entry/teleport failures instead of a bare `IllegalStateException`.
 - Simple Voice Chat on Velocity proxy: Proxy versions prior to 2.6.26 fail to disconnect stale bridges on `SecretPacket` handling, routing reconnect packets to dead client UDP ports and permanently wedging voice chat. Keep `voicechat-velocity` at 2.6.26+ and set `keep_alive=3000` (30s timeout tolerance) in `voicechat-server.properties` across backend servers to prevent short network jitter from triggering mass disconnects.
 - Prefer smallest diff: existing providers, menu structure, config keys, and tests before new abstractions.
 
@@ -72,3 +75,5 @@ metadata:
 - Do not call broadcast hide for viewer preference; it changes what other players see.
 - Do not treat source compile as packaged verification; loader reads final JAR resources/classes.
 - Do not call config reload complete until derived menu assets are rebuilt; otherwise values stay stale until restart.
+- Do not call bare `player.teleport(loc)` without dismounting vehicles/passengers; seated players (GSit) or players with pets/cosmetics cause Bukkit to return `false`, rejecting entry.
+- Do not compare Bukkit `world.getName()` with strict case sensitivity against configured world names; dimension namespaces and folder casings frequently diverge across Multiverse and vanilla world managers.
