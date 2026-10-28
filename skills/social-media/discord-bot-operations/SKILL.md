@@ -36,7 +36,7 @@ metadata:
    for f in commands/*.js donation-logger.js webhook-server.js items-handler.js rank-handler.js; do node --check "$f" || exit 1; done
    ```
 5. When adding or modifying slash commands, register guild commands with `node deploy.js` so Discord updates the command definitions immediately without waiting for global cache propagation.
-6. For temporary Discord role assignments (e.g. 7-day passes), track grant and expiration timestamps in a persistent JSON store; check and remove expired roles on bot startup and via a periodic `setInterval` (e.g. 60s). Never use in-memory `setTimeout` alone.
+6. For temporary Discord role assignments (e.g. 7-day passes), track grant and expiration timestamps in a persistent JSON store; check and remove expired roles on bot startup and via a periodic `setInterval` (e.g. 60s). Never use in-memory `setTimeout` alone. For stackable/queued passes, store an array of discrete pass records (`status: 'active' | 'remaining' | 'expired'`, `channelId`, `messageId`); never key the store by `userId` alone, because repeat purchases overwrite active passes and drop message tracking. When an active pass exists for the same player and user, mark the new pass `remaining` and defer RCON execution until promotion. On expiration, patch the old embed to `expired`, promote the next `remaining` pass to `active`, execute its RCON, patch its embed, and revoke the Discord role only when zero active passes remain for that user.
 7. For in-game RCON commands triggered by Discord interactions, strip leading `/` from console commands, ensure `rcon.end()` runs in a `finally` block to prevent lingering socket connections, and append executed actions to `rcon-log.txt`.
 8. Run one serialization self-check that constructs an `EmbedBuilder` and asserts footer text is exactly `Noesantara Network` and native timestamp exists. Avoid starting a second bot instance because its webhook port can collide with PM2.
 9. Restart only intended PM2 process and verify liveness:
@@ -59,6 +59,7 @@ metadata:
 ## Pitfalls
 
 - Do not rely on in-memory `setTimeout` for temporary Discord role assignments; PM2 reloads and process restarts discard in-memory timers, permanently orphaning expired roles on users. Use a persistent JSON store with a startup and interval check.
+- Do not key temporary pass stores by `userId` alone when passes can stack; repeat commands will overwrite active entries, discard earlier queue timers, and orphan Discord message IDs needed for retroactive status patches.
 - Do not leave RCON client sockets open or unhandled on exceptions; always place `rcon.end()` inside a `finally` block to prevent socket exhaustion.
 - Do not prefix console commands with `/` in Minecraft RCON; console dispatchers expect bare command names and will fail or behave unpredictably.
 - Do not forget to run `node deploy.js` when adding or modifying slash commands; Discord does not register new commands in the guild until `applicationGuildCommands` is updated.

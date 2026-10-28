@@ -127,3 +127,36 @@ In `CustomFishing`, fishing skill EXP is granted via action commands upon catch 
 2. Apply multiplier proportionally: update both `sk xp add ... fishing <N*multiplier>` and `index-xp: <N*multiplier> XP` so player-facing index matches actual XP gained.
 3. Reload without server restart: dispatch `cfishing reload` via console (`POST /api/client/servers/{server_id}/command`). Verify reload time (~50-150ms) in `logs/latest.log`.
 
+---
+
+## 7. Geyser NetherNet Migration & Zero-Restart MCPE Connection Repair
+
+### Root Cause
+- Starting with Bedrock 26.60 / 1.21.40+ (mandatory since October 27, 2026), Mojang disabled the legacy RakNet transport on Bedrock clients in favor of **NetherNet**.
+- When Geyser is updated to build 1237+ on Velocity or backend servers, leaving `transport: raknet` causes Geyser to emit:
+  ```
+  WARNING! NetherNet support is NOT enabled.
+  Players will not be able to connect to your server, starting October 27th...
+  ```
+- Under `raknet`, Geyser only binds UDP 19132 for RakNet and keeps TCP signaling closed. Bedrock clients cannot perform TCP signaling discovery and fail to join or see MOTD.
+
+### Zero-Restart Hot-Fix Procedure
+1. **Config Update**: In `plugins/Geyser-Velocity/config.yml` (or backend Spigot `plugins/Geyser-Spigot/config.yml`), change:
+   ```yaml
+   bedrock:
+     address: 0.0.0.0
+     port: 19132
+     webrtc-port: 0
+     transport: nethernet
+   ```
+   *Note*: If older Bedrock clients (< 26.40) must also be supported, set `transport: both` and allocate a dedicated secondary UDP port in `webrtc-port`. With `transport: nethernet`, port 19132 handles both TCP signaling and UDP WebRTC without extra allocations.
+2. **Built-in Signaling**: Verify `signaling.mode: builtin` and `stun-discovery: true`.
+3. **Hot-Reload**: Dispatch `geyser reload` via console or Client API (`POST /api/client/servers/{server_id}/command`).
+   - Geyser gracefully stops RakNet, starts built-in HTTP/TCP signaling on `0.0.0.0:19132`, runs STUN discovery, and re-arms listeners.
+   - Java players remain connected without disruption.
+4. **Console Verification**:
+   - `geyser nethernet status` -> confirms MOTD, level, and player count JSON.
+   - `geyser nethernet advertised` -> confirms public STUN mapping (`<public_ip>:19132`).
+   - `geyser connectiontest <ip> <port>` -> verifies external reachability (`Your server is likely online and working`).
+
+
