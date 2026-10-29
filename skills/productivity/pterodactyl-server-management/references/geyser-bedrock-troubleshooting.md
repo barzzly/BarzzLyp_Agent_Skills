@@ -1,5 +1,9 @@
 # Geyser Bedrock connectivity and NetherNet / RakNet troubleshooting
 
+- **Container Bind Address (`bedrock.address`) & Port Allocation Pitfalls**:
+  - `bedrock.address` MUST ALWAYS remain `0.0.0.0` in Pterodactyl and containerized hosting. Setting public server IP causes Docker container socket bind failure or rejection of forwarded packets, rendering the server completely unreachable (`timed out`).
+  - `bedrock.port` must strictly match the assigned Pterodactyl container allocation (e.g. 25562), never default `19132` or Java port `25565` unless specifically allocated. Setting an unassigned port causes immediate timeout during client auth handshake, surfacing Bedrock client error modal code **"Terracotta"** (`An error has occurred. Search help.minecraft.net for "Terracotta"`). When a user reports "Terracotta", verify `bedrock.address` is `0.0.0.0` and `bedrock.port` matches container port allocations.
+
 - **NetherNet vs. RakNet Port Allocation Requirements**:
   - NetherNet uses WebRTC over UDP for gameplay and requires an HTTP/TCP signaling server (built-in or external NXS) for connection negotiation.
   - When a server is hosted on a Pterodactyl node or shared hosting allocation where the assigned Bedrock port forwards only UDP (or filters incoming TCP on that port), setting `transport: nethernet` makes built-in signaling unreachable (`Connection timed out` from external probes). Bedrock/MCPE clients fail to receive server metadata and display the server as offline.
@@ -13,4 +17,5 @@
 - **Non-Destructive Remote Connectivity Verification**:
   - Test external reachability from console using `geyser connectiontest <public_ip> <bedrock_port>`. Syntax strictly requires space separation between IP and port; passing `<ip>:<port>` causes Geyser to parse the string as an invalid IPv6 literal and report false failure.
   - Confirm success in `/logs/latest.log` with `Your server is likely online and working as of 0 seconds ago!`. If the test returns `Connection timed out` under `nethernet`, check whether the hosting environment permits incoming TCP on the Bedrock port before reverting to `raknet`.
+  - Verify UDP reachability directly via raw RakNet Unconnected Ping (`0x01` + timestamp + offline magic `\x00\xff\xff\x00\xfe\xfe\xfe\xfe\xfd\xfd\xfd\xfd\x124Vx` + GUID) to `<public_ip>:<bedrock_port>`. An incoming RakNet Pong (`0x1c` containing `MCPE;...`) proves the UDP listener is active and answering externally without relying on in-game client state.
   - For deep diagnostic dumps, execute `geyser dump` from console and fetch the generated raw report from `https://dump.geysermc.org/raw/<dump_id>` to inspect `netherNetInfo`, active candidate addresses, bound protocols (`bedrockProtocols`), and `connectionAttempts`.

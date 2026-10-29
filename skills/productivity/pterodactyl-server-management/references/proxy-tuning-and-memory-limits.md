@@ -141,22 +141,63 @@ In `CustomFishing`, fishing skill EXP is granted via action commands upon catch 
 - Under `raknet`, Geyser only binds UDP 19132 for RakNet and keeps TCP signaling closed. Bedrock clients cannot perform TCP signaling discovery and fail to join or see MOTD.
 
 ### Zero-Restart Hot-Fix Procedure
-1. **Config Update**: In `plugins/Geyser-Velocity/config.yml` (or backend Spigot `plugins/Geyser-Spigot/config.yml`), change:
-   ```yaml
-   bedrock:
-     address: 0.0.0.0
-     port: 19132
-     webrtc-port: 0
-     transport: nethernet
-   ```
-   *Note*: If older Bedrock clients (< 26.40) must also be supported, set `transport: both` and allocate a dedicated secondary UDP port in `webrtc-port`. With `transport: nethernet`, port 19132 handles both TCP signaling and UDP WebRTC without extra allocations.
-2. **Built-in Signaling**: Verify `signaling.mode: builtin` and `stun-discovery: true`.
+1. **Config Update**:
+   - **Single-Port Setup (`transport: nethernet`)** (e.g. Velocity on standard port `19132`):
+     ```yaml
+     bedrock:
+       address: 0.0.0.0
+       port: 19132
+       webrtc-port: 0
+       transport: nethernet
+       signaling:
+         mode: builtin
+         advertise-addresses:
+           - '<public_ip>:19132'
+         stun-discovery: true
+     ```
+   - **Dual-Stack Setup (`transport: both`)** (e.g. standalone backend servers with custom Bedrock allocations):
+     When players have an established port (e.g. `25562`) saved in their Bedrock client, never switch `port` to a new NetherNet allocation with `transport: nethernet`—it disables RakNet UDP and breaks connectivity for all existing players. Use `transport: both` with the secondary allocation assigned to `webrtc-port`:
+     ```yaml
+     bedrock:
+       address: 0.0.0.0
+       port: 25562        # Primary Bedrock port: RakNet UDP + built-in TCP signaling
+       webrtc-port: 18170 # Secondary allocation: NetherNet WebRTC UDP
+       transport: both
+       signaling:
+         mode: builtin
+         advertise-addresses:
+           - '<public_ip>:18170' # WebRTC UDP port advertised to connecting clients
+         stun-discovery: true
+     ```
+2. **Built-in Signaling**: Verify `signaling.mode: builtin` (or `hybrid`) and `stun-discovery: true`.
 3. **Hot-Reload**: Dispatch `geyser reload` via console or Client API (`POST /api/client/servers/{server_id}/command`).
-   - Geyser gracefully stops RakNet, starts built-in HTTP/TCP signaling on `0.0.0.0:19132`, runs STUN discovery, and re-arms listeners.
-   - Java players remain connected without disruption.
+   - Geyser gracefully stops previous listeners, re-arms RakNet on `UDP <port>`, starts built-in HTTP/TCP signaling on `<port>`, and binds NetherNet on `UDP <webrtc-port>`.
+   - Connected Java players remain undisturbed.
 4. **Console Verification**:
+   - Check console log: `Started Geyser on UDP port <port>` AND `Built-in signaling started on http://0.0.0.0:<port>, with NetherNet on UDP port <webrtc-port>`.
    - `geyser nethernet status` -> confirms MOTD, level, and player count JSON.
-   - `geyser nethernet advertised` -> confirms public STUN mapping (`<public_ip>:19132`).
    - `geyser connectiontest <ip> <port>` -> verifies external reachability (`Your server is likely online and working`).
+
+---
+
+## 8. Diagnosing Sudden Mass Disconnects Across Proxied Networks
+
+### Symptom
+Every player across all backend worlds (e.g. EcoRPG, Lobby) disconnects simultaneously at the exact same second with generic disconnect messages:
+- Backend Paper logs: `<player> lost connection: Disconnected` / `[floodgate] Floodgate player ... disconnected`.
+- Bedrock logs: `<player> has disconnected from the Java server because of §rEnd of stream` / `Bedrock client disconnected`.
+- In-game chat report: "kok ke dc semua" / players booted to server list.
+
+### Diagnostic Steps
+1. **Compare Server Uptimes**:
+   Query `GET /api/client/servers/{id}/resources` across the proxy (Velocity) and backend servers.
+   - If backend uptimes are hours or days long but proxy uptime is seconds/minutes with a recent `startup_datetime`, the backend servers never crashed or restarted.
+2. **Inspect Proxy Logs for Shutdown vs Crash**:
+   - Check `logs/server.log` (or newest rotated `.gz` archive) on the proxy:
+     - **Graceful container reboot / SIGTERM**: Contains `Shutting down the proxy...`, `Closing endpoint 0.0.0.0:25565`, `[connected player] <name>: Proxy shutting down.`, `Closing storage... Goodbye!`. Followed by Pterodactyl container startup `container@pterodactyl~ java -version` and `Booting up Velocity...`.
+     - **Kernel OOM (SIGKILL)**: No shutdown lines; process terminates instantly with Exit code 137 in Wings console.
+     - **Java Exception / Crash**: Generates `CrashReport_<date>.log` in `/logs/`.
+3. **Verify Panel Activity**:
+   When checking Pterodactyl activity via `GET /api/client/servers/{id}/activity`, activity logs are paginated ascending (`current_page: 1` is oldest). Fetch the final page (`?page={total_pages}`) to inspect recent power events (`server:power.restart`) or distinguish user-initiated restarts from container node restarts.
 
 

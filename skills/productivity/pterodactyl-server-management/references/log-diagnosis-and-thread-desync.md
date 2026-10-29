@@ -74,3 +74,27 @@
      - Search regex: `description:\s*['"]?\{[0-9]+\}`
   3. Cleanse the offending strings (set to `''` or strip `{n}`) directly in the data file.
   4. Ensure input validation or command pre-processing filters out indexed format strings (`{[0-9]+}`) from user-submitted text fields.
+
+### 5. Sudden Network-Wide Player Disconnection ("ke dc semua")
+- **Diagnostics Order**:
+  1. Check backend server uptimes first (e.g. EcoRPG, Lobby). If backend uptimes are high (hours/days), the game server did not crash.
+  2. Inspect Velocity proxy logs (`/logs/latest.log` or `/logs/server.log`).
+  3. Look for graceful proxy shutdown signatures:
+     - `Shutting down the proxy...`
+     - `Closing storage... Goodbye!`
+     - Followed by immediate reboot (`Booting up Velocity...`).
+  4. If proxy restarted gracefully in ~10 seconds, the mass disconnect was caused by a node-level container restart / SIGTERM on the proxy instance, not in-game plugin errors or database failures. Players automatically reconnect within 1–2 minutes once the proxy listening port binds.
+
+### 6. Skript Console Command Dispatch Syntax Failure
+- **Signature**:
+  - `Can't understand this condition/effect: console command "/..."` during script reload.
+  - Chat reward broadcasts deliver to online players, but automated console rewards (e.g. PlayerPoints `/p give`, currency, items) never apply to databases or player inventories.
+- **Root Cause**:
+  In Skript 2.x, console command effects require explicit execution syntax: `execute console command "<cmd>"` (or `make console execute command "<cmd>"`). Writing `console command "..."` without `execute`, or including a leading slash `/`, causes a parse exception on reload.
+- **Fix**:
+  1. Patch the script (e.g. `/plugins/Skript/scripts/reward.sk`):
+     ```skript
+     execute console command "p give %loop-player% 50"
+     ```
+  2. Reload live without restarting the server: `skript reload <script_name>`.
+
