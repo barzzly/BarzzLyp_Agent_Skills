@@ -23,3 +23,11 @@
 3. **Console Reload & Verification**:
    - Trigger plugin reload via `POST /api/client/servers/{server_id}/command` (e.g. `{"command": "advancedredeem reload"}`).
    - Inspect `logs/latest.log` to confirm reload success message (e.g., `Plugin has been successfully reloaded!`) and check for any syntax or database errors.
+
+## Skript Reward Dispatch & Reload Aliasing
+- **Explicit `execute` syntax required for console commands**:
+  - In Skript scripts (`plugins/Skript/scripts/*.sk`), executing server commands requires `execute console command "<cmd>"`.
+  - Omitting `execute` (e.g. writing `console command "/p give %loop-player% 50"`) produces a syntax compilation error (`Can't understand this condition/effect`). Any `send ...` lines in the same block continue to execute normally, causing players to receive chat notifications (e.g. "You received 50 coins") while the currency is silently dropped.
+- **RCON Reload Command Collision with AuraSkills**:
+  - Never execute shorthand `sk reload <script>` via RCON/console when AuraSkills or Skills plugins are present; `sk` aliases to `/skills reload`.
+  - Always use `skript reload <script>` or `skript reload scripts` and check the console response to confirm 0 compilation errors.
