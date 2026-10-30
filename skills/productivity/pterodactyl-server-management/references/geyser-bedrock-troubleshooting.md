@@ -4,6 +4,14 @@
   - `bedrock.address` MUST ALWAYS remain `0.0.0.0` in Pterodactyl and containerized hosting. Setting public server IP causes Docker container socket bind failure or rejection of forwarded packets, rendering the server completely unreachable (`timed out`).
   - `bedrock.port` must strictly match the assigned Pterodactyl container allocation (e.g. 25562), never default `19132` or Java port `25565` unless specifically allocated. Setting an unassigned port causes immediate timeout during client auth handshake, surfacing Bedrock client error modal code **"Terracotta"** (`An error has occurred. Search help.minecraft.net for "Terracotta"`). When a user reports "Terracotta", verify `bedrock.address` is `0.0.0.0` and `bedrock.port` matches container port allocations.
 
+- **Bedrock 1.26.60+ NetherNet Enforcement & Android Cleartext HTTP ("Terracotta")**:
+  - In Minecraft Bedrock 1.26.60+, Mojang enforces NetherNet and disables legacy RakNet connection negotiation for updated clients.
+  - On mobile operating systems (particularly Android 16+), OS-level `NetworkSecurityConfig` prohibits cleartext HTTP traffic to raw IP addresses. If Geyser uses built-in signaling over plain HTTP (`http://<ip>:<port>`) without TLS certificates, Android clients block the signaling request before WebRTC initialization, throwing error codeword **"Terracotta"** with diagnostic metadata `Google,M,Android,ARM64-Android 16 Error Detail: InitialConnection-...`.
+  - Fix: Enable `signaling.mode: hybrid` with external NXS signaling (`endpoint: https://agent.warden.cloud`). This provisions a trusted HTTPS signaling endpoint (e.g. `https://<subdomain>.wdn.gg`). Provide Bedrock 1.26.60+ mobile players with either:
+    1. 1-click web launcher URL: `https://<subdomain>.wdn.gg` (auto-triggers `minecraft://connect?serverUrl=...&serverPort=443`).
+    2. Manual server entry in Bedrock: Server Address `<subdomain>.wdn.gg`, Port `443`.
+  - For gameplay traffic, set `transport: both`, assign `webrtc-port` to a distinct open container UDP allocation (e.g. `18170`), and explicitly specify `advertise-addresses: ['<public_ip>:<webrtc_port>']`. This preserves legacy RakNet UDP connectivity on `<public_ip>:<raknet_port>` for older clients while enabling HTTPS-negotiated NetherNet for 1.26.60+ clients.
+
 - **NetherNet vs. RakNet Port Allocation Requirements**:
   - NetherNet uses WebRTC over UDP for gameplay and requires an HTTP/TCP signaling server (built-in or external NXS) for connection negotiation.
   - When a server is hosted on a Pterodactyl node or shared hosting allocation where the assigned Bedrock port forwards only UDP (or filters incoming TCP on that port), setting `transport: nethernet` makes built-in signaling unreachable (`Connection timed out` from external probes). Bedrock/MCPE clients fail to receive server metadata and display the server as offline.
