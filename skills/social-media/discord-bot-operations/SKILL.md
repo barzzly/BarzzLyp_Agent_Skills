@@ -36,10 +36,15 @@ metadata:
    for f in commands/*.js donation-logger.js webhook-server.js items-handler.js rank-handler.js; do node --check "$f" || exit 1; done
    ```
 5. When adding or modifying slash commands, register guild commands with `node deploy.js` so Discord updates the command definitions immediately without waiting for global cache propagation.
-6. For temporary Discord role assignments (e.g. 7-day passes), track grant and expiration timestamps in a persistent JSON store; check and remove expired roles on bot startup and via a periodic `setInterval` (e.g. 60s). Never use in-memory `setTimeout` alone. For stackable/queued passes, store an array of discrete pass records (`status: 'active' | 'remaining' | 'expired'`, `channelId`, `messageId`); never key the store by `userId` alone, because repeat purchases overwrite active passes and drop message tracking. When an active pass exists for the same player and user, mark the new pass `remaining` and defer RCON execution until promotion. On expiration, patch the old embed to `expired`, promote the next `remaining` pass to `active`, execute its RCON, patch its embed, and revoke the Discord role only when zero active passes remain for that user.
-7. For in-game RCON commands triggered by Discord interactions, strip leading `/` from console commands, ensure `rcon.end()` runs in a `finally` block to prevent lingering socket connections, and append executed actions to `rcon-log.txt`.
-8. Run one serialization self-check that constructs an `EmbedBuilder` and asserts footer text is exactly `Noesantara Network` and native timestamp exists. Avoid starting a second bot instance because its webhook port can collide with PM2.
-9. Restart only intended PM2 process and verify liveness:
+6. For temporary Discord role assignments (e.g. 7-day passes), track grant and expiration timestamps in a persistent JSON store; check and remove expired roles on bot startup and via a periodic `setInterval` (e.g. 60s). Never use in-memory `setTimeout` alone. For stackable/queued passes, store an array of discrete pass records (`status: 'active' | 'remaining' | 'expired'`, `channelId`, `messageId`); never key the store by `userId` alone, because repeat purchases overwrite active passes and drop message tracking. When an active pass exists for the same player and user, mark the new pass `remaining` and defer RCON execution until promotion. On expiration, patch the old embed to `expired`, promote the next `remaining` pass to `active`, execute its RCON/pass reset, patch its embed, and revoke the Discord role only when zero active passes remain for that user. When zero passes remain in queue, dispatch in-game revocation via RCON (e.g. `weeklypass <passId> disacc <nick>`).
+7. For in-game passes with repeat/queued cycles (e.g. NoeWeeklyPass):
+   - Never rely on `/weeklypass <passId> acc <nick>` alone to activate queued or repeat passes; plugins that keep existing start dates and claim records will either reject with `already-authorized` or keep the old cycle intact, preventing claims on day 1.
+   - Resolve the player UUID via RCON `papi parse <nick> %player_uuid%`.
+   - Reset the player file directly via Pterodactyl Client API (`POST /api/client/servers/{id}/files/write`) with `start: today`, `authorized: true`, and empty claims `{}`.
+   - Flush the plugin's in-memory cache (e.g. send 520 dummy UUID queries via RCON to overflow a 512-capacity LRU cache) so runtime in-game menus reload from disk immediately without requiring a Minecraft server restart.
+8. For in-game RCON commands triggered by Discord interactions, strip leading `/` from console commands, ensure `rcon.end()` runs in a `finally` block to prevent lingering socket connections, and append executed actions to `rcon-log.txt`.
+9. Run one serialization self-check that constructs an `EmbedBuilder` and asserts footer text is exactly `Noesantara Network` and native timestamp exists. Avoid starting a second bot instance because its webhook port can collide with PM2.
+10. Restart only intended PM2 process and verify liveness:
    ```bash
    pm2 restart <bot-name> --update-env
    sleep 3
@@ -47,8 +52,8 @@ metadata:
    pm2 logs <bot-name> --lines 30 --nostream
    ```
    Require `status: online`, `unstable restarts: 0`, and a ready log before reporting success.
-10. For panel refreshes, keep channel IDs in one small sender script, target only requested channels, delete only bot-authored messages, send item/rank/coin payloads, and avoid starting a second long-lived bot process. Build Coins from the existing panel convention or source-of-truth product builder, including its coin emoji/list/description and `Webstore Noesantara` link; omit only the body image when requested while retaining footer logo. Add `content: '|| @everyone ||'` when the panel convention requires a visible everyone mention, then verify it through the API. Never replace a rich existing panel with a minimal placeholder just because the catalog is available.
-11. Check source for stale branding and inspect `git diff --check`. Report changed scope, runtime status, message IDs verified, and that unrelated human messages were preserved.
+11. For panel refreshes, keep channel IDs in one small sender script, target only requested channels, delete only bot-authored messages, send item/rank/coin payloads, and avoid starting a second long-lived bot process. Build Coins from the existing panel convention or source-of-truth product builder, including its coin emoji/list/description and `Webstore Noesantara` link; omit only the body image when requested while retaining footer logo. Add `content: '|| @everyone ||'` when the panel convention requires a visible everyone mention, then verify it through the API. Never replace a rich existing panel with a minimal placeholder just because the catalog is available.
+12. Check source for stale branding and inspect `git diff --check`. Report changed scope, runtime status, message IDs verified, and that unrelated human messages were preserved.
 
 ## RCON migration
 
@@ -57,6 +62,8 @@ metadata:
 - Recheck target power state immediately before final verification; earlier offline state may have changed. When running, use bot's installed `rcon-client` to authenticate and send read-only `list`, then close connection. TCP reachability alone does not prove password authentication. Never start a second Discord bot instance for this check.
 
 ## Pitfalls
+
+- Do not assume `/weeklypass <passId> acc <player>` resets an in-game pass for a repeat purchase or queue promotion; custom pass plugins that store YAML per player and cache progress in memory will reject with `already-authorized` or preserve the previous `startDate` and completed claims, blocking day 1 claims. Always rewrite the player YAML with `start: today` and `claims: {}` via Pterodactyl Client API and flush the plugin's in-memory LRU cache before player opens the menu.
 
 - Do not rely on in-memory `setTimeout` for temporary Discord role assignments; PM2 reloads and process restarts discard in-memory timers, permanently orphaning expired roles on users. Use a persistent JSON store with a startup and interval check.
 - Do not key temporary pass stores by `userId` alone when passes can stack; repeat commands will overwrite active entries, discard earlier queue timers, and orphan Discord message IDs needed for retroactive status patches.

@@ -178,6 +178,18 @@ In `CustomFishing`, fishing skill EXP is granted via action commands upon catch 
    - `geyser nethernet status` -> confirms MOTD, level, and player count JSON.
    - `geyser connectiontest <ip> <port>` -> verifies external reachability (`Your server is likely online and working`).
 
+### Bedrock Error Code: "Terracotta" (Cellular / CGNAT WebRTC Failure)
+- **Symptom**: Some Bedrock/MCPE players can connect normally while others get immediately disconnected with `Unable to connect to world. Error code: Terracotta`. In server logs:
+  ```
+  [NetherNetServerChannel]: <player> could not connect over NetherNet: no network path to this server was found. Their device needs to reach UDP port <port> on one of the addresses this server advertises.
+  ```
+- **Root Cause**: Geyser is set to `transport: nethernet` only. Players on cellular data (CGNAT) or symmetric NAT routers cannot complete peer-to-peer WebRTC STUN handshakes. Because RakNet is disabled under `nethernet`, Geyser drops them immediately.
+- **Fix**: Switch to `transport: both`.
+  - RakNet on UDP `19132` connects players whose WebRTC fails.
+  - Built-in signaling on TCP `19132` + NetherNet WebRTC on an open secondary UDP port (e.g. `webrtc-port: 25565`, leveraging Java's unused UDP port).
+  - Update `signaling.advertise-addresses` to advertise the WebRTC port (`<public_ip>:<webrtc_port>`).
+  - Reload with `geyser reload`. Both RakNet and NetherNet listeners start concurrently.
+
 ---
 
 ## 8. Diagnosing Sudden Mass Disconnects Across Proxied Networks
@@ -199,5 +211,39 @@ Every player across all backend worlds (e.g. EcoRPG, Lobby) disconnects simultan
      - **Java Exception / Crash**: Generates `CrashReport_<date>.log` in `/logs/`.
 3. **Verify Panel Activity**:
    When checking Pterodactyl activity via `GET /api/client/servers/{id}/activity`, activity logs are paginated ascending (`current_page: 1` is oldest). Fetch the final page (`?page={total_pages}`) to inspect recent power events (`server:power.restart`) or distinguish user-initiated restarts from container node restarts.
+
+---
+
+## 9. Velocity Proxy Stuck in "Starting" (Yellow Status) on Pterodactyl
+
+### Symptom
+Velocity proxy container boots completely, logs `Listening on ...`, and routes players without issues, but the Pterodactyl web panel UI keeps the server status indicator yellow (`starting`) indefinitely instead of turning green (`running`).
+
+### Root Cause
+- The server instance was created using a standard Paper/Spigot Egg rather than a dedicated Velocity Egg.
+- Paper eggs configure `config.startup.done` to match `)! For help, type "help"` or Paper's specific startup completion line.
+- Velocity logs `Done (X.Xs)!` or `Listening on ...` without the help prompt. Because Wings' regex parser never finds the configured `done` string in the container stdout, it never transitions the server lifecycle state from `starting` to `running`.
+
+### Resolution
+1. **Import Dedicated Velocity Egg**:
+   - Ensure an official Velocity egg exists in the panel (Nest `Minecraft`, ID e.g. 17).
+   - Verify egg config:
+     - `config.startup.done`: `"Done ("`
+     - `config.stop`: `"end"` (Velocity uses `end` to shut down gracefully; `stop` is unrecognized)
+2. **Switch Server to Velocity Egg**:
+   - Update server model via Laravel tinker or Admin API:
+     ```php
+     $server = Server::find($server_id);
+     $egg = Egg::where('name', 'Velocity')->first();
+     $server->egg_id = $egg->id;
+     $server->nest_id = $egg->nest_id;
+     $server->startup = $egg->startup;
+     $server->save();
+     ```
+   - Ensure `SERVER_JARFILE` environment variable matches the actual jar on disk (e.g. `server.jar` vs `velocity.jar`).
+3. **Restart Proxy**:
+   - Issue `restart` signal via Client API.
+   - When Velocity outputs `Done (X.Xs)!`, Wings immediately recognizes the completion and the panel flips to green (`running`).
+
 
 

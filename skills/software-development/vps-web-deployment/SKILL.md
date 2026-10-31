@@ -34,8 +34,33 @@ Standard procedure for deploying web applications (Node.js/Express, Vite/React, 
     # Verify non-interactive sudo
     echo "<password>" | sudo -S whoami
     ```
+  - **Passwordless sudo (NOPASSWD)**: When configuring standard administrative user to execute root actions without password prompts:
+    ```bash
+    echo "<user> ALL=(ALL:ALL) NOPASSWD:ALL" > /etc/sudoers.d/<user>
+    chmod 0440 /etc/sudoers.d/<user>
+    sudo -n whoami  # confirms non-interactive sudo without password prompt
+    ```
+  - **Chained command privilege boundaries**: In chained bash invocations (`cmd1 && cmd2`), `sudo` applied to `cmd1` does not carry over to `cmd2`. Each distinct command requiring root privileges must explicitly include `sudo` (e.g. `sudo apt update && sudo apt install <pkg> -y`), otherwise subsequent steps fail with permission/lock errors.
   - **Explicit password auth testing**: When verifying credentials after `chpasswd`, always test with `ssh -o PubkeyAuthentication=no` so successful SSH key fallback does not mask a failed or misformatted password hash.
   - **Post-reboot port 22 probe**: If the target VPS is rebooted during provisioning, network and sshd may experience transient ICMP loss and SYN timeouts. Probe port 22 with a bounded check loop (`nc -zv -w 2 <ip> 22` or socket retry) before issuing SSH commands to prevent execution hangs on connection timeouts.
+  - **Full user home directory migration via rsync**: When migrating an entire user environment (`/home/<user>`) from an old VPS to a new VPS:
+    - **Omit compression on low-latency connections**: With sub-10ms network latency, omit `-z` for archives, JARs, and binaries; raw `rsync -av` achieves 90–110 MB/s line-rate throughput without CPU bottleneck.
+    - **Exclude Unix domain sockets & transient locks**: Active daemons (PM2, agents, desktop runtimes) maintain socket files that cannot be copied as regular files. Always pass `--exclude="*.sock"` and `--exclude="*.lock"` to prevent rsync aborts.
+    - **Staged migration order**: Sync lightweight dotfiles and configs first (`.ssh`, `.config`, `.bashrc`, `Scripts`), then web/app projects (`Website`, `Projects`, `Bot`), build toolchains (`.gradle`, `.hermes`, `.npm`), and finally heavy data directories (`Minecraft`).
+    - **Readback parity check**: Validate transfer completeness by comparing local vs remote top-level entries (`os.listdir('/home/<user>')`), matching total disk footprint (`du -sh`), and confirming file ownership (`chown -R <user>:<user>`) and directory permissions (`chmod 750`).
+  - **Multi-Service & Database Cutover Parity**:
+    - **MariaDB user hash preservation**: Extract exact user password hashes and grants (`SHOW GRANTS FOR '<user>'@'localhost';`) so application `.env` files require zero credential adjustments. Create users using `IDENTIFIED BY PASSWORD '<hash>'` on the destination host before restoring database dumps via `mysqldump --databases <dbs>`.
+    - **Docker named volume migration**: Containers using named volumes (e.g. 9Router `9router_9router-data`) store persistent state in `/var/lib/docker/volumes/<name>/_data`. Tar and restore the volume payload directly, preserve ownership (`chown -R 1000:1000`), and start the container with identical port mappings, environment variables, and restart policies (`--restart unless-stopped`).
+    - **Nginx SSL certificate migration**: Copy both `/etc/letsencrypt/archive/<domain>` and `/etc/letsencrypt/live/<domain>` (with symlinks intact) along with `options-ssl-nginx.conf` and `ssl-dhparams.pem` to the new VPS. Link sites to `sites-enabled/`, test with `nginx -t`, and reload. This enables immediate SSL termination on the new VPS before DNS cutover or without waiting for Certbot renewals.
+    - **Hypervisor virtual disk sizing vs filesystem allocation (`lsblk` vs `df`)**: When provisioned disk size appears smaller than expected (e.g. 300GB instead of 512GB), inspect the block device level with `lsblk` and partition layout with `parted /dev/sda print free`. If the physical/virtual disk itself is 300GB with no unallocated space, the provider provisioned a smaller virtual disk volume at the hypervisor level (not an unexpanded partition). Rescan SCSI devices (`echo 1 > /sys/class/block/sda/device/rescan`) or request hypervisor storage resize before expanding filesystems with `growpart` and `resize2fs`.
+    - **Atomic dual-gateway polling handoff**: Messaging platforms with single-consumer polling APIs (e.g. Telegram `getUpdates`) return `409 Conflict` if multiple gateways run simultaneously with the same bot token. Deploy and enable the systemd service on the new host, but keep it stopped until an atomic stop-on-source / start-on-target cutover is performed.
+    - **Subprocess self-termination protection for service supervisors**: Commands executed inside a supervised agent process that attempt to restart or stop their own supervisor (e.g. `systemctl restart hermes-gateway`) are intercepted by agent runtime safety guards to prevent self-killing. Handoff commands for the active runner must be executed from an external terminal or after message delivery completes.
+    - **Dual PM2 installation daemon collision & port binding traps**: When Node.js and PM2 are installed both globally via system package manager (`/usr/lib/node_modules/pm2` / `/usr/bin/pm2`) and in user-space (`~/.npm-global/bin/pm2` or cloned home setups), running `pm2` without an absolute path may connect to a different god daemon instance than the one configured in `pm2-<user>.service`. If an old daemon or orphan worker holds an application port (`5000`, `19137`), subsequent worker starts fail with `EADDRINUSE` and enter an `errored` crash loop. Remediate cleanly:
+      1. Kill orphan socket listeners: `sudo fuser -k <port>/tcp`.
+      2. Kill rogue god daemons: `pm2 kill` and `pkill -u <user> -f "PM2"`.
+      3. Clean stale IPC sockets and pidfiles: `rm -f ~/.pm2/pm2.pid ~/.pm2/rpc.sock ~/.pm2/pub.sock`.
+      4. Start and persist through the canonical systemd unit: `sudo systemctl start pm2-<user>.service`.
+      5. Launch applications explicitly via the canonical PM2 binary matching systemd (`/usr/lib/node_modules/pm2/bin/pm2 start ...`), then run `pm2 save`.
 
 ### 1. Repository & Location
 - Place all web projects under the designated web root (e.g. `/home/<user>/Website/<project-name>`). Keep the home directory tidy.

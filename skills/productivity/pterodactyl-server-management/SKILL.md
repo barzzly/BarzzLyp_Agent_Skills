@@ -13,7 +13,7 @@ metadata:
 
 # Pterodactyl Server Management (SFTP & Client API)
 
-Honor final power state. For player wipes, see [database reset](references/player-data-reset.md). For schedule replication, see [schedule replication](references/pterodactyl-schedule-replication.md). For dungeon WorldGuard, see [dungeon-worldguard scope](references/dungeon-worldguard-scope.md). For proxy OOM & hologram lifecycle, see [proxy tuning](references/proxy-tuning-and-memory-limits.md).
+Honor final power state. For player wipes, see [database reset](references/player-data-reset.md). For schedule replication, see [schedule replication](references/pterodactyl-schedule-replication.md). For dungeon WorldGuard, see [dungeon-worldguard scope](references/dungeon-worldguard-scope.md). For proxy OOM & hologram lifecycle, see [proxy tuning](references/proxy-tuning-and-memory-limits.md). For event XP/sell multipliers, see [temporary event boosts](references/temporary-event-boosts.md).
 
 ## Execution preference
 
@@ -39,8 +39,8 @@ Honor final power state. For player wipes, see [database reset](references/playe
 
 ## Noesantara deposit interaction
 
-- Create transfers on the website with amount and account-bound expiry. User wants Vault withdrawals processed automatically from the web without ingame commands, while deposits retain `/depositweb CODE` or `/web deposit CODE`. Keep prepare/claim, account ownership, expiry, balance, journal and duplicate fences intact. User requires automatic Vault WD while recipient is online OR offline; authenticate via owning web session/password and signed bridge, resolve exact known UUID using OfflinePlayer on main thread, and credit through Vault rather than raw eco give. Keep online signed-player authentication for deposits/manual commands and inactive durable-provider flow. Test real client disconnect before WD request, zero online players through settlement, exact credit and no duplicate; remove online gates from WD form, creation and discovery together. ECO RPG server itself must remain running.
-- Parse whole-Money grouped inputs explicitly: `523,631`, `523.631`, and `523631` mean integer `523631`. Validate grouping before removing separators; reject mixed grouping, decimal fractions, exponent notation and malformed input. Use the same parser for preflight, POST amount and response comparison; backend still enforces integer bounds.
+- Web transfers bind amount and account expiry. Process Vault withdrawals automatically online/offline via signed bridge and main-thread `OfflinePlayer` credit; deposits use `/depositweb CODE` or `/web deposit CODE`. Keep prepare/claim, ownership, expiry, balance, journal and idempotency fences. ECO RPG must remain running.
+- Parse grouped whole-money numbers strictly (`523,631`, `523.631`, `523631` -> integer `523631`). Validate separator grouping before stripping; reject mixed grouping, decimal fractions, and exponent notation across preflight and POST.
 - Paginate automatic withdrawal discovery with a bounded stable cursor that advances past locally blocked/skipped owners. A fixed oldest-eight query can starve other players while uncertain journals remain locked. Never clear journals, refund, or replay mutations to unblock discovery; test more than eight owners and an unprocessable first page.
 - Check current Vault balance on the main thread immediately before withdrawal from the game account, not only when generating the web request. Reject insufficient funds before invoking the money mutation, with clear player feedback and zero website credit. Preserve signed identity, claim, journal, expiry and idempotency checks around this shortcut.
 - Test balance falling between request and confirmation, duplicate confirmation, foreign-owner and expired codes, and insufficient funds through the native command. Checking balance prevents overspending, not EssentialsX crash rollback.
