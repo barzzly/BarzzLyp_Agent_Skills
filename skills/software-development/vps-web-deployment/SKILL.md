@@ -9,6 +9,34 @@ Standard procedure for deploying web applications (Node.js/Express, Vite/React, 
 
 ## Architecture & Standard Deployment Workflow
 
+### 0. Fresh VPS Provisioning & Non-Root User Setup
+- When provisioning a new VPS delivered with only initial `root` password:
+  - **Non-interactive SSH without `sshpass`**: OpenSSH supports `SSH_ASKPASS` with `SSH_ASKPASS_REQUIRE=force`. Create a temporary executable script (`chmod 700`) that outputs the root password, set `SSH_ASKPASS=/path/to/script` and `SSH_ASKPASS_REQUIRE=force`, then invoke `ssh -o StrictHostKeyChecking=no root@<ip> "<commands>"`. Clean up the script immediately after execution.
+  - **Create dedicated standard user**:
+    ```bash
+    useradd -m -s /bin/bash -c "Display Name,,," <user>
+    echo "<user>:<password>" | chpasswd
+    usermod -aG sudo,users <user>
+    ```
+    *Note: GECOS (Full Name) accepts mixed-case labels (e.g. `BarzzLy`), while system usernames must remain lowercase.*
+  - **SSH authorized_keys setup**:
+    ```bash
+    mkdir -p /home/<user>/.ssh && chmod 700 /home/<user>/.ssh
+    echo "<public_key>" >> /home/<user>/.ssh/authorized_keys
+    chmod 600 /home/<user>/.ssh/authorized_keys
+    chown -R <user>:<user> /home/<user>/.ssh
+    chmod 750 /home/<user>
+    ```
+  - **Verify sudo & root password alignment**:
+    ```bash
+    # Update root password if synchronizing credentials
+    echo "root:<password>" | chpasswd
+    # Verify non-interactive sudo
+    echo "<password>" | sudo -S whoami
+    ```
+  - **Explicit password auth testing**: When verifying credentials after `chpasswd`, always test with `ssh -o PubkeyAuthentication=no` so successful SSH key fallback does not mask a failed or misformatted password hash.
+  - **Post-reboot port 22 probe**: If the target VPS is rebooted during provisioning, network and sshd may experience transient ICMP loss and SYN timeouts. Probe port 22 with a bounded check loop (`nc -zv -w 2 <ip> 22` or socket retry) before issuing SSH commands to prevent execution hangs on connection timeouts.
+
 ### 1. Repository & Location
 - Place all web projects under the designated web root (e.g. `/home/<user>/Website/<project-name>`). Keep the home directory tidy.
 - Clone or pull latest code:
@@ -232,6 +260,7 @@ Standard procedure for deploying web applications (Node.js/Express, Vite/React, 
 
 ## Pitfalls & Core Rules
 
+- **Non-interactive SSH password automation without `sshpass`**: On minimalist environments lacking `sshpass` or `pexpect`, OpenSSH supports non-tty password feeding via `SSH_ASKPASS` combined with `SSH_ASKPASS_REQUIRE=force`. Point `SSH_ASKPASS` to an executable `0700` script echoing the password, pass `-o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null`, and wipe the script immediately after command completion to prevent credentials lingering in `/tmp`.
 - **CDN-aware HTML verification**: Compare exact application asset hashes and normalize only a positively identified CDN-injected beacon when comparing public HTML. Cloudflare can inject its analytics script into otherwise byte-identical HTML; an unnormalized full-HTML hash can falsely fail a healthy release and trigger downtime. Preserve all other markup in comparison.
 - **Isolated npm configuration**: Give npm userconfig and globalconfig distinct empty paths; pointing both to `/dev/null` fails with `double-loading config`. Keep this test-harness error separate from application build failure.
 - **Unchanged companion JAR verification**: Rebuilt ZIP/JAR timestamps can change archive hash without code changes. For an unchanged, non-deployed companion compare complete unique entry-name/content-hash maps to the baseline; continue requiring exact archive SHA for the plugin actually deployed.
