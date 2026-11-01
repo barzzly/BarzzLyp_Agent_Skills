@@ -13,7 +13,7 @@ metadata:
 
 # Pterodactyl Server Management (SFTP & Client API)
 
-Honor final power state. For player wipes, see [database reset](references/player-data-reset.md). For schedule replication, see [schedule replication](references/pterodactyl-schedule-replication.md). For dungeon WorldGuard, see [dungeon-worldguard scope](references/dungeon-worldguard-scope.md). For proxy OOM & hologram lifecycle, see [proxy tuning](references/proxy-tuning-and-memory-limits.md). For event boosts, see [event boosts](references/temporary-event-boosts.md). For pass cache & Skript fixes, see [pass & skript guide](references/ingame-pass-cache-and-skript-troubleshooting.md).
+Honor final power state. For wipes see [database reset](references/player-data-reset.md); [schedules](references/pterodactyl-schedule-replication.md); [dungeon-worldguard](references/dungeon-worldguard-scope.md); [proxy tuning](references/proxy-tuning-and-memory-limits.md); [event boosts](references/temporary-event-boosts.md); [pass & skript guide](references/ingame-pass-cache-and-skript-troubleshooting.md); [MythicMobs & ItemsAdder](references/mythicmobs-itemsadder-troubleshooting.md).
 
 ## Execution preference
 
