@@ -1,5 +1,10 @@
 # MythicMobs and ItemsAdder Runtime Troubleshooting
 
+## ModelEngine hook ABI mismatch
+- When many MODEL, STATE, CHANGEPART, BRIGHTNESS and BODYROTATION mechanics fail together, inspect startup ModelEngine exceptions before editing pack YAML. `NoClassDefFoundError: io/lumine/mythic/bukkit/compatibility/AbstractModelEngineSupport$MEGAttachment` means the ModelEngine hook targets a newer MythicMobs API; `mm reload` alone cannot supply the missing class.
+- Inspect actual JAR ZIP entries and Maven distribution metadata. A filename without Premium can still be `Mythic-Dist-Premium`; never replace that build with a public free download without explicit approval. Select an official release that supports the live Minecraft version and verify required API entries plus release hash. Request the owner's compatible Premium artifact when authenticated downloads are unavailable, and obtain restart authorization before changing the active JAR.
+- Prefer direct SFTP after slow panel API reads. Quote complete remote paths containing spaces, and use `sftp -b -` so failed directory changes stop the batch before recursive downloads. Fetch explicit plugin paths, never `get -r .` after an unverified `cd`.
+
 ## MythicMobs EquipMechanic Drop Type Resolution
 - Resolve equipment item IDs against MythicMobs item definitions (including pack Items folders) or vanilla materials. On MythicMobs 5.12/5.13 use `equip{item=<name> HAND}` or another named slot; legacy numeric `:0` can silently leave equipment empty. Verify actual equipment NBT rather than relying on a warning-free reload.
 - Un-namespaced custom items in skills/mobs must have matching definitions in `MythicMobs/Items/*.yml` (e.g. `Id: PAPER`, `Model: <cmd>`); missing entries trigger `Drop <name>:<slot> Drop type not found` on every equip tick.

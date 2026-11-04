@@ -32,9 +32,11 @@
 To deploy or upload plugins/files without SFTP credentials:
 1. Request signed upload URL from panel:
    `GET /api/client/servers/{server_id}/files/upload`
+   Always use a standard browser `User-Agent` (e.g. `Mozilla/5.0`) and GET, not POST. On a WAF-protected panel, use the same User-Agent for related reads.
    Extract `data.attributes.url` (e.g., `https://<node>:60001/upload/file?token=...`).
 2. Append target directory query parameter:
    `${UPLOAD_URL}&directory=/plugins`
+   Note: Wings may place uploaded files at server root despite `directory`; inspect root and `/plugins`, then move only the exact staged JAR via the panel file API if needed.
 3. POST multipart form payload:
    - Form field name: `files`
    - Content-Type: `multipart/form-data; boundary=...`
