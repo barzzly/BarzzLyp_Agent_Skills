@@ -378,3 +378,8 @@ Standard procedure for deploying web applications (Node.js/Express, Vite/React, 
     12. **Seamless Backdrop Alpha Fading (Eliminating Hard Bottom Edges)**:
        - When header or hero backdrops display high-contrast or high-opacity images (e.g. `opacity-75`) blending into light solid background content, standard background color gradient overlays frequently leave a noticeable horizontal clipping line at the bottom of the container.
        - Eliminate hard edges by layering CSS `mask-image: linear-gradient(to bottom, black 50%, transparent 100%)` directly on the image element and terminating the background color gradient earlier (`to-85%` reaching `#FEFEFE`), allowing alpha transparency to hit 0 before container bounds.
+    13. **Storefront Transaction Revenue Querying & Status Verification**:
+       - When auditing store revenue or calculating periodic gross earnings from `transactions`, never assume successful orders use `status = 'paid'`.
+       - Check the table schema and distinct statuses first: live production systems frequently normalize settled orders to `status = 'success'` (with `paid_at` populated), while `'paid'` may be an intermediate or legacy webhook state.
+       - Filter by the true settlement status: `WHERE status = 'success' AND paid_at >= '<start>' AND paid_at <= '<end>'` to prevent zero-sum reporting on healthy active stores.
+
