@@ -11,4 +11,9 @@
    - **Base Entity Type matters**: Tiny base entities (e.g. `silverfish`, 0.4x0.3) leave huge vertical model areas unhittable by server raycasts. Use `IRON_GOLEM` or suitably proportioned entities with `MovementSpeed: 0` so the core bounding box covers the visual torso.
    - **Visual Dummies must disable hitboxes**: Auxiliary decoration dummies (e.g. base stands, VFX holders) summoned at the boss location must have `h=false` (or `hitbox=false`) in their `model{}` mechanic and `Collidable: false`; otherwise their invincible hitboxes intercept player attacks aimed at the boss.
    - **Bound spawn immunity duration**: Never set unbounded or massive potion duration (e.g. `duration=99999`) for spawn resistance. Use bounded timeouts (e.g. `duration=100`, 5s) so bosses never get permanently stuck in godmode if a trigger fails.
+8. **Quest & Dungeon Event Integration Pitfalls (NoeClass / MythicMobs / NoeDungeon)**:
+   - **MythicMob Internal Name Parity**: Custom quest systems (e.g. `NoeClassSystem`) match targets against `MythicMob.getInternalName()`. When servers prefix mob definitions across balance files (e.g. `RPGNEW_HOLLOW_LRD_HOLLOWKEEPER` instead of raw `LRD_HOLLOWKEEPER`), quest listeners split by comma (`target.split(",")`) must include both legacy and prefixed IDs in `target: <id1>,<id2>` across all category quest files (`daily`, `weekly`, class variants) and `config.yml`.
+   - **Survival & Killer Filter**: Ensure players test kills in `SURVIVAL` gamemode; kills by environmental damage, minions, or creative hits are rejected by strict quest listeners (`p.getGameMode() == GameMode.SURVIVAL`).
+   - **Dungeon vs Boss Completion Semantics**: `DUNGEON` quest completion is driven by `DungeonCompleteEvent` on final session completion (e.g. reaching evacuation checkpoint), whereas `MYTHIC_KILL` completes immediately on entity death. Clarify to players whether the quest tracks boss kill or overall dungeon clear.
+
 
