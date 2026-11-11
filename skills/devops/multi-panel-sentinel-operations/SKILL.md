@@ -11,12 +11,17 @@ metadata:
 
 ## Telemetry Report Format & Typography Rules
 - **Delivery Destination:** Route VPS Sentinel reports directly to Discord monitoring channel (`1570029605107146752`) via BarzzLyDev Bot (`run-sentinel-discord.py`), BUKAN ke Telegram (`deliver: local` pada cron Hermes).
-- **Discord Heading 1:** Gunakan `# Nama Kategori` (wajib ada spasi setelah `#`) agar Discord merender teks sebagai Heading 1 besar yang tegas.
-- **Category Titles & Headers:** Wajib BOLD (**Metrik Sistem VPS**, **Status Service VPS**, **Status Service C-Console**, **Status Service C-Ultras**).
+- **Discord Heading 1:** Gunakan `# Nama Kategori` (wajib ada spasi setelah `#`) di description embed agar Discord merender teks sebagai Heading 1 besar yang tegas.
+- **Category Titles & Headers:** Wajib format Heading (`# Metrik Sistem VPS`, `# Status Service VPS`, `# Status Service C-Console`, `# Status Service C-Ultras`).
 - **Service & Server Names:** Wajib BOLD (**OS-Ubuntu**, **NOESANTARA BOT DC**, dll).
 - **Status Value:** Wajib format inline code (\`ONLINE\`, \`RUNNING\`, \`OFFLINE\`, \`SUSPENDED\`).
 - **Spacing:** WAJIB beri 1 baris kosong (jarak 1 enter kosong / `\n\n`) antara judul kategori dengan service pertama, serta 1 baris kosong di antara setiap baris service/server agar tidak dempet di Discord mobile/desktop.
 - **Footer Discord Embed:** Tampilkan teks `BarzzLyDev • MM/DD/YYYY hh:mm AM/PM` (WIB) dengan avatar BarzzLyDev icon. Jangan menyisipkan field spacer buatan (`\u200B`) sebelum footer karena membuat gap kosong terlalu jauh.
+- **Embed Colors:**
+  * START & FINISH (Done): Wajib Biru (`#3498db`). Embed rekapitulasi akhir backup yang sukses berwarna BIRU (bukan hijau).
+  * ITEM SUCCESS: Hijau (`#2ecc71`).
+  * ERROR / FAILED: Merah (`#e74c3c`).
+  * ANOMALY / WARNING: Kuning (`#f1c40f`).
 - **Service Filtering:** Kecualikan service yang telah dipindahkan/dijalankan di dalam container panel Pterodactyl (seperti Discord bot) dari daftar service host VPS.
 - **OS Base Memory Calculation:** Hitung physical RSS murni dari root core OS processes (`ps -u root` minus daemon Docker/Wings/DB/Apps). Jangan mengandalkan sisa pengurangan total memory jika host juga menampung container Pterodactyl/Minecraft lokal, agar RAM OS tidak tampak bengkak secara semu.
 
@@ -39,9 +44,11 @@ metadata:
   * Jalankan seluruh proses kompresi dan upload dengan prioritas terendah via `nice -n 19 ionice -c 3`.
   * Gunakan kompresi cepat (`zip -1 -q -r`) untuk menghindari spike CPU pada chunk Minecraft yang sudah terkompres Anvil. Lewati folder kosong jika tidak ada file untuk di-zip guna menghindari exit code 12 (`Nothing to do`).
   * Batasi bandwidth upload via `rclone copy --bwlimit 45M --tpslimit 10`. Batas query `--tpslimit 10` wajib disertakan agar shared OAuth client ID tidak terkena `403 RATE_LIMIT_EXCEEDED` dari Google Drive.
+  * Tambahkan `--timeout 1m --contimeout 30s --drive-chunk-size 32M --retries 3 --low-level-retries 10` pada perintah rclone. Chunk 32 MB mengurangi query API 4x lipat pada file besar, dan timeout eksplisit mencegah rclone menggantung permanen pada socket TCP saat Google Drive idle commit.
+  * Sanitasi nama folder target di Google Drive: gantikan karakter slash `/` menjadi tanda minus `-` (`name.upper().replace('/', '-')`, contoh: `NOESANTARA DEV/EVENT` menjadi `NOESANTARA DEV-EVENT`) agar rclone tidak salah memecahnya menjadi subfolder bersarang.
   * Backup per-item ke staging lokal (`/var/backups/sentinel_staging/`), upload ke remote, lalu hapus zip lokal seketika sebelum memproses item berikutnya agar disk VPS tetap 0% overhead.
   * Bersihkan file backup lama berumur > 7 hari di Google Drive otomatis pada setiap akhir proses backup via `rclone --tpslimit 10 delete --min-age 7d "gdrive:Backup Server"`.
-  * Embed laporan backup wajib mencantumkan waktu mulai pada notifikasi start, serta waktu mulai, waktu selesai, total durasi, dan total ukuran pada notifikasi finish. Jarak footer harus natural tanpa spacer field dummy.
+  * Embed laporan backup wajib mencantumkan waktu mulai pada notifikasi start, serta waktu mulai, waktu selesai, total durasi, dan total ukuran pada notifikasi finish. Jarak footer harus natural tanpa spacer field dummy. Selesai akhir (finish) berwarna BIRU.
 - **Headless Google Drive OAuth via rclone:**
   * Di VPS tanpa desktop browser, jalankan `rclone authorize "drive"` di background, tangkap URL lokal `http://127.0.0.1:53682/auth?state=...` dan redirect location Google OAuth.
   * User membuka link Google OAuth di browser HP/PC, login, dan klik Izinkan.
