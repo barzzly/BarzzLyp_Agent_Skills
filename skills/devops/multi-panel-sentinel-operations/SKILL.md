@@ -10,10 +10,13 @@ metadata:
 # Multi-Panel Sentinel Operations
 
 ## Telemetry Report Format & Typography Rules
-- **Category Titles & Headers:** Wajib BOLD (**Metrik Sistem VPS:**, **Status Service VPS:**, **Status Service C-Ultras:**).
-- **Service & Server Names:** Wajib BOLD (**OS-Ubuntu (Host VPS)**, **NOESANTARA BOT DC**, dll).
-- **Status Value:** Wajib BOLD (status **ONLINE**, status **RUNNING**, status **OFFLINE**, status **SUSPENDED**).
-- **Spacing:** WAJIB beri 1 baris kosong (jarak 1 enter kosong) antara judul kategori dengan service pertamanya, serta 1 baris kosong di antara setiap baris service/server agar tidak rapat di Telegram.
+- **Delivery Destination:** Route VPS Sentinel reports directly to Discord monitoring channel (`1570029605107146752`) via BarzzLyDev Bot (`run-sentinel-discord.py`), BUKAN ke Telegram (`deliver: local` pada cron Hermes).
+- **Discord Heading 1:** Gunakan `# Nama Kategori` (wajib ada spasi setelah `#`) agar Discord merender teks sebagai Heading 1 besar yang tegas.
+- **Category Titles & Headers:** Wajib BOLD (**Metrik Sistem VPS**, **Status Service VPS**, **Status Service C-Console**, **Status Service C-Ultras**).
+- **Service & Server Names:** Wajib BOLD (**OS-Ubuntu**, **NOESANTARA BOT DC**, dll).
+- **Status Value:** Wajib format inline code (\`ONLINE\`, \`RUNNING\`, \`OFFLINE\`, \`SUSPENDED\`).
+- **Spacing:** WAJIB beri 1 baris kosong (jarak 1 enter kosong / `\n\n`) antara judul kategori dengan service pertama, serta 1 baris kosong di antara setiap baris service/server agar tidak dempet di Discord mobile/desktop.
+- **Footer Discord Embed:** Tampilkan teks `BarzzLyDev • MM/DD/YYYY hh:mm AM/PM` (WIB) dengan avatar BarzzLyDev icon. Jangan menyisipkan field spacer buatan (`\u200B`) sebelum footer karena membuat gap kosong terlalu jauh.
 - **Service Filtering:** Kecualikan service yang telah dipindahkan/dijalankan di dalam container panel Pterodactyl (seperti Discord bot) dari daftar service host VPS.
 - **OS Base Memory Calculation:** Hitung physical RSS murni dari root core OS processes (`ps -u root` minus daemon Docker/Wings/DB/Apps). Jangan mengandalkan sisa pengurangan total memory jika host juga menampung container Pterodactyl/Minecraft lokal, agar RAM OS tidak tampak bengkak secara semu.
 
@@ -23,5 +26,26 @@ metadata:
   - `PTERODACTYL_CONSOLE_URL` & `PTERODACTYL_CONSOLE_API_KEY` (BarzzLy Console)
 - **Cloudflare & HTTP/2 Polling:** Panel game server pihak ketiga (seperti UltraServers) sering berada di balik Cloudflare WAF. Gunakan `curl --http2` dengan `--connect-timeout 5 --max-time 15`, sertakan header `-H 'User-Agent: curl/8.5.0'` (default Python `urllib` diblokir Cloudflare hingga timeout), dan gunakan konkurensi (`concurrent.futures.ThreadPoolExecutor`) saat polling `/resources` tiap server agar tidak memicu timeout atau memblokir eksekusi skrip cron.
 - **Root Cause Server Down/Reboot:** Jika game server terpencil (misal UltraServers ECORPG) tiba-tiba shutdown bersih (`ThreadedAnvilChunkStorage: All dimensions are saved`), periksa error upstream database di log (`CommunicationsException` / HikariPool socket timeout). Reboot pada container database pusat (misal `NOESANTARA DATABASE` di console.barzzly) memicu shutdown protektif pada plugin Paper agar data chunk/player tidak korup. Selaraskan dengan power action di Wings host (`sudo tail -n 50 /var/log/pterodactyl/wings.log`) untuk melacak event `action=restart`/`action=stop`.
-- **Pterodactyl Egg Startup Detection:** Jika container aplikasi di Pterodactyl berstatus kuning (`STARTING`) terus-menerus padahal service sudah aktif di log, periksa field `config_startup` pada tabel `eggs` di database panel (`panel.eggs`). Pastikan array `"done"` memuat teks unik yang dicetak aplikasi saat selesai booting (misal: `"Bot aktif sebagai"`).
+- **Pterodactyl Egg Startup Detection:** Jika container aplikasi di Pterodactyl berstatus kuning (`STARTING`) terus-menerus padahal service sudah aktif di log, periksa field `config_startup` pada tabel `eggs` di database panel (`panel.eggs`). Pastikan field `"done"` berupa string regex/literal tunggal (misal: `{"done": "Bot aktif sebagai"}`), BUKAN JSON array. Pterodactyl Wings (Go) meng-unmarshal `"done"` sebagai string; jika diset array `["..."]`, unmarshal gagal dan status server tertahan `starting` permanen. Selain itu, pastikan script container mencetak newline `\n` sebelum string deteksi agar tidak tergabung dengan karakter spinner `npm install` (misal `/Bot aktif sebagai`).
+
+## VPS & Panel Backup Sentinel Operations
+- **Dynamic Server Discovery:** Jangan hardcode UUID server panel di script backup. Query tabel `panel.servers` (`SELECT uuid, name FROM panel.servers`) secara dinamis setiap kali cron jalan, agar server game/bot baru (seperti bot discord baru) langsung otomatis masuk ke daftar backup.
+- **Kategori Destinasi Backup (Google Drive):**
+  * `Server Panel/<NAMA_SERVER>/backup-<slug>-YYYY-MM-DD.zip`: Untuk semua server panel (kecuali container DB). Exclude file log & cache (`*.log`, `*/logs/*`, `*/cache/*`, `*/crash-reports/*`).
+  * `Database/NOESANTARA DATABASE/backup-noesantara-database-YYYY-MM-DD.zip`: Khusus volume container DB panel (port 19138).
+  * `Database/WEBSITE DATABASE/backup-website-database-YYYY-MM-DD.zip`: Dump host MariaDB via `mariadb-dump --all-databases --single-transaction --quick` lalu di-zip.
+  * `Website/<NAMA_WEB>/backup-<slug>-YYYY-MM-DD.zip`: Folder web (seperti `Noesantara-Website`), exclude `node_modules/`, `.git/`, `dist/`.
+- **Zero Game Lag & Disk Safety:**
+  * Jalankan seluruh proses kompresi dan upload dengan prioritas terendah via `nice -n 19 ionice -c 3`.
+  * Gunakan kompresi cepat (`zip -1 -q -r`) untuk menghindari spike CPU pada chunk Minecraft yang sudah terkompres Anvil. Lewati folder kosong jika tidak ada file untuk di-zip guna menghindari exit code 12 (`Nothing to do`).
+  * Batasi bandwidth upload via `rclone copy --bwlimit 45M --tpslimit 10`. Batas query `--tpslimit 10` wajib disertakan agar shared OAuth client ID tidak terkena `403 RATE_LIMIT_EXCEEDED` dari Google Drive.
+  * Backup per-item ke staging lokal (`/var/backups/sentinel_staging/`), upload ke remote, lalu hapus zip lokal seketika sebelum memproses item berikutnya agar disk VPS tetap 0% overhead.
+  * Bersihkan file backup lama berumur > 7 hari di Google Drive otomatis pada setiap akhir proses backup via `rclone --tpslimit 10 delete --min-age 7d "gdrive:Backup Server"`.
+  * Embed laporan backup wajib mencantumkan waktu mulai pada notifikasi start, serta waktu mulai, waktu selesai, total durasi, dan total ukuran pada notifikasi finish. Jarak footer harus natural tanpa spacer field dummy.
+- **Headless Google Drive OAuth via rclone:**
+  * Di VPS tanpa desktop browser, jalankan `rclone authorize "drive"` di background, tangkap URL lokal `http://127.0.0.1:53682/auth?state=...` dan redirect location Google OAuth.
+  * User membuka link Google OAuth di browser HP/PC, login, dan klik Izinkan.
+  * Saat browser diarahkan ke `http://127.0.0.1:53682/?state=...&code=...` dan menampilkan error koneksi, minta user menyalin URL address bar tersebut.
+  * Script VPS melakukan HTTP GET ke `http://127.0.0.1:53682/?<query>` lokal, menyelesaikan handshake OAuth, dan menyimpan token ke `~/.config/rclone/rclone.conf`.
+- **Root Crontab Rclone Config:** Saat script backup dijalankan dari root crontab, rclone secara default mencari config di `/root/.config/rclone/rclone.conf`. Buat symlink `/root/.config/rclone -> /home/barzzly/.config/rclone` atau lewatkan flag `--config /home/barzzly/.config/rclone/rclone.conf` secara eksplisit.
 - **Cron Worker Linger:** Pada host Ubuntu baru, pastikan user non-root di-set `sudo loginctl enable-linger <user>`. Tanpa linger, worker background cron Hermes berbasis `systemd-run --user --scope` akan gagal dispatch dengan error `User ID ... is not logged in or lingering`.
