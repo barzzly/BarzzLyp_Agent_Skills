@@ -7,6 +7,14 @@
 - Assert exact semantic delta, positive weights and decreased base-pool trash across all biome subgroups; label calculations as no-gear theoretical pools, not measured catches. Back up fresh remote source, compare before write, read back bytes, and use registered customfishing reload.
 - A concurrent restart can queue console reload while latest.log rotates. Require fresh Done, current running state, reload confirmation and final source readback; do not claim own task restarted server when no power signal was sent.
 
+## Read-only CustomFishing catalog audits
+
+- Partition item definitions into entries with explicit `size` and loot without `size`; preserve every ID and compare expected/collected sets, not counts alone. Fish-named trash can lack size; never invent its maximum.
+- Report `size` upper bound as base maximum, not loot weight or rod capacity. Inspect global `restricted-size-range`, bait/hook/equipment/enchant/totem size effects, and unit labels in both item lore and global messages. If kg/cm labels conflict or stacking/clamp order is unproved, expose the conflict and do not calculate a final gear maximum.
+- Traverse every loot-condition branch with inherited parent conditions. Keep water, lava, environment, world, rod, and time gates separate; item groups, categories, and index-habitat lore are not proof of biome eligibility.
+- Resolve names from explicit CustomFishing display fields before external providers. Check item-detection-order and actual inheritance references; matching Nexo material plus CustomModelData proves a model association, not inheritance of names or stats. Preserve mismatched/alias IDs exactly and list missing category references separately from active fish.
+- Leave a runnable coverage check with the catalog: exact ID sets, no duplicate YAML top-level IDs, every fish base maximum matches source, and snapshot hashes remain unchanged. Restrict private config extracts to gameplay fields; never copy operational endpoints or credentials into reports.
+
 ## CustomFishing EXP scaling & live reload
 
 - CustomFishing lacks native EXP or global EXP multiplier in `config.yml`. EXP is granted via commands in item catch events: `command_action: type: command, value: ['sk xp add {player} fishing <amount>']` under `contents/item/default.yml`.

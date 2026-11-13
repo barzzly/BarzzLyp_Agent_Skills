@@ -219,6 +219,11 @@ and read the `info: stats:` line to see the counts before picking a number.
 - **Hand-editing the Sources block.** Use `render --replace-in <draft>`; slicing
   the file yourself risks a stale or duplicated block that `verify` then flags.
 
+## Full-page extraction checks
+
+- Treat abrupt endings and unexplained ellipses in extracted pages as incomplete retrieval even when the tool reports success; retry the canonical trailing-slash URL or fetch full HTML with curl and parse it before claiming full documentation coverage.
+- Keep config templates separate from persisted runtime state; a default allow-list does not establish existing per-world or per-record values. Cite the configuration snapshot for literal values and the docs for interpretation.
+
 ## Indonesian journal accreditation
 
 - Verify SINTA rank for the article's publication year, not only Current Accreditation; promotions do not automatically apply retroactively. Match journal title, publisher, and ISSN to avoid same-name journals.
