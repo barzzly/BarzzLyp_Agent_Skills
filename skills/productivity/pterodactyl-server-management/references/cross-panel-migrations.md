@@ -2,6 +2,12 @@
 
 When moving server archives or migrating servers between Pterodactyl panels (e.g., Ultraservers to local console):
 
+## Archive delivery without extraction
+1. Resolve the destination from the live panel inventory and confirm its exact server name before transfer.
+2. Download or pull the archive, then validate it locally before upload: check ZIP signature with `zipfile.is_zipfile()` and run `ZipFile.testzip()` when the archive is complete. A downloader reporting success is not proof of a valid archive.
+3. For Google Drive, a direct export URL can return an HTML virus-scan warning for large files even when the link is public. Parse the warning form's `uuid` and retry its exact `drive.usercontent.google.com/download` action with the same file ID, `export=download`, `confirm=t`, and that UUID. Validate the response as ZIP bytes; downloader success can still mean an HTML error page. If the confirmed request reports quota exceeded/too many users, stop retries: changing `usp` or re-sharing the same file ID does not change its quota. Report that Drive's block may take up to 24 hours to clear; meanwhile ask the owner for a newly uploaded file or an actual copied archive in another accessible Drive, not an added shortcut. Do not attempt upload until valid ZIP bytes are obtained.
+4. If the user asks to keep the `.zip`, upload the archive only; do not decompress it. Verify target file listing and size before claiming receipt. Keep the server power state unchanged unless explicitly asked otherwise, and remove any local staging copy only after target receipt is verified.
+
 ## 1. Direct Transfer via Wings API (No Local Intermediate Hop)
 Avoid routing large archives (multi-hundred MBs or GBs) through the local host disk:
 1. **Generate Signed Download URL**:
