@@ -35,6 +35,8 @@ metadata:
 
 ## VPS & Panel Backup Sentinel Operations
 - **Dynamic Server Discovery:** Jangan hardcode UUID server panel di script backup. Query tabel `panel.servers` (`SELECT uuid, name FROM panel.servers`) secara dinamis setiap kali cron jalan, agar server game/bot baru (seperti bot discord baru) langsung otomatis masuk ke daftar backup.
+- **Backup Boundary:** Bedakan backup Google Drive + notifikasi Discord (`/usr/local/bin/backup-sentinel.py`, root cron `04:00`) dari backup skill GitHub Hermes (`~/.hermes/scripts/backup-agent-skills.py`, cron `06:00/14:00/22:00`). Keduanya punya tujuan, retention, dan verifikasi berbeda.
+- **BarzzLy & Minecraft Skill Scope:** Backup Drive menyimpan `/home/barzzly/BarzzLy` ke `gdrive:Backup Server/BarzzLy/` bila folder ada, serta `/home/barzzly/Minecraft/skills` ke `gdrive:Backup Server/Minecraft/Skills/`. Exclude `.env`, key, database, log, ZIP/JAR, cache dan binary generated files. Verifikasi item upload dan notif Discord terpisah; local ZIP saja bukan bukti upload.
 - **Kategori Destinasi Backup (Google Drive):**
   * `Server Panel/<NAMA_SERVER>/backup-<slug>-YYYY-MM-DD.zip`: Untuk semua server panel (kecuali container DB). Exclude file log & cache (`*.log`, `*/logs/*`, `*/cache/*`, `*/crash-reports/*`).
   * `Database/NOESANTARA DATABASE/backup-noesantara-database-YYYY-MM-DD.zip`: Khusus volume container DB panel (port 19138).
