@@ -20,6 +20,16 @@ When plugins maintain an in-memory LRU cache alongside YAML player data (e.g. `N
 
 ---
 
+## Skript severe errors versus server crashes
+
+1. Resolve the live server name and inspect `/resources`; preserve power state during diagnosis. Fetch `logs/latest.log` and retain a local evidence copy.
+2. Extract one complete `[Skript] Severe Error` block, including `Caused by`, first plugin frame, `Current item`, and `Current trigger`. Count error blocks, not stack-trace lines; addon lists alone do not identify the culprit.
+3. Read the named `.sk` function and its callers. For placeholder failures involving `Player.getLocation()` on a null player, inspect delayed join handlers and disconnect timing. A typed `player` argument does not guarantee an online player after `wait`; PlaceholderAPI may receive an OfflinePlayer whose live Player resolves to null.
+4. Revalidate online status after each delay and immediately before online-only placeholders. Guard the shared function as well as delayed callers, and return a safe value when the player is gone. Treat this as a proposed fix until target-script reload and a join/disconnect reproduction confirm it; do not trigger a production crash merely to reproduce one.
+5. Establish crash evidence separately: search for watchdog dumps, `OutOfMemoryError`, fatal tick exceptions, shutdown boundaries, and matching crash-report timestamps. A caught Skript exception is not proof that the JVM stopped. Read node `server.log` around shutdown to distinguish an explicit `stop` command from an unexpected exit. Label old crash reports historical rather than attributing them to current warnings.
+6. If panel file listings omit recent logs, compare direct SFTP `listdir_attr('/logs')`, sort numeric `st_mtime`, and inspect recent compressed logs. Do not conclude no recent logs exist from a partial API listing.
+7. Report exact script/function, failing expression, observed mechanism, current server state, and whether crash causality is confirmed. For check-only requests, stop at diagnosis; do not silently edit, reload, or restart.
+
 ## 2. Nexo Item Migration in Skript Commands
 When servers migrate from legacy item managers (e.g. ItemsAdder) to Nexo:
 - Replaced commands like `iagive <player> <item> <amount> silent` break silently in scripts.

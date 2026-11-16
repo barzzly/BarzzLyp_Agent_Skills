@@ -61,6 +61,16 @@ Build clean, deployable plugin data from vendor archives while preserving asset 
    - For plugin-folder bundles, ZIP the parent folder so extraction creates one named directory. For player resource packs, put `pack.mcmeta` and `assets/` directly at ZIP root; an enclosing project folder prevents Minecraft from loading the pack.
    - Run `ZipFile.testzip()` and verify archived file count equals staged file count before sending.
 
+## Live Pterodactyl deployment
+
+- Resolve exact target server from the live panel inventory by name and identifier before touching files. Inspect installed provider directories, plugin JAR versions, current server state, and relevant YAML through read-only API/SFTP; never infer target layout from local snapshots.
+- Prefer API for inventory and console commands, SSH-key SFTP for bulk files. Discover the SFTP username from the authenticated account and use `sftp -P <port> -o BatchMode=yes`; for large trees use `uv run --with paramiko --with pyyaml` and one recursive traversal, not hundreds of panel file requests.
+- Stage locally, parse every YAML/JSON/BBModel, reject unsafe ZIP paths, and audit IDs against live registries before upload. Isolate each vendor pack under its own MythicMobs/ModelEngine namespace when identifiers may collide; namespace generic helper skills instead of renaming files only.
+- Before each write, back up existing target bytes and compare their hashes with the read-only snapshot. Abort on concurrent changes or differing target content unless the merge is explicit. Write files, read back exact bytes, and record a machine-readable manifest of source counts, deployed paths, hashes, skipped variants, conflicts, and backups.
+- Reload in dependency order: `mi reload` when MMOItems data changed, `meg reload`, `mm reload`, then `iazip` for ItemsAdder generation. Do not restart production unless requested. Capture fresh log offset before reload and verify reload completion, generated ZIP path, archive size, and at least one real client `SUCCESSFULLY_LOADED` event.
+- Treat successful generation as separate from clean integration. Classify fresh errors by changed asset versus pre-existing server error; stop and fix new missing model, duplicate registry, sound-registry, font-glyph, or MMOItems integration errors before claiming installation complete. A generated pack and a successful reload do not prove boss combat or model visibility; test those separately.
+- Merge resource-pack registries before `iazip`: keep one effective `sounds.json` per merged destination and allocate non-conflicting font glyphs. ItemsAdder silently skips duplicate glyph providers and warns on duplicate `sounds.json`; raw vendor files with the same basename are not independent namespaces.
+
 For MCPets mount packs, Nexo icon conversion and reload/delivery checks, read [Pet mount integration](references/pet-mount-integration.md).
 
 For vendor boss collisions, generated textures, native spawn checks and delivery boundaries, read [Boss pack integration](references/boss-pack-integration.md).

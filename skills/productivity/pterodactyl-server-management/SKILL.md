@@ -276,6 +276,8 @@ For ordered setup, authentication, resource-pack handling, and chat checks, read
 
 See [PlayerAuctions confirmation/bids](references/playerauctions-confirmation.md).
 
+[Drive](references/google-drive-zip-transfer.md)
+
 ## Prerequisites
 
 - SSH Key pair generated locally (`~/.ssh/id_ed25519.pub`).
