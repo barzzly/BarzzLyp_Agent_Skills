@@ -2,8 +2,7 @@
 name: pterodactyl-server-management
 description: Use when managing Pterodactyl game servers via SFTP or API.
 version: 1.0.0
-author: BarzzLy, Hermes Agent
-license: MIT
+author: BarzzLy
 platforms: [linux, macos]
 metadata:
   hermes:
@@ -11,7 +10,7 @@ metadata:
     category: productivity
 ---
 
-# Pterodactyl Server Management (SFTP & Client API)
+# Pterodactyl Server Management
 
 Preserve power state. [Dataset inventory](references/gameplay-dataset-inventory.md); [wipes](references/player-data-reset.md); [schedules](references/pterodactyl-schedule-replication.md); [dungeon-worldguard](references/dungeon-worldguard-scope.md); [proxy tuning](references/proxy-tuning-and-memory-limits.md); [event boosts](references/temporary-event-boosts.md); [pass & skript guide](references/ingame-pass-cache-and-skript-troubleshooting.md); [MythicMobs & ItemsAdder](references/mythicmobs-itemsadder-troubleshooting.md); [cross-panel migrations](references/cross-panel-migrations.md).
 
@@ -276,7 +275,7 @@ For ordered setup, authentication, resource-pack handling, and chat checks, read
 
 See [PlayerAuctions confirmation/bids](references/playerauctions-confirmation.md).
 
-[Drive](references/google-drive-zip-transfer.md)
+[Drive](references/google-drive-zip-transfer.md); [Skript](references/skript-error-triage.md)
 
 ## Prerequisites
 
