@@ -12,7 +12,9 @@ metadata:
 
 # Pterodactyl Server Management
 
-Preserve power state. [Dataset inventory](references/gameplay-dataset-inventory.md); [wipes](references/player-data-reset.md); [schedules](references/pterodactyl-schedule-replication.md); [dungeon-worldguard](references/dungeon-worldguard-scope.md); [proxy tuning](references/proxy-tuning-and-memory-limits.md); [event boosts](references/temporary-event-boosts.md); [pass & skript guide](references/ingame-pass-cache-and-skript-troubleshooting.md); [MythicMobs & ItemsAdder](references/mythicmobs-itemsadder-troubleshooting.md); [cross-panel migrations](references/cross-panel-migrations.md).
+Preserve power state. Verify fresh reload output after each write; HTTP 204 is not success proof. Preserve requested Java/Bedrock artwork; ask before substituting plain text or reloading Geyser, which disconnects Bedrock players. [Glyph procedure](references/itemsadder-glyph-pinning.md).
+
+See references/ for gameplay inventory, wipes, schedules, dungeon/WorldGuard scope, proxy limits, event boosts, Skript cache, MythicMobs/ItemsAdder, and cross-panel migrations.
 
 ## Execution preference
 
