@@ -1,0 +1,13 @@
+# ItemsAdder Ciso tool imports
+
+- Compare source embedded PNGs by decoded RGBA pixels, not PNG bytes; server compression changes hashes without changing artwork. Compare model cube bounds, UVs, rotations, display and export flags, not element counts alone.
+- Inspect `storage/items_ids_cache.yml` and all live contents configs before assigning IDs. Cached removed item IDs are reserved; restore exact existing namespace/material/CMD for matching assets to preserve issued items. Namespace folder and `info.namespace` may differ.
+- Preserve existing intentional vanilla replacement models while adding ItemsAdder custom-item entries. Do not silently delete `assets/minecraft/models/item/netherite_*` replacement artwork as duplicates.
+- Paper 1.21.11 has native NETHERITE_SPEAR. Verify actual Material docs/version rather than assuming TRIDENT or SWORD. Native spear custom model allocation is separate from sword allocation.
+- Inspect hidden editor leftovers: source mace can contain hidden sword geometry with invalid texture indexes. Keep visible intended artwork and report excluded hidden cubes. Respect export:false unless intentionally preserving existing deployed effects.
+- Java 1.21.11 models support multi-axis x/y/z element rotations. Preserve source angles and origins; do not snap changed hoe pose to older export or claim older-client fidelity.
+- For fractional animation frame times, Minecraft metadata requires integer ticks. Use a bounded exact repeating 2/3-tick schedule for 2.5 ticks while preserving interpolation intent; flag existing invalid metadata separately rather than silently broad-editing all asset sets.
+- Quote all SFTP local paths containing spaces, including recursive get destination. Unquoted destination may be truncated without failing exit status. Validate exact destination existence before processing.
+- Generated ItemsAdder `_namespace:` texture references may be atlas sprite aliases, not missing texture files. Resolve `atlases/*.json` single sources `sprite` to `resource` before validating physical PNG paths.
+- `iazip` may automatically reload MythicMobs and mark current player packs installed before real download. Require fresh generation completion, CRC, exact seven material+CMD overrides, public served SHA256 matching generated ZIP, and a real SUCCESSFULLY_LOADED log event. These do not prove item visuals.
+- Classify pre-existing `netherite_spear_in_hand` fallback generation errors, missing ModelEngine overlays, and texture mipmap warnings against saved pre-reload logs. Do not claim clean all-version compatibility from successful generation.
