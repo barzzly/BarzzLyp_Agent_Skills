@@ -16,6 +16,8 @@ Preserve power state. Verify fresh reload output after each write; HTTP 204 is n
 
 See references/ for gameplay inventory, wipes, schedules, dungeon/WorldGuard scope, proxy limits, event boosts, Skript cache, MythicMobs/ItemsAdder, and cross-panel migrations.
 
+See [API diagnosis](references/api-diagnosis.md).
+
 ## Execution preference
 
 - Work directly on active remote server; use backed-up edits and read-back checks. First resolve the exact server from the user's name and live server inventory, then inspect the relevant remote files before editing. Avoid local Paper launches and mass-spawn tests. Mark untested items clearly.
