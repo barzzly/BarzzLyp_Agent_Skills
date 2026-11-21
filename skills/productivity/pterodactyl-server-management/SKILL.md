@@ -12,9 +12,9 @@ metadata:
 
 # Pterodactyl Server Management
 
-Preserve power state. Verify fresh reload output after each write; HTTP 204 is not success proof. Preserve requested Java/Bedrock artwork; ask before substituting plain text or reloading Geyser, which disconnects Bedrock players. [Glyph procedure](references/itemsadder-glyph-pinning.md).
+Preserve power state unless controlled migration requires a stop. Read back every write; HTTP 204 is not proof. Preserve requested Java/Bedrock artwork; ask before Geyser reload. See [cross-panel migration](references/cross-panel-migration.md) and [Glyph procedure](references/itemsadder-glyph-pinning.md).
 
-See references/ for gameplay inventory, wipes, schedules, dungeon/WorldGuard scope, proxy limits, event boosts, Skript cache, MythicMobs/ItemsAdder, and cross-panel migrations.
+See references/ for topical procedures, including gameplay, migrations, and verification. For cross-panel DB/IP work, read `references/cross-panel-database-migration.md`.
 
 See [API diagnosis](references/api-diagnosis.md).
 

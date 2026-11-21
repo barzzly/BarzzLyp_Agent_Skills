@@ -11,13 +11,13 @@ Standard procedure for deploying web applications (Node.js/Express, Vite/React, 
 
 ### 0. Fresh VPS Provisioning & Non-Root User Setup
 - When provisioning a new VPS delivered with only initial `root` password:
-  - **Non-interactive SSH without `sshpass`**: OpenSSH supports `SSH_ASKPASS` with `SSH_ASKPASS_REQUIRE=force`. Create a temporary executable script (`chmod 700`) that outputs the root password, set `SSH_ASKPASS=/path/to/script` and `SSH_ASKPASS_REQUIRE=force`, then invoke `ssh -o StrictHostKeyChecking=no root@<ip> "<commands>"`. Clean up the script immediately after execution.
+  - **Non-interactive SSH without `sshpass`**: Use `SSH_ASKPASS` with `SSH_ASKPASS_REQUIRE=force` and `DISPLAY=:0`. Create a temporary `0700` helper containing `printf '%s\n' "$REMOTE_SSH_PASSWORD"`, supply the password through the subprocess environment, and delete the helper in a `finally` block or temporary-directory context. For first contact use `StrictHostKeyChecking=accept-new` (TOFU, not independent host verification), then `StrictHostKeyChecking=yes`; stop on a changed host key. Set `ConnectTimeout=15` and `NumberOfPasswordPrompts=1` to bound failures.
   - **Create dedicated standard user**:
     ```bash
     useradd -m -s /bin/bash -c "Display Name,,," <user>
     echo "<user>:<password>" | chpasswd
-    usermod -aG sudo,users <user>
     ```
+    Check `getent passwd <user>` before creating; do not overwrite an existing account without resolving scope. Feed `<user>:<password>\n` to `chpasswd` through subprocess stdin rather than embedding secrets in remote shell commands. Grant administrative access only when requested: on Ubuntu inspect `getent group sudo` and `visudo -c`, then run `usermod -aG sudo <user>` and inspect `sudo -l -U <user>`. Keep UID unchanged; full sudo does not require UID 0. Test from a fresh SSH session with `sudo -k; sudo -S -p '' id`, feeding the user password on stdin; expect `uid=0(root)` because existing sessions retain old supplementary groups.
     *Note: GECOS (Full Name) accepts mixed-case labels (e.g. `BarzzLy`), while system usernames must remain lowercase.*
   - **SSH authorized_keys setup**:
     ```bash
@@ -27,14 +27,8 @@ Standard procedure for deploying web applications (Node.js/Express, Vite/React, 
     chown -R <user>:<user> /home/<user>/.ssh
     chmod 750 /home/<user>
     ```
-  - **Verify sudo & root password alignment**:
-    ```bash
-    # Update root password if synchronizing credentials
-    echo "root:<password>" | chpasswd
-    # Verify non-interactive sudo
-    echo "<password>" | sudo -S whoami
-    ```
-  - **Passwordless sudo (NOPASSWD)**: When configuring standard administrative user to execute root actions without password prompts:
+  - **Root password changes**: Change or synchronize the root password only when explicitly requested. Feed `root:<password>\n` directly to `chpasswd` over SSH stdin; keep the working access path until a separate SSH connection succeeds using the new password with `PubkeyAuthentication=no` and `PreferredAuthentications=password`. Report success without repeating credentials or saving them in skills.
+  - **Passwordless sudo (NOPASSWD)**: Use only when passwordless access is explicitly requested; ordinary full-sudo requests use the password-protected sudo group. Validate any sudoers drop-in with `visudo -cf <file>` before activating it. When configuring explicitly requested passwordless access:
     ```bash
     echo "<user> ALL=(ALL:ALL) NOPASSWD:ALL" > /etc/sudoers.d/<user>
     chmod 0440 /etc/sudoers.d/<user>
@@ -61,6 +55,29 @@ Standard procedure for deploying web applications (Node.js/Express, Vite/React, 
       3. Clean stale IPC sockets and pidfiles: `rm -f ~/.pm2/pm2.pid ~/.pm2/rpc.sock ~/.pm2/pub.sock`.
       4. Start and persist through the canonical systemd unit: `sudo systemctl start pm2-<user>.service`.
       5. Launch applications explicitly via the canonical PM2 binary matching systemd (`/usr/lib/node_modules/pm2/bin/pm2 start ...`), then run `pm2 save`.
+
+### Swap provisioning
+
+- Before creating swap, inspect target `swapon --show --bytes`, `/etc/fstab`, filesystem type, free disk, and existing target paths; never overwrite an existing swapfile or disable live swap blindly. On ext4 with sufficient headroom and no swap, create the requested size with `umask 077; fallocate -l 8G /swapfile; chmod 600 /swapfile; mkswap /swapfile; swapon /swapfile`.
+- Back up `/etc/fstab` before adding one `/swapfile none swap sw 0 0` entry. Persist `vm.swappiness = 10` in a dedicated sysctl drop-in and apply it. Read back active swap bytes, permissions, fstab entry, runtime swappiness and persistent drop-in via a separate connection. No reboot or game restart is required; host swap does not change per-container Pterodactyl swap limits.
+- For Python embedded through multiple shell/tool quoting layers, avoid nested newline escapes in string literals; use `chr(10)` for generated text or a separately transferred script. If persistence fails after `swapon`, resume from inspected state rather than recreating active swap.
+
+### Pterodactyl allocation replication
+
+- Inventory source allocations through the source panel's Application API with pagination; assert fetched count equals API total, deduplicate exact ports, and preserve only unassigned ports when cloning to a new node. Read target node identity before writing, then create allocations using target node ID, destination IPv4, and validated port ranges; never copy source `server_id` bindings.
+
+### Pterodactyl server cutover
+
+- Validate each panel credential before any write: call `GET /api/client` with `Authorization: Bearer <ptlc_...>` and `Accept: Application/vnd.pterodactyl.v1+json`. Treat `200` as usable Client API auth, `401` as invalid/revoked/wrong token or panel, and `403` as an authorization/scope or route-policy problem; do not infer token validity from the dashboard login.
+- Separate migration planes: Client API inventories servers and controls power, Application API creates nodes/allocations, and SFTP copies server files. A Client API token does not grant SFTP or Application API access, and Pterodactyl SFTP normally uses the server's panel credentials rather than an SSH private key.
+- Inventory source and target by stable server name plus identifier, then require an explicit mapping. Stop only the selected source services, record each source power state, copy files/configs through SFTP while preserving ownership/permissions, and keep source data untouched until target startup and health checks pass.
+- Preserve runtime semantics during recreation: egg, Docker image, startup command, environment variables, resource limits, allocations, databases, mounts, and schedules. Do not copy source `server_id` values or blindly reuse source allocations; target allocations must be unassigned before binding.
+- Start target servers only after file parity and config review. Verify Wings state, container state, recent logs, bot process/heartbeat, and public service behavior; restore the original power state policy and report each server separately. Never call a partial inventory or successful HTTP request a completed migration.
+- Treat Wings' SFTP host public key as distinct from an operator SSH key. It may be shown in Wings logs/configuration for host verification, but it does not authenticate a panel Client API or replace a user's private SSH key; never expose private key material.
+- Revoke any API token pasted into chat or logs and create a replacement because bearer tokens grant live panel access; never store token values in skills, memory, repository files, or reports.
+- Treat Wings ports separately from game allocations: node daemon ports commonly use `8080`/`2022`, while player allocations use the node IPv4 and game-port range. Do not use `127.0.0.1` for player-facing allocations.
+- Verify after creation by re-fetching target allocations and asserting destination IP, exact port set/count, and `server_id = null`. A successful API response alone is not proof. If Application API returns `403`, stop writes and use the authenticated Panel allocation UI or fix API scope; do not claim allocations were created and do not retry blindly.
+- For large contiguous ranges, use the panel's range input or bounded batches under the application's range limit. Check for existing target ports before each batch so reruns remain idempotent.
 
 ### 1. Repository & Location
 - Place all web projects under the designated web root (e.g. `/home/<user>/Website/<project-name>`). Keep the home directory tidy.
@@ -186,13 +203,10 @@ Standard procedure for deploying web applications (Node.js/Express, Vite/React, 
   ```
 
 ### 6. Cloudflare DNS & SSL Settings
-- DNS record:
-  - **Type**: `A`
-  - **Name**: `<subdomain>` (or `@` for apex)
-  - **IPv4**: `<vps_public_ip>`
-  - **Proxy status**: Proxied (Orange Cloud)
-- SSL/TLS encryption mode:
-  - Set to **Full** (or **Flexible** if VPS listens only on port 80 HTTP).
+- Create an `A` record with name `<subdomain>` (or `@`) and value `<vps_public_ip>`. Enter only the hostname, without `https://` or a path, in installer FQDN prompts.
+- Use **DNS only** during installers that verify the hostname resolves to the origin IP; proxying returns Cloudflare IPs and can fail that check. Save the record and verify resolution before proceeding.
+- Enable proxying only after origin HTTPS works and the service's ports/protocols support it. Use **Full (strict)** with a valid origin certificate; do not recommend Flexible as a shortcut because it leaves the origin hop unencrypted and can cause redirect/cookie problems.
+- For Pterodactyl node TLS, configuration bootstrap, foreground testing, and systemd handoff, follow [Panel and Wings provisioning](references/pterodactyl-provisioning.md). Distinguish the Wings API hostname from player-facing IP allocations before choosing TLS settings.
 
 ### 7. Automated CI/CD via GitHub Actions (SSH Deploy on Push)
 - Generate or ensure an SSH key pair exists (`~/.ssh/id_ed25519` and `id_ed25519.pub`).
@@ -285,7 +299,7 @@ Standard procedure for deploying web applications (Node.js/Express, Vite/React, 
 
 ## Pitfalls & Core Rules
 
-- **Non-interactive SSH password automation without `sshpass`**: On minimalist environments lacking `sshpass` or `pexpect`, OpenSSH supports non-tty password feeding via `SSH_ASKPASS` combined with `SSH_ASKPASS_REQUIRE=force`. Point `SSH_ASKPASS` to an executable `0700` script echoing the password, pass `-o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null`, and wipe the script immediately after command completion to prevent credentials lingering in `/tmp`.
+- **SSH host identity and secrets**: Follow the provisioning SSH_ASKPASS procedure above; retain known-host records rather than disabling host checks or using `/dev/null`, because password automation must not silently accept changed server identities.
 - **CDN-aware HTML verification**: Compare exact application asset hashes and normalize only a positively identified CDN-injected beacon when comparing public HTML. Cloudflare can inject its analytics script into otherwise byte-identical HTML; an unnormalized full-HTML hash can falsely fail a healthy release and trigger downtime. Preserve all other markup in comparison.
 - **Isolated npm configuration**: Give npm userconfig and globalconfig distinct empty paths; pointing both to `/dev/null` fails with `double-loading config`. Keep this test-harness error separate from application build failure.
 - **Unchanged companion JAR verification**: Rebuilt ZIP/JAR timestamps can change archive hash without code changes. For an unchanged, non-deployed companion compare complete unique entry-name/content-hash maps to the baseline; continue requiring exact archive SHA for the plugin actually deployed.
