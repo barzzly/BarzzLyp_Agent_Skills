@@ -12,9 +12,9 @@ PTERODACTYL_PANEL_URL=https://panel.ultraservers.com
 PTERODACTYL_API_KEY=ptlc_...
 
 # BarzzLy Console Panel (Self-hosted node: Bot WA, RP Rebel, Velocity)
-PTERODACTYL_CONSOLE_URL=https://console.barzzly.com
+PTERODACTYL_CONSOLE_URL=https://panel.barzzly.com
 PTERODACTYL_CONSOLE_API_KEY=ptlc_...
-PTERODACTYL_CONSOLE_SSH_KEY=/home/barzzly/.ssh/id_pterodactyl_barzzly
+PTERODACTYL_CONSOLE_SSH_KEY=/home/barzzly/.ssh/id_panel_hermes
 ```
 
 ### Resolution Rules:
@@ -28,15 +28,16 @@ PTERODACTYL_CONSOLE_SSH_KEY=/home/barzzly/.ssh/id_pterodactyl_barzzly
 When bootstrapping SFTP access on a Pterodactyl panel, generate a dedicated ed25519 keypair and register it autonomously using the Client API so the user never needs to copy-paste keys through the web UI:
 
 ### Step 1: Generate Dedicated Keypair
+Skip this if `~/.ssh/id_panel_hermes` already exists: it is registered on panel.barzzly.com and panel.ultraservers.com, and `~/.ssh/config` already routes node1.barzzly.com (port 2022) and *.ultraservers.com (port ${PTERODACTYL_SFTP_PORT}) to it. Never overwrite it.
 ```bash
-ssh-keygen -t ed25519 -C "barzzly-pterodactyl-console" -f ~/.ssh/id_pterodactyl_barzzly -N ""
+ssh-keygen -t ed25519 -C "barzzly-pterodactyl-console" -f ~/.ssh/id_panel_hermes -N ""
 ```
 
 ### Step 2: Register Public Key via Client API
 Pterodactyl exposes an account SSH key registration endpoint on `POST /api/client/account/ssh-keys`:
 
 ```bash
-PUB_KEY=$(cat ~/.ssh/id_pterodactyl_barzzly.pub)
+PUB_KEY=$(cat ~/.ssh/id_panel_hermes.pub)
 
 curl -s -X POST "${PANEL_URL}/api/client/account/ssh-keys" \
   -H "Authorization: Bearer ${API_KEY}" \
@@ -64,6 +65,6 @@ Returns `object: "ssh_key"` with fingerprint and timestamp:
 ## 3. SFTP Ingress via Wings
 Once registered, authenticate SFTP connections to Wings (port 2022 by default) using the dedicated key:
 ```bash
-sftp -i ~/.ssh/id_pterodactyl_barzzly -P 2022 <username>.<server_identifier>@<node_sftp_ip>
+sftp -i ~/.ssh/id_panel_hermes -P 2022 <username>.<server_identifier>@<node_sftp_ip>
 ```
 Ensure permissions on the private key remain `chmod 600`.

@@ -11,6 +11,10 @@ Use this workflow when moving named Pterodactyl servers between panels or nodes.
 7. Match runtime to egg: Velocity uses Velocity, Paper uses Paper, and Node.js bots use Node.js. Keep completion words scoped to the matching egg/server; do not alter global egg settings to fix one server.
 8. Validate endpoint values and old-endpoint absence. Restart one named server at a time, preserve prior power state unless migration requires a stop, and verify logs for actual database connection success. Config inspection alone does not prove connectivity.
 9. Read back allocation descriptions and server state after writes. HTTP 204 or a successful write call alone is not proof.
+10. For allocation range migrations, inventory every explicitly scoped server and save allocations, primary IDs, power state, startup, and touched files. Use the panel's BuildModificationService (preserving database/allocation/backup limits) when authorized local Laravel access is available; it syncs Wings. Verify Wings mappings after restart, not merely panel rows.
+11. Write file contents as raw text to `/files/write?file=<encoded-path>`, never form-encoded `file=...&content=...`; the latter can become literal file contents. Read back exact bytes and parse YAML/TOML before restarting.
+12. For MariaDB port moves, inspect egg config substitution before restarting. A broken `{{server.allocations.default.port}}` template can blank `.my.cnf` port values. A server-specific `mariadbd --port=<verified-allocation>` startup override avoids changing the global egg. Update every verified client endpoint, including container DNS clients, and test a MariaDB greeting plus real plugin connections.
+13. Treat allocation descriptions as labels, not proof of service usage. Inspect actual configs: Velocity VotifierPlus may use `bungeeconfig.yml`; ajLeaderboards SQL settings may live in `cache_storage.yml`; voicechat proxy uses `voicechat-proxy.properties`. Do not label a primary game port unused merely because a plugin scan is empty.
 
 Common checks:
 

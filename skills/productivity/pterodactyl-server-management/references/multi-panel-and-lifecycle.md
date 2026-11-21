@@ -4,7 +4,7 @@
 Manage across the 2 distinct active panels:
 - **UltraServers Panel**: `https://panel.ultraservers.com` (`PTERODACTYL_PANEL_URL`, `PTERODACTYL_API_KEY`).
   - *Cloudflare Bypass:* Always use HTTP/2 (`curl -s --http2`) with user-agent headers. Datacenter VPS IPs will trigger Cloudflare Turnstile blocks or stalls on standard HTTP/1.1 requests.
-- **BarzzLy Console**: `https://console.barzzly.com` (`PTERODACTYL_CONSOLE_URL`, `PTERODACTYL_CONSOLE_API_KEY`, SSH key `~/.ssh/id_pterodactyl_barzzly`).
+- **BarzzLy Console**: `https://panel.barzzly.com` (`PTERODACTYL_CONSOLE_URL`, `PTERODACTYL_CONSOLE_API_KEY`, SSH key `~/.ssh/id_panel_hermes`).
 
 ## 2. Egg "Starting" (Yellow Status) Resolution
 When a server/bot stays in yellow ("Starting") status indefinitely even though its logs indicate full readiness:
