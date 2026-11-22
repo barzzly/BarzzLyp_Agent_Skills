@@ -12,11 +12,9 @@ metadata:
 
 # Pterodactyl Server Management
 
-Preserve power state unless controlled migration requires a stop. Read back every write; HTTP 204 is not proof. Preserve requested Java/Bedrock artwork; ask before Geyser reload. See [cross-panel migration](references/cross-panel-migration.md) and [Glyph procedure](references/itemsadder-glyph-pinning.md).
+Preserve power state except approved stops. Verify writes. For player-data loss, resolve source, target and every storage category; never reduce all-data recovery to one plugin. Report DB, local plugin and world/playerdata coverage separately. See [recovery](references/database-clone-verification.md), [migration](references/cross-panel-migration.md), [Glyph](references/itemsadder-glyph-pinning.md).
 
-See references/ for topical procedures, including gameplay, migrations, and verification. For cross-panel DB/IP work, read `references/cross-panel-database-migration.md`.
-
-See [API diagnosis](references/api-diagnosis.md).
+Preserve Java/Bedrock artwork; ask before Geyser reload. Dungeon: preserve routes; spread loot; verify traversal. See [placement](references/dungeon-annotation-placement.md).
 
 ## Execution preference
 

@@ -16,7 +16,7 @@
    - Create empty database with UTF-8 support: `CREATE DATABASE IF NOT EXISTS \`<name>\` CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;`
    - Create matching user with `%` host: `CREATE USER IF NOT EXISTS '<user>'@'%' IDENTIFIED BY '<pass>';`
    - Grant full schema permissions: `GRANT ALL PRIVILEGES ON \`<name>\`.* TO '<user>'@'%'; FLUSH PRIVILEGES;`
-5. **Import & verify counts:** Import via TCP socket: `mariadb -h <host> -P <port> -u root -p'<pass>' <db> < <dump>.sql`. Query `information_schema.TABLES` to compare table and row counts before and after migration.
+5. **Import & verify counts:** Only import under explicit restoration/migration authorization; pass credentials through `MYSQL_PWD`, never command arguments. Discover tables with `SHOW TABLES` and verify exact direct `SELECT COUNT(*)` counts plus schema/content against the captured snapshot. Do not use `information_schema.TABLES` estimates or its potentially blocking scans. For loss audits, inspect actual enabled plugin storage first: local SQLite/YAML may be authoritative even when similarly named MySQL databases exist. Compare backup user counts and record keys separately from timestamps; retained keys do not prove retained inventory or progress.
 6. **Archive backups locally & panel-side:**
    - Retain a compressed `.tar.gz` bundle of all `.sql` dumps in a persistent backup directory.
    - Trigger a panel snapshot via `POST /api/client/servers/<server_id>/backups` and verify `is_successful: true`.
