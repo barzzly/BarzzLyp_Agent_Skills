@@ -1,0 +1,7 @@
+# Calestial loot probability
+
+- Inspect installed LootService.rollViewEntries before reducing chance. When nexo-max-items > 0, positive-chance Nexo entries form mandatory weighted draws; reducing 100 to 50 does not halve their probability. Switch scoped tables to independent slot chances with nexo-min-items:0 and nexo-max-items:0 when genuine per-entry odds are requested. Report changed draw semantics and potential empty chests.
+- Reduce quantity separately from chance. Core/miniboss tables can contain many guaranteed high stacks; chest GUI ignores ordinary min-items/max-items for independent rolls. Preserve locations and objective locks unless user explicitly requests placement changes.
+- Add new mob materials through a dungeon-specific MythicMobs drop table, replacing references only on scoped mobs; preserve shared Hollow drop tables. Trace boss loot separately from ordinary monster drops.
+- Resolve names to live Nexo IDs: Artifact Rune can be scroll_of_dead, Ring Rune rune_plate, Necklace Rune rune_plate2. Preserve identifiers, texture and custom_model_data when changing display name/lore. Use current dungeon drop lore rather than invented usage claims.
+- Validate staged YAML through installed NoeDungeon serializer/validator, then exact readback, scoped Nexo/MythicMobs/NoeDungeon reload and live validation. Report pre-existing Exit location warnings and API deprecation warnings separately. Configuration checks do not prove physical drops or existing item lore updates.

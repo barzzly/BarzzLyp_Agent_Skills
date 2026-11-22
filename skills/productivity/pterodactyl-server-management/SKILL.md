@@ -16,6 +16,13 @@ Preserve power state except approved stops. Verify writes. For player-data loss,
 
 Dungeon: edit live scoped variants; trace skill damage, not only Damage; verify runtime separately from hits. See [placement](references/dungeon-annotation-placement.md).
 
+## Player-facing update recaps
+
+- For “today's updates,” collect both Telegram histories for the same owner across the local-day boundary; include dungeon, material/loot, boss/pet, voucher and bug work, not only the latest thread. State the interval when sessions span midnight.
+- Deduplicate and retain final state after reversals; exclude unrelated networks and superseded boss arrangements/damage multipliers.
+- Use copyable `# Category` headings and indented `[ ✔ ]` / `[  ]` checklists. Checked means deployed/read back; list unverified gameplay separately.
+- Match announcement references: main heading, short intro, section headings/bullets, exact entry command and key/party requirements. Describe player-facing changes, not logs; don't promise unverified fixes. Count characters before claiming one-message fit.
+
 ## Execution preference
 
 - Work directly on active remote server; use backed-up edits and read-back checks. First resolve the exact server from the user's name and live server inventory, then inspect the relevant remote files before editing. Avoid local Paper launches and mass-spawn tests. Mark untested items clearly.
@@ -98,6 +105,8 @@ Dungeon: edit live scoped variants; trace skill damage, not only Damage; verify 
 
 ## NoeDungeon deployment and namespace migration
 
+For template ID changes, follow [ID migration](references/dungeon-id-migration.md): folder + YAML ID, exact command references, cooldown/history and cache-safe live verification.
+
 - NoeRPG uses active `plugins/NoeDungeon-1.1.0.jar` and `plugins/NoeDungeon/`; verify current state rather than assuming historical RukhDungeon paths. When old JAR is unexpectedly absent and server offline, confirm maintenance ownership before starting. Preserve inactive source folder locally and verify exact bytes before removing it remotely.
 - Before namespace migration, snapshot complete plugin data and every world/playerdata/*.dat, scan NBT structurally for old PDC keys, and query LuckPerms user/group permission tables read-only for old nodes. Rename only exact PDC namespace keys with collision rejection and compare reverse-transformed NBT to original; never byte-replace compressed NBT. Preserve cooldowns, rewards, map paths and unrelated tags. Inspect companion plugin descriptors/class references separately.
 - Preserve explicit `HOLLOW_` world-prefix overrides. When changing default `rd_` to `nd_`, add `nd_*` to HuskClaims exclusions without deleting existing patterns. NoeRPG Skript's `/dungeon` convenience menu delegates to `nd menu`; this shortcut is separate from NoeDungeon's `/noedungeon` and `/nd` dispatcher.
@@ -105,12 +114,11 @@ Dungeon: edit live scoped variants; trace skill damage, not only Damage; verify 
 
 ## RukhDungeon inventory layout deployment
 
-- Audit all 17 bundled menu YAMLs plus Java fallback positions; existing `plugins/RukhDungeon/menu/*.yml` override new JAR defaults, so deploy minimal layout changes alongside JAR. Preserve labels, actions, permissions, item metadata and dungeon data.
-- Use center close column 4 and back column 7 (zero-based), leaving columns 5–6 clear; align supporting actions at column 1 where appropriate. Fill partial player/content lists left-to-right, never centered; preserve editable loot slots 0–44, save boundaries, and explicit custom slot arrays.
-- For invite-player screenshots, locate the actual head slot rather than the floating tooltip. Start bordered invite lists at slot 10 (first interior cell of row two), continue through 16, then 19–25; a six-row inventory has 28 interior cells. Inspect live `PartyInviteMenu` bytecode with `javap -c -p -classpath <live.jar> <class>` alongside YAML before editing: hardcoded `set(i - from, ...)` ignores layout settings and overwrites the top border. Map page-local index with `10 + (index / 7) * 9 + index % 7` and cap page size at 28 together, preserving invite validation and navigation.
-- Correct layout tests that encode the old wrong positions before patching production code; require RED on actual menu build/action slots. Cover a partial row crossing, a full 28-entry page, entry 29 on the next page, and preserved border/navigation. Separate passing headless tests and packaged-artifact checks from live deployment and visual proof.
-- Test legacy Gate/Region `rows: 3`, `close.slot: 26`: centering eight choices would overwrite eighth choice at 26. Keep sequential slots 18–25 when navigation shares picker row; only center when close has separate row. Exercise custom close collision too.
-- Verify all menu constructors on isolated loopback Paper and actual client screenshots; shorten overlong list titles, keep instructions in lore. Check Back destinations and native loot save roundtrip. Keep test fixture plugin off production. Separate local visual proof from live JAR/config hash readback and fresh startup logs.
+- Audit all 17 menu YAMLs and Java fallbacks; existing YAML overrides JAR defaults. Preserve labels, actions, permissions, item metadata and dungeon data.
+- Close column 4, back column 7 (zero-based), columns 5–6 clear; supporting actions column 1. Fill lists left-to-right; preserve loot slots 0–44 and custom slot arrays.
+- Inspect live PartyInviteMenu with `javap -c -p`: hardcoded `set(i - from, ...)` overwrites borders. Use `10 + (index / 7) * 9 + index % 7`, cap 28; locate actual heads, not tooltips.
+- Require RED on menu/action slots, then test partial rows, 28 entries, entry 29, borders/navigation and custom close collisions. Legacy three-row picker with close 26 uses choices 18–25; center only with separate close row.
+- Exercise constructors on isolated Paper, native loot roundtrip, Back and client screenshots; shorten titles, put instructions in lore. Keep fixtures off production; verify live JAR/config hashes and fresh startup separately.
 
 For Hollow chest/material/boss edits, read [Hollow content maintenance](references/hollow-content-maintenance.md) for cached API reads, map marker diffs, native loot pools and verification boundaries.
 

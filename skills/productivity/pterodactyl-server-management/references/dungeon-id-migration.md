@@ -1,0 +1,10 @@
+# Dungeon ID migration
+
+1. Resolve the live server and list `plugins/NoeDungeon/dungeons/`. Distinguish template IDs from display names, world names, item IDs and unrelated menu keys; rename only requested template identifiers.
+2. Inspect repository loading and player-data storage in installed plugin/source. Folder names can determine runtime IDs despite YAML `id`; migrate both. Scan native menus, command strings and dependent configs for exact references, not broad text replacements.
+3. Back up dungeon YAML and player profiles. Stage only root `id`, exact command arguments, `completed-dungeons` entries and `cooldowns` keys. Preserve stats and expiry values; on destination collision keep the later cooldown and deduplicate history. Assert semantic equality outside these fields.
+4. Check live sessions, editors and online users immediately before applying. Wait for affected runs/editors; reload pins their old template and can recreate stale IDs. Migrate profiles only when affected users are offline, or use a verified cache-aware migration; ordinary reload does not evict PlayerDataManager's cache.
+5. Read back originals before writes to detect concurrent edits. Use SFTP for bulk small-file scanning/backups instead of flooding panel contents endpoints. Verify staged bytes, write and read back exact targets, then rename folders with destination-exists rejection. If interrupted, inspect actual files/folders before retrying; writes may already have succeeded.
+6. Reload with `nd reload`, inspect `nd list`, and run `nd validate <new-id>` for every target. Require old IDs absent, new IDs enabled as intended, unchanged non-ID dungeon YAML and migrated profiles. Report existing exit warnings separately. Do not restart or change loot, maps, mobs or entry requirements for an ID-only request.
+
+Keep one runnable migration check covering destination collisions, preserved cooldown/history and unchanged dungeon content. Verify only backed-up YAML, not unrelated `.bak` files that were never collected.
