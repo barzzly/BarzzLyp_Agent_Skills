@@ -741,6 +741,11 @@ Use `/context` in interactive mode to see a colored grid of context usage. Key t
 14. **Background launch may fail before command execution when session bus is unavailable.** If terminal background reports `Failed to connect to bus` and expected log files never appear, use an isolated named tmux session running the print-mode process, with project-local logs. Read logs for progress and completion; remove only that tmux session afterward.
 15. **Video-driven WebGL work requires visual QA beyond successful builds.** Extract timed reference frames with ffmpeg, inspect them, pass concrete geometry/camera/material details to the coding agent. Verify rendered screenshots, model attachments, working controls, local-only assets and mobile input. A CSS `display:grid/flex` rule can override HTML `hidden`; test computed visibility and include a `[hidden] { display:none !important; }` safeguard when appropriate.
 
+## Custom API connector warnings
+
+- When custom API auth intentionally overrides a claude.ai login, the connector-disabled banner is not itself an inference failure. Set documented `disableClaudeAiConnectors: true` in user settings to opt out of account connector fetching; preserve custom endpoint, model, OAuth login, and local MCP servers. Verify debug output contains `Disabled via disableClaudeAiConnectors setting`.
+- Still run one real tools-disabled print probe. A separate `401 API key required for remote API access` means router credentials need verification, not removal of custom auth. Test existing credentials against the same endpoint with a normal User-Agent to distinguish WAF 403 from API 401; never print secrets. Back up settings before replacing only the invalid token with an existing verified owner credential. Do not change router auth policy or silently switch models.
+
 ## Rules for Hermes Agents
 
 1. **Prefer print mode (`-p`) for single tasks** — cleaner, no dialog handling, structured output

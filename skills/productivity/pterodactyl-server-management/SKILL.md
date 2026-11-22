@@ -14,7 +14,7 @@ metadata:
 
 Preserve power state except approved stops. Verify writes. For player-data loss, resolve source, target and every storage category; never reduce all-data recovery to one plugin. Report DB, local plugin and world/playerdata coverage separately. See [recovery](references/database-clone-verification.md), [migration](references/cross-panel-migration.md), [Glyph](references/itemsadder-glyph-pinning.md).
 
-Preserve artwork; ask before Geyser reload. Dungeon: parkour before combat; unlock exploration loot; ×2 means quantities. See [placement](references/dungeon-annotation-placement.md).
+Dungeon: edit live scoped variants; trace skill damage, not only Damage; verify runtime separately from hits. See [placement](references/dungeon-annotation-placement.md).
 
 ## Execution preference
 
