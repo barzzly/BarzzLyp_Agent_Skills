@@ -11,6 +11,13 @@ metadata:
 
 # Minecraft Asset Pack Consolidation
 
+## Vendor archive validation
+- Detect archive magic before extraction; `.zip` can contain RAR. Use libarchive with path-traversal checks instead of renaming or treating invalid ZIP as corrupt.
+- Validate every JSON before deployment. Some vendor `sounds.json` files have an extra closing brace; repair staged bytes only after proving the exact syntax defect, preserving source archive.
+- Allocate explicit ItemsAdder model IDs beyond existing material cache mappings, then apply those same IDs to MythicMobs item definitions. Verify generated vanilla overrides and runtime cache agree.
+- Inspect reload logs for missing vendor metaskills. Replace a missing simple rotation helper with native `look` only when its call site proves intent; verify no unresolved metaskill remains.
+- ItemsAdder PNG compression can change uploaded source file hashes. Distinguish proven PNG optimization from unexpected config/model changes, and verify final hosted pack hash against generated server ZIP.
+
 Build one deployable plugin-folder tree from nested vendor archives, using an existing finished pack as structural reference.
 
 ## Procedure
