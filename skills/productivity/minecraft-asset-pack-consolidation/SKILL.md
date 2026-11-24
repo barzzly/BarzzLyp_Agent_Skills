@@ -65,6 +65,8 @@ Assert all before completion:
 
 ## Pitfalls
 
+- For cosmetics-only extraction, select models by the requested collection directory and copy their referenced texture directories, including emissive PNGs and animation `.mcmeta`. Do not copy the whole namespace's unrelated menu/items. Compare versions by bytes before deduplicating; retain source archives. Check every selected model has an ItemsAdder item definition and report missing MagicCosmetics registrations separately. Alternate versions can change item materials/IDs while MMOItems and MagicCosmetics still reference old names; use one coherent definition set, never merge both config variants blindly.
+
 - Vendor packs commonly contain several mutually exclusive MythicMobs variants. Copying every variant causes duplicate mob and skill IDs.
 - Renaming colliding `.bbmodel` files does not resolve runtime conflicts; references still target original model ID.
 - Vendor `ModelEngine/blueprints` may contain `.png` and `.aseprite` source files beside `.bbmodel`. When every bbmodel texture has embedded `data:image/...` content, remove non-bbmodel files; ModelEngine otherwise attempts to import them as models and emits `Unknown format` for each file.
