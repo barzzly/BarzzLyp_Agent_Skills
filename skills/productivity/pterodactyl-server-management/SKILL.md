@@ -12,7 +12,7 @@ metadata:
 
 # Pterodactyl Server Management
 
-Preserve power state except approved stops. Verify writes. For player-data loss, resolve source, target and every storage category; never reduce all-data recovery to one plugin. Report DB, local plugin and world/playerdata coverage separately. See [recovery](references/database-clone-verification.md), [migration](references/cross-panel-migration.md), [Glyph](references/itemsadder-glyph-pinning.md).
+Preserve power state except approved stops. Verify writes. Audit access [read-only](references/incident-audit-timeline.md). For player-data loss, resolve source, target and every storage category; never reduce all-data recovery to one plugin. Report DB, local plugin and world/playerdata coverage separately. See [recovery](references/database-clone-verification.md), [migration](references/cross-panel-migration.md), [Glyph](references/itemsadder-glyph-pinning.md).
 
 Dungeon: edit live scoped variants; trace skill damage, not only Damage; verify runtime separately from hits. See [placement](references/dungeon-annotation-placement.md).
 
