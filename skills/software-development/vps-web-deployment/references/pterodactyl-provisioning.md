@@ -1,5 +1,10 @@
 # Pterodactyl Panel and Wings provisioning
 
+## Same-host IPv4 renumbering
+
+- Stage the confirmed new address alongside the old one. Use a free source-policy table and rule for the new gateway; verify source-bound public egress, then test inbound SSH independently before retiring the old address/default route. Local HTTPS and a wildcard SSH listener do not prove remote reachability. Validate merged Netplan with `netplan generate`; do not start stopped workloads to test a network change.
+- For in-place allocation changes, preserve node, allocation IDs, ports and server assignments. Snapshot the scoped rows, check for destination collisions, update transactionally and compare the exact mapping before commit.
+
 ## Choose addressing before installation
 
 1. Distinguish the Panel URL, Wings API endpoint, and game allocations. Players can connect to an IPv4 allocation even when Wings uses a DNS hostname; do not remove Wings TLS to satisfy an IPv4 game-address request.

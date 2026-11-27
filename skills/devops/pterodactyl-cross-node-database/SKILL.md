@@ -70,6 +70,12 @@ Use when Minecraft/Pterodactyl servers on one node connect to MariaDB hosted in 
    - Read logs for a successful Hikari/MySQL connection and absence of `Communications link failure`, `Connection refused`, or `Connect timed out`.
    - Read back server status and database connection after restart.
 
+## Same-host IP renumbering
+
+During dual-address cutover, mirror the existing restricted Docker original-destination matches for the new public address, preserving the same source allowlist, ports and terminal drop. Check both runtime rules and the persistent rule installer before starting the database. A remote game node retains its own allocation; change only plugin endpoints that refer to the renumbered host. With both workloads stopped, verify file readback and defer SQL/application testing until authorized startup.
+
+Compare panel assignments with stopped Docker containers' `HostConfig.PortBindings` and `SERVER_IP`: panel readback alone does not prove the next published binds. Verify website primary and auxiliary SQL pools separately; successful SQL authentication does not establish that leaderboards and game plugins use the same authoritative schema.
+
 ## Decision table
 
 | Observation | Meaning | Action |
