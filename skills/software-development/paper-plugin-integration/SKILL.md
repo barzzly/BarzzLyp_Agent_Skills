@@ -56,6 +56,12 @@ metadata:
    - Build JAR, inspect packaged `plugin.yml` and config resources, record artifact path.
    - Report compiled, packaged, headless-tested, live-tested, and deployed states separately.
 
+## Branding installed plugins
+
+1. After an authorized first start, confirm the named backend reached `Done` and each plugin enabled. Inspect its generated message and config files for the display prefix; do not change `table-prefix` for branding, because it selects database tables.
+2. Back up the original, edit only the supported display key, parse the YAML, and verify remote readback. For GrimAC, inspect `messages.yml` (`prefix` used by `%prefix%`); for LagFixer, inspect the nested `prefix` in `config.yml`, preserving its trailing separator space. If the installed build has no configurable message prefix, report the exception instead of renaming the plugin or rewriting unrelated messages.
+3. Use the plugin's native reload and verify a fresh response contains the requested brand: `grim reload` completion or `lagfixer help` after `lagfixer reload`. A startup banner or unchanged logger label does not test the chat prefix. For CoreProtect, `co status` verifies operation, not branding.
+
 ## Rules for this user's Paper plugins
 
 - Keep `folia-supported: false` unless every Bukkit/entity/world operation is region-scheduler safe.
